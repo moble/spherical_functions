@@ -23,4 +23,8 @@ title: Blogging Like a Hacker
 
 For now, this will just show the `index.html` file that github created
 with the page generator.  You can create new pages in the top
-directory (or any subdirectory)
+directory (or any subdirectory), which will be get translated and be
+available at http://localhost:4000/ as long as that last `serve`
+command is running.
+
+But the pages you create will just be basic text pages.
