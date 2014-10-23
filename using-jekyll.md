@@ -8,7 +8,7 @@ click on the page generator.  Generate the page with your favorite
 layout (content doesn't matter at this point).
 
 Now, go back to the command line, `cd` into your repo, and run `git
-checkout gh-pages`.  Remove any of the garbage that git ignores (like
+checkout gh-pages`.[^1]  Remove any of the garbage that git ignores (like
 `build` directories, `.o` or `.pyc` files, etc.), because Jekyll will
 try to serve those things as pages.
 
@@ -111,3 +111,11 @@ Once you restart your server, you should now be able to write simple
 markdown text files in your top-level directory.  Jekyll will watch
 for any changes and recreate the pages as you save them.
 
+
+[^1]: Note that another (possibly better) way of doing this is to
+      simply clone the `gh-pages` branch within your main repo
+      directory (without making it a submodule, or anything).  Just do
+
+          git clone -b gh-pages git@github.com:<YOUR_REPO_HERE> gh-pages
+
+      You might also want to add `gh-pages` to `.gitignore`.
