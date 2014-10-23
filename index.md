@@ -3,9 +3,14 @@
 
 # Conventions
 
-Here, we carefully examine all the assumptions built in to the
-conventions for the `spherical_functions` package, and relate these
-choices to those made by other authors.
+Defined exclusively in terms of quaternions, the Wigner $\mathfrak{D}$
+matrices and spherical-harmonic functions (spin-weighted and scalar)
+are pretty simple, and easy to make internally consistent.  However,
+it is important to establish which conventions are in use ---
+especially in comparison to other source.  Here, I carefully examine
+all the assumptions built in to the conventions for the
+`spherical_functions` package, and relate these choices to those made
+by other authors.
 
 ## Quaternions, rotations, spherical coordinates
 
@@ -16,9 +21,10 @@ formula
   \Rotated{\vec{v}} = \rotor{R}\, \vec{v}\, \rotor{R}^{-1}.
 \end{equation}
 In principle, a unit quaternion obeys $\co{\rotor{R}} =
-\rotor{R}^{-1}$.  In practice, however, the system is (slightly
-slower, but) more stable numerically if we explicitly use the
-inversion.
+\rotor{R}^{-1}$.  In practice, however, there are cases where the
+system is (slightly slower, but) more stable numerically if the
+explicit inversion is used.  And since the inversion is such a simple
+operation, we simply use it.
 
 ![Spherical-coordinate system; By Andeggs, via Wikimedia Commons]({{ site.url }}/spherical_functions/images/3D_Spherical_Coords.svg){: style="float:right;height:200px"}
 
@@ -98,21 +104,29 @@ $(\basis{x}, \basis{y}, \basis{z})$ can be identified with generators
 of rotations usually seen in quantum mechanics (or generally just
 special-function theory) according to the rule
 \begin{align}
-  \frac{\basis{x}}{2} \mapsto -i\, J\_x \\\\
-  \frac{\basis{y}}{2} \mapsto -i\, J\_y \\\\
-  \frac{\basis{z}}{2} \mapsto -i\, J\_z.
+  \frac{\basis{x}}{2} &\mapsto -i\, J\_x, \\\\
+  \frac{\basis{y}}{2} &\mapsto -i\, J\_y, \\\\
+  \frac{\basis{z}}{2} &\mapsto -i\, J\_z.
 \end{align}
 This is important when relating quaternion expressions to expressions
 more commonly seen in the literature.  In particular, with this
-identification, we have the usual commutation relations like
-$[J\_x, J\_y] = i\, J_z$, etc.  And in any case, this certainly
-clarifies what to do with expressions like the following from
-Wikipedia:
+identification, we have the usual commutation relations
+\begin{align}
+  \left[\frac{\basis{x}}{2}, \frac{\basis{y}}{2}\right] = \frac{\basis{z}}{2} &\mapsto
+  [J\_x, J\_y] = i\, J\_z, \\\\
+  \left[\frac{\basis{y}}{2}, \frac{\basis{z}}{2}\right] = \frac{\basis{x}}{2} &\mapsto
+  [J\_y, J\_z] = i\, J\_x, \\\\
+  \left[\frac{\basis{z}}{2}, \frac{\basis{x}}{2}\right] = \frac{\basis{y}}{2} &\mapsto
+  [J\_z, J\_x] = i\, J\_y.
+\end{align}
+And in any case, this certainly clarifies what to do with expressions
+like the following from Wikipedia:
 \begin{equation}
   \mathcal{R}(\alpha,\beta,\gamma) = e^{-i\alpha\, J\_z}\,
-  e^{-i\beta\, J\_y} e^{-i\gamma\, J\_z}.
+  e^{-i\beta\, J\_y} e^{-i\gamma\, J\_z},
 \end{equation}
-
+which shows that my interpretation of Euler angles is the same as
+Wikipedia's.
 
 ### Mathematica
 
