@@ -20,7 +20,7 @@ In principle, a unit quaternion obeys $\co{\rotor{R}} =
 slower, but) more stable numerically if we explicitly use the
 inversion.
 
-![Spherical-coordinate system; By Andeggs, via Wikimedia Commons]({{ site.url }}/images/3D_Spherical_Coords.svg){: style="float:right;height:200px"}
+![Spherical-coordinate system; By Andeggs, via Wikimedia Commons]({{ site.url }}/spherical_functions/images/3D_Spherical_Coords.svg){: style="float:right;height:200px"}
 
 When necessary to make contact with previous literature, we will use
 the standard spherical coordinates $(\vartheta, \varphi)$, in the
