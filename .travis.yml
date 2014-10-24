@@ -31,7 +31,7 @@ install:
   - git clone --depth=50 --branch=master git://github.com/moble/numpy_quaternion.git
   - cd numpy_quaternion && python setup.py install && cd - && /bin/rm -rf numpy_quaternion
   # - pip install git+git://github.com/moble/numpy_quaternion
-  - nm /home/travis/miniconda/envs/test-environment/lib/python*/site-packages/quaternion/numpy_quaternion*.so
+  # - nm /home/travis/miniconda/envs/test-environment/lib/python*/site-packages/quaternion/numpy_quaternion*.so
   - python -c 'import numpy; print(numpy.__version__)'
   - python -c 'import numba; print(numba.__version__)'
   - python setup.py install
