@@ -33,8 +33,8 @@ numbers $\quat{Q}\_a = \quat{Q}\_1 + i\, \quat{Q}\_z$ and $\quat{Q}\_b
 = \quat{Q}\_y + i\, \quat{Q}\_x$.<sup>[^1]</sup> This is only important because
 it allows us to verify the multiplication law
 \begin{align}
-  (P\,Q)\_a &= P\_a\, Q\_a - \co{P}\_b\, Q\_b, \\\\
-  (P\,Q)\_b &= P\_b\, Q\_a + \co{P}\_a\, Q\_b.
+  (\quat{P}\,\quat{Q})\_a &= \quat{P}\_a\, \quat{Q}\_a - \co{\quat{P}}\_b\, \quat{Q}\_b, \\\\
+  (\quat{P}\,\quat{Q})\_b &= \quat{P}\_b\, \quat{Q}\_a + \co{\quat{P}}\_a\, \quat{Q}\_b.
 \end{align}
 Given a rotor $\rotor{R}$, these two complex numbers are the
 quantities actually used in computing the $\mathfrak{D}$ matrix
@@ -56,6 +56,14 @@ related rotor
 \begin{equation}
   \rthetaphi = e^{\varphi \basis{z}/2}\, e^{\vartheta \basis{y}/2}.
 \end{equation}
+This can be obtained as an `np.quaternion` object in python as
+
+```python
+>>> import numpy as np, quaternion
+>>> vartheta, varphi = 0.1, 0.2
+>>> R_tp = np.quaternion.from_spherical_coords(vartheta, varphi)
+```
+
 Here, rotations are given assuming the right-hand screw rule, so that
 this corresponds to an initial rotation through the angle $\vartheta$
 about $\basis{y}$, followed by a rotation through $\varphi$ about
@@ -103,6 +111,14 @@ $(\alpha, \beta, \gamma)$.  We therefore define the rotor
   R\_{(\alpha, \beta, \gamma)} = e^{\alpha\, \basis{z}/2}\, e^{\beta\,
   \basis{y}/2}\, e^{\gamma\, \basis{z}/2}.
 \end{equation}
+This can be obtained as an `np.quaternion` object in python as
+
+```python
+>>> import numpy as np, quaternion
+>>> alpha, beta, gamma = 0.1, 0.2, 0.3
+>>> R_euler = np.quaternion.from_euler_angles(alpha, beta, gamma)
+```
+
 Note that the rotations are always taken about the *fixed* axes
 $\basis{z}$ and $\basis{y}$.  Also, this is in operator form, so it
 must be read from right to left: The rotation is given by an initial
