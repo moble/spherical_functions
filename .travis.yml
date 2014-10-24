@@ -20,7 +20,6 @@ install:
   - conda update -q conda
   # Useful for debugging any issues with conda
   - conda info -a
-  - cat /home/travis/.condarc
 
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy numba pip pytest
   - source activate test-environment
