@@ -54,7 +54,7 @@ without root privileges.  (Anaconda does this by default anyway.)
 ## Usage
 
 First, we show a very simple example of usage with Euler angles,
-though it break my heart to do
+though it breaks my heart to do
 so:<sup>[1](#euler-angles-are-awful)</sup>
 
 ```python
@@ -94,7 +94,7 @@ willing to guarantee that the input arguments are correct, you can use
 a special hidden form of the function:
 
 ```python
->>> sp._wignerD(R.a, R.b, indices)
+>>> sp._wignerD(R.a, R.b, indices, elements)
 
 ```
 
@@ -104,7 +104,12 @@ defined on [this page](http://moble.github.io/spherical_functions/)
 assumed to be a two-dimensional array of integers, where the second
 dimension has size three, representing the (ℓ, m', m) indices.  This
 avoids certain somewhat slower pure-python operations involving
-argument checking, reshaping, etc.
+argument checking, reshaping, etc.  The `elements` variable must be a
+one-dimensional array of complex numbers (can be uninitialized), which
+will be replaced with the corresponding values on return.  Again,
+however, there is no input dimension checking here, so if you give bad
+inputs, behavior could range from silently wrong to exceptions to
+segmentation faults.  Caveat emptor.
 
 
 ## Acknowledgments
