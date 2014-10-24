@@ -5,6 +5,7 @@ python:
   - "3.4"
 
 before_install:
+  - pip install https://github.com/moble/numpy_quaternion
   - sudo apt-get update
   # You may want to periodically update this, although the conda update
   # conda line below will keep everything up-to-date.  We do this
@@ -27,6 +28,7 @@ install:
   # Replace dep1 dep2 ... with your dependencies
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy numba pip pytest
   - source activate test-environment
+  - type -a pip
   - pip install https://github.com/moble/numpy_quaternion
   - python -c 'import numpy; print(numpy.__version__)'
   - python -c 'import numba; print(numba.__version__)'
