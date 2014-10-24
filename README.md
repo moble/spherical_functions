@@ -45,7 +45,8 @@ pip install git+git://github.com/moble/spherical_functions@master
 
 ## Usage
 
-First, we show a very simple example of usage with Euler angles:[1](#euler-angles-are-awful)
+First, we show a very simple example of usage with Euler angles,
+though it break my heart to do so:<sup>[1](#euler-angles-are-awful)</sup>
 
 ```python
 >>> import spherical_functions as sp
@@ -62,11 +63,13 @@ at once.
 ```
 
 
-#### Euler angles are awful
+###### [1]: Euler angles are awful
 
 Euler angles are pretty much
 [the worst things ever](http://moble.github.io/spherical_functions/#euler-angles)
 and it makes me feel bad even supporting them.  Quaternions are
-faster, more accurate, and basically free of singularities.  You can
-work entirely without Euler angles.  But if you're so old fashioned
-you really can't give them up, they are fully supported.
+faster, more accurate, basically free of singularities, more
+intuitive, and generally easier to understand.  You can work entirely
+without Euler angles (I certainly do).  You absolutely never need
+them.  But if you're so old fashioned that you really can't give them
+up, they are fully supported.
