@@ -24,9 +24,9 @@ before_install:
   - conda info -a
 
 install:
-  # Replace dep1 dep2 ... with your dependencies
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy numba pip pytest
-  - source activate test-environment
+  - conda install numpy numba pip pytest
+  # - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy numba pip pytest
+  # - source activate test-environment
   - pip --version
   - git clone --depth=50 --branch=master git://github.com/moble/numpy_quaternion.git
   - cd numpy_quaternion && python setup.py install && cd - && /bin/rm -rf numpy_quaternion
