@@ -26,6 +26,20 @@ system is (slightly slower, but) more stable numerically if the
 explicit inversion is used.  And since the inversion is such a simple
 operation, we simply use it.
 
+The Wigner $\mathfrak{D}$ matrices are derived in terms of a
+particular split of the quaternion group into two parts.  In
+particular, a quaternion $\quat{Q}$ can be expressed in terms of two
+complex numbers $\quat{Q}\_a = \quat{Q}\_1 + i\, \quat{Q}\_z$ and
+$\quat{Q}\_b = \quat{Q}\_y + i\, \quat{Q}\_x$.[^1] This is only
+important because it allows us to verify the multiplication law
+\begin{align}
+  (P\,Q)\_a &= P\_a\, Q\_a - \co{P}\_b\, Q\_b, \\\\
+  (P\,Q)\_b &= P\_b\, Q\_a + \co{P}\_a\, Q\_b.
+\end{align}
+Given a rotor $\rotor{R}$, these two complex numbers are the
+quantities actually used in computing the $\mathfrak{D}$ matrix
+elements.
+
 ![Spherical-coordinate system; By Andeggs, via Wikimedia Commons]({{ site.url }}/spherical_functions/images/3D_Spherical_Coords.svg){: style="float:right;height:200px"}
 
 When necessary to make contact with previous literature, we will use
@@ -158,10 +172,20 @@ that
 WignerD[{j,m1,m2},psi,theta,phi]
 ```
 
-gives the function $\mathfrak{D}^j_{m_1,m_2}(\psi,\theta,\phi)$, and
+gives the function $\mathfrak{D}^j\_{m\_1,m\_2}(\psi,\theta,\phi)$, and
 the spherical harmonics are related to $\mathfrak{D}$ by
 
 \begin{equation}
   \mathfrak{D}^\ell\_{0,m}(0, \theta, \phi) =
   \sqrt{\frac{4\pi}{2\ell+1}} Y\_{\ell,m} (\theta, \phi).
 \end{equation}
+
+
+
+[^1]: This, of course, is not a productive way of *thinking about*
+      quaternions, but it is a very useful way of calculating with
+      them.  That is, this decomposition into two complex components
+      is something that the user probably does not need to worry
+      about.  It is, however, an isomorphism between quaternions and
+      the usual (awful) presentation of Pauli spinors as two-component
+      complex vectors.
