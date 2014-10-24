@@ -23,7 +23,6 @@ install:
 
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy numba pip pytest
   - source activate test-environment
-  - conda install -c https://conda.binstar.org/asmeurer glibc
   - pip install git+git://github.com/moble/numpy_quaternion
   - python setup.py install
 
