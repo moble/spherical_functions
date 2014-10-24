@@ -29,7 +29,7 @@ install:
   - source activate test-environment
   - pip --version
   - pip install git+git://github.com/moble/numpy_quaternion
-  - nm /home/travis/miniconda/envs/test-environment/lib/python*/site-packages/quaternion/numpy_quaternion.cpython-*.so
+  - nm /home/travis/miniconda/envs/test-environment/lib/python*/site-packages/quaternion/numpy_quaternion*.so || echo "Couldn't do it"
   - python -c 'import numpy; print(numpy.__version__)'
   - python -c 'import numba; print(numba.__version__)'
   - python setup.py install
