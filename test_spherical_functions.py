@@ -16,6 +16,7 @@ from operator import mul    # or mul=lambda x,y:x*y
 from fractions import Fraction
 from functools import reduce
 
+import numba # This is to check to make sure we're actually using numba
 
 special_angles = np.arange(-8*np.pi, 8*np.pi+0.1, np.pi/4.)
 
