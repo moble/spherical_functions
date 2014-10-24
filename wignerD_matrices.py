@@ -1,26 +1,137 @@
 from __future__ import print_function, division, absolute_import
 
-from . import njit, _wigner_coefficient as coeff, binomial_coefficient, epsilon, min_exp, mant_dig
-from math import sqrt, log
+from . import njit, jit, _wigner_coefficient as coeff, binomial_coefficient, epsilon, min_exp, mant_dig, error_on_bad_indices
+import numpy as np
+import quaternion
 
-_log2 = log(2)
+_log2 = np.log(2)
 
-@njit('c16(c16, c16, i4,i4,i4)')
-def wignerD(Ra, Rb, ell, mp, m):
-    """Calculate the Wigner D matrix element
+@njit('b1(i4,i4,i4)')
+def _check_valid_indices(ell, mp, m):
+    if(abs(mp)>ell or abs(m)>ell):
+        return False
+    return True
 
-    Note that no exception is raised if |m|>ell or |mp|>ell, which are
-    not valid values of the input indices; instead, the return value
-    is simply 0.
+#@jit(locals=dict(Ra='c16', Rb='c16', absRa='f8', absRb='f8', absRRatioSquared='f8'))
+#@jit
+def wignerD(*args):
+    """Return elements of the Wigner D matrices
+
+    The conventions used for this function are discussed more fully on
+    <http://moble.github.io/spherical_functions/>.
+
+    Input arguments
+    ===============
+    The input can be in any of the following forms:
+
+    wigner(R, ell, mp, m)
+    wigner(R, indices)
+    wigner(Ra, Rb, ell, mp, m)
+    wigner(Ra, Rb, indices)
+    wigner(alpha, beta, gamma, ell, mp, m)
+    wigner(alpha, beta, gamma, indices)
+
+    Where
+      * R is a unit quaternion (no checking of norm is done)
+      * Ra and Rb are the complex parts of a unit quaternion
+      * alpha, beta, gamma are the Euler angles [shudder...]
+      * ell, mp, m are the integral indices of the D matrix element
+      * indices is an array of [ell,mp,m] indices as above, or simply
+        a list of ell modes, in which case all valid [mp,m] values
+        will be returned
+
+    Note that there is currently no support for half-integral indices,
+    though this would be very simple to implement.  Basically, the
+    lack of support is simply due to the fact that the compiled code
+    can run faster with integer arguments.  Feel free to open an issue
+    on this project's github page if you want support for half-integer
+    arguments <https://github.com/moble/spherical_functions/issues>.
+
+    Also note that, by default, a ValueError will be raised if the
+    input (ell, mp, m) values are not valid.  (For example, |m|>ell.)
+    If instead, you would simply like a return value of 0.0, after
+    importing this module as sp, simply evaluate
+    >>> sp.error_on_bad_indices = False
+
+
+    Return value
+    ============
+
+    One complex number is returned for each component requested.  If
+    the (ell,mp,m) arguments were given explicitly, this means that a
+    single complex scalar is returned.  If more than one component was
+    requested, a one-dimensional numpy array of complex scalars is
+    returned, in the same order as the input.
 
     """
-    # Set up some constants we'll use
+    # Find the rotation from the args
+    if isinstance(args[0], np.quaternion):
+        # The rotation is input as a single quaternion
+        Ra = args[0].a
+        Rb = args[0].b
+        mode_offset = 1
+    elif isinstance(args[0], complex) and isinstance(args[1], complex):
+        # The rotation is input as the two parts of a single quaternion
+        Ra = args[0]
+        Rb = args[1]
+        mode_offset = 2
+    elif isinstance(args[0], (int,float)) and isinstance(args[1], (int,float)) and isinstance(args[2], (int,float)):
+        # UUUUGGGGLLLLYYYY.  The rotation is input as Euler angles
+        R = quaternion.quaternion_from_Euler_angles(args[0], args[1], args[2])
+        mode_offset = 3
+    else:
+        raise ValueError("Can't understand input rotation")
+
+    # These constants are the recurring quantities in the computation
+    # of the matrix elements, so we calculate them here just once
     absRa = abs(Ra)
     absRb = abs(Rb)
     absRRatioSquared = (absRb*absRb/(absRa*absRa) if absRa>epsilon else 0.0)
-    absRa_exp = (int(log(absRa)/_log2) if absRa>epsilon else min_exp)
-    absRb_exp = (int(log(absRb)/_log2) if absRb>epsilon else min_exp)
+    absRa_exp = (int(np.log(absRa)/_log2) if absRa>epsilon else min_exp)
+    absRb_exp = (int(np.log(absRb)/_log2) if absRb>epsilon else min_exp)
 
+    # Find the indices
+    return_scalar = False
+    if(len(args)-mode_offset == 3):
+        # Assume these are the (l, mp, m) indices
+        ell,mp,m = args[mode_offset:]
+        indices = np.array([[ell,mp,m],], dtype=int)
+        if(error_on_bad_indices and _check_valid_indices(*(indices[0]))):
+            raise ValueError("(ell,mp,m)=({0},{1},{2}) is not a valid set of indices for Wigner's D matrix".format(ell,mp,m))
+        return_scalar = True
+    elif(len(args)-mode_offset == 1):
+        indices = np.asarray(args[mode_offset], dtype=int)
+        if(indices.ndim==0 and indices.size==1):
+            # This was just a single ell value
+            ell = indices[0]
+            indices = np.array([[ell, mp, m] for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
+            if(ell==0):
+                return_scalar = True
+        elif(indices.ndim==1 and indices.size>0):
+            # This a list of ell values
+            indices = np.array([[ell, mp, m] for ell in indices for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
+        elif(indices.ndim==2):
+            # This is an array of [ell,mp,m] values
+            if(error_on_bad_indices):
+                for ell,mp,m in indices:
+                    if not _check_valid_indices(ell,mp,m):
+                        raise ValueError("(ell,mp,m)=({0},{1},{2}) is not a valid set of indices for Wigner's D matrix".format(ell,mp,m))
+        else:
+            raise ValueError("Can't understand input indices")
+    else:
+        raise ValueError("Can't understand input indices")
+
+    D_elements = np.empty((len(indices),), dtype=complex)
+    for i,index in enumerate(indices):
+        D_elements[i] = _wignerD(Ra, Rb, absRa, absRb, absRRatioSquared, absRa_exp, absRb_exp, *index)
+
+    if(return_scalar):
+        return D_elements[0]
+    return D_elements
+
+
+@njit('c16(c16, c16, f8, f8, f8, i4, i4, i4, i4, i4)')
+def _wignerD(Ra, Rb, absRa, absRb, absRRatioSquared, absRa_exp, absRb_exp, ell, mp, m):
     # Check validity of indices
     if(abs(mp)>ell or abs(m)>ell):
         return 0.0+0.0j
