@@ -9,10 +9,10 @@ from sys import float_info
 ## Allow the code to function without numba, but discourage it
 ## strongly.
 try:
-    from numbapro import njit
+    from numbapro import njit, jit
 except ImportError:
     try:
-        from numba import njit
+        from numba import njit, jit
     except ImportError:
         import warnings
         warning_text = \
@@ -27,6 +27,7 @@ except ImportError:
                 return fn
             return _identity_decorator_inner
         njit = _identity_decorator_outer
+        jit = _identity_decorator_outer
 
 
 ## Module constants
@@ -34,6 +35,7 @@ ell_max = 32
 epsilon = 1.e-14
 min_exp = float_info.min_exp
 mant_dig = float_info.mant_dig
+error_on_bad_indices = True
 
 ## Factorial
 factorials = array([float(factorial(i)) for i in range(171)])
