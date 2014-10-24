@@ -1,8 +1,8 @@
 from __future__ import print_function, division, absolute_import
 
-from numba import njit
-from math import sqrt
+from . import njit
 from . import factorials
+from math import sqrt
 
 @njit('f8(i4,i4,i4,i4,i4,i4)')
 def wigner3j(j_1, j_2, j_3, m_1, m_2, m_3):
