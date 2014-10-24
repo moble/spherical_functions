@@ -42,8 +42,8 @@ conda install pip numpy numba
 Installation of this package and the `quaternion` package is simple:
 
 ```sh
-pip install git+git://github.com/moble/numpy_quaternions@master
-pip install git+git://github.com/moble/spherical_functions@master
+pip install https://github.com/moble/numpy_quaternion
+pip install https://github.com/moble/spherical_functions
 ```
 
 If you refuse to use anaconda, you might want to use `pip install
