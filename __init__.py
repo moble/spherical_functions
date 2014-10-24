@@ -4,6 +4,7 @@ __all__ = ['wigner3j']
 
 from numpy import array, floor
 from math import factorial, sqrt
+from sys import float_info
 
 ## Allow the code to function without numba, but discourage it
 ## strongly.
@@ -31,7 +32,8 @@ except ImportError:
 ## Module constants
 ell_max = 32
 epsilon = 1.e-14
-
+min_exp = float_info.min_exp
+mant_dig = float_info.mant_dig
 
 ## Factorial
 factorials = array([float(factorial(i)) for i in range(171)])
@@ -71,3 +73,4 @@ def _wigner_coefficient(ell,mp,m):
 
 
 from .wigner3j import wigner3j
+from .wignerD_matrices import wignerD
