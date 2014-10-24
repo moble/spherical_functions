@@ -21,7 +21,7 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy numba pip pytest
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy numba glibc pip pytest
   - source activate test-environment
   - pip install git+git://github.com/moble/numpy_quaternion
   - python setup.py install
