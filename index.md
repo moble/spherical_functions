@@ -27,11 +27,11 @@ explicit inversion is used.  And since the inversion is such a simple
 operation, we simply use it.
 
 The Wigner $\mathfrak{D}$ matrices are derived in terms of a
-particular split of the quaternion group into two parts.  In
-particular, a quaternion $\quat{Q}$ can be expressed in terms of two
-complex numbers $\quat{Q}\_a = \quat{Q}\_1 + i\, \quat{Q}\_z$ and
-$\quat{Q}\_b = \quat{Q}\_y + i\, \quat{Q}\_x$.[^1] This is only
-important because it allows us to verify the multiplication law
+particular split of the quaternion group into two parts.  Explicitly,
+a quaternion $\quat{Q}$ can be expressed in terms of two complex
+numbers $\quat{Q}\_a = \quat{Q}\_1 + i\, \quat{Q}\_z$ and $\quat{Q}\_b
+= \quat{Q}\_y + i\, \quat{Q}\_x$.<sup>[^1]</sup> This is only important because
+it allows us to verify the multiplication law
 \begin{align}
   (P\,Q)\_a &= P\_a\, Q\_a - \co{P}\_b\, Q\_b, \\\\
   (P\,Q)\_b &= P\_b\, Q\_a + \co{P}\_a\, Q\_b.
