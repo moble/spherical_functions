@@ -11,7 +11,10 @@ The conventions for this package are described in detail on
 
 ## Dependencies
 
-The only true requirements for this code are `python` and `numpy`.
+The only true requirements for this code are `python` and `numpy`, as
+well as my accompanying
+[`quaternion`](https://github.com/moble/numpy_quaternion) package
+(installation for the latter is shown below).
 
 However, this package can automatically use
 [`numba`](http://numba.pydata.org/), which uses
@@ -36,11 +39,16 @@ conda install pip numpy numba
 
 ## Installation
 
-Installation of this package is simple:
+Installation of this package and the `quaternion` package is simple:
 
 ```sh
+pip install git+git://github.com/moble/numpy_quaternions@master
 pip install git+git://github.com/moble/spherical_functions@master
 ```
+
+If you refuse to use anaconda, you might want to use `pip install
+--user ...` in each case, to install inside your home directory
+without root privileges.  (Anaconda does this by default anyway.)
 
 
 ## Usage
@@ -51,17 +59,63 @@ so:<sup>[1](#euler-angles-are-awful)</sup>
 
 ```python
 >>> import spherical_functions as sp
+>>> alpha, beta, gamma = 0.1, 0.2, 0.3
+>>> ell,mp,m = 3,2,1
+>>> sp.wignerD(alpha, beta, gamma, ell, mp, m)
+
 ```
 
-If you need to calculate values of the 𝔇 matrix elements or the Ylm
-modes for many values of (ℓ, m', m), it is more efficient to do so all
-at once.
+Of course, it's always better to use unit quaternions to describe
+rotations:
 
 ```python
->>> modes = [[ell,mp,m] for ell in range(2,9)
-... for mp in range(-ell, ell+1) for m in range(-ell, ell+1)]
->>> sp.wignerD(R, modes)
+>>> import numpy as np
+>>> import quaternion
+>>> R = np.quaternion(1,2,3,4).normalized()
+>>> ell,mp,m = 3,2,1
+>>> sp.wignerD(R, ell, mp, m)
+
 ```
+
+If you need to calculate values of the 𝔇<sup>(ℓ)</sup> matrix elements
+for many values of (ℓ, m', m), it is more efficient to do so all at
+once.  The following calculates all modes for ℓ from 2 to 8
+(inclusive):
+
+```python
+>>> indices = np.array([[ell,mp,m] for ell in range(2,9)
+... for mp in range(-ell, ell+1) for m in range(-ell, ell+1)])
+>>> sp.wignerD(R, indices)
+
+```
+
+Finally, if you really need to put the pedal to the metal, and are
+willing to guarantee that the input arguments are correct, you can use
+a special hidden form of the function:
+
+```python
+>>> sp._wignerD(R.a, R.b, indices)
+
+```
+
+Here, `R.a` and `R.b` are the two complex parts of the quaternion
+defined on [this page](http://moble.github.io/spherical_functions/)
+(though the user need not care about that).  The `indices` variable is
+assumed to be a two-dimensional array of integers, where the second
+dimension has size three, representing the (ℓ, m', m) indices.  This
+avoids certain somewhat slower pure-python operations involving
+argument checking, reshaping, etc.
+
+
+## Acknowledgments
+
+I very much appreciate Barry Wardell's help in sorting out the
+relationships between my conventions and those of other people and
+software packages (especially Mathematica's crazy conventions).
+
+This work was supported in part by the Sherman Fairchild Foundation
+and by NSF Grants No. PHY-1306125 and AST-1333129.
+
 
 <br/><br/>
 ###### <sup>1</sup> Euler angles are awful
