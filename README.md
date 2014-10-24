@@ -4,7 +4,7 @@ Python/numba package for evaluating and transforming Wigner's 𝔇
 matrices, Wigner's 3-j symbols, and spin-weighted (and scalar)
 spherical harmonics.  These functions are evaluated directly in terms
 of quaternions, as well as in the more standard forms of spherical
-coordinates and Euler angles.<sup>[1](#euler-angles-are-awful)</sup>
+coordinates and Euler angles.<sup>[1](#1-euler-angles-are-awful)</sup>
 
 The conventions for this package are described in detail on
 [this page](http://moble.github.io/spherical_functions/).
@@ -63,11 +63,11 @@ at once.
 >>> sp.wignerD(R, modes)
 ```
 
-
+<br/><br/>
 ###### <sup>1</sup> Euler angles are awful
 
 Euler angles are pretty much
-[the worst things ever](http://moble.github.io/spherical_functions/#euler-angles)
+[the worst things ever](http://moble.github.io/spherical_functions/#1-euler-angles)
 and it makes me feel bad even supporting them.  Quaternions are
 faster, more accurate, basically free of singularities, more
 intuitive, and generally easier to understand.  You can work entirely
