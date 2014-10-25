@@ -77,18 +77,12 @@ def wignerD(*args):
         mode_offset = 2
     elif isinstance(args[0], (int,float)) and isinstance(args[1], (int,float)) and isinstance(args[2], (int,float)):
         # UUUUGGGGLLLLYYYY.  The rotation is input as Euler angles
-        R = quaternion.quaternion_from_Euler_angles(args[0], args[1], args[2])
+        R = quaternion.from_Euler_angles(args[0], args[1], args[2])
+        Ra = R.a
+        Rb = R.b
         mode_offset = 3
     else:
         raise ValueError("Can't understand input rotation")
-
-    # These constants are the recurring quantities in the computation
-    # of the matrix elements, so we calculate them here just once
-    absRa = abs(Ra)
-    absRb = abs(Rb)
-    absRRatioSquared = (absRb*absRb/(absRa*absRa) if absRa>epsilon else 0.0)
-    absRa_exp = (int(np.log(absRa)/_log2) if absRa>epsilon else min_exp)
-    absRb_exp = (int(np.log(absRb)/_log2) if absRb>epsilon else min_exp)
 
     # Find the indices
     return_scalar = False
@@ -121,65 +115,97 @@ def wignerD(*args):
     else:
         raise ValueError("Can't understand input indices")
 
-    D_elements = np.empty((len(indices),), dtype=complex)
-    for i,index in enumerate(indices):
-        D_elements[i] = _wignerD(Ra, Rb, absRa, absRb, absRRatioSquared, absRa_exp, absRb_exp, *index)
+    elements = np.empty((len(indices),), dtype=complex)
+    _wignerD(Ra, Rb, indices, elements)
 
     if(return_scalar):
-        return D_elements[0]
-    return D_elements
+        return elements[0]
+    return elements
 
+@njit('void(complex128, complex128, int64[:,:], complex128[:])')
+def _wignerD(Ra, Rb, indices, elements):
+    """Main work function for computing Wigner D matrix elements
 
-@njit('c16(c16, c16, f8, f8, f8, i4, i4, i4, i4, i4)')
-def _wignerD(Ra, Rb, absRa, absRb, absRRatioSquared, absRa_exp, absRb_exp, ell, mp, m):
-    # Check validity of indices
-    if(abs(mp)>ell or abs(m)>ell):
-        return 0.0+0.0j
+    This is the core function that does all the work in the
+    computation, but it is strict about its input, and does not check
+    them for validity.
 
-    if(absRa<=epsilon or 2*absRa_exp*(mp-m)<min_exp+mant_dig):
-        if mp!=m:
-            return 0.0j
-        else:
-            if (ell+mp)%2==0:
-                return Rb**(2*m)
+    Input arguments
+    ===============
+    _wignerD(Ra, Rb, indices, elements)
+
+      * Ra, Rb are the complex components of the rotor
+      * indices is an array of integers [ell,mp,m]
+      * elements is an array of complex with length equal to the first
+        dimension of indices
+
+    The `elements` variable is needed because numba cannot create
+    arrays at the moment, but this is modified in place.
+
+    """
+    N = indices.shape[0]
+
+    # These constants are the recurring quantities in the computation
+    # of the matrix elements, so we calculate them here just once
+    absRa = abs(Ra)
+    absRb = abs(Rb)
+    absRRatioSquared = (absRb*absRb/(absRa*absRa) if absRa>epsilon else 0.0)
+    absRa_exp = (int(np.log(absRa)/_log2) if absRa>epsilon else min_exp)
+    absRb_exp = (int(np.log(absRb)/_log2) if absRb>epsilon else min_exp)
+
+    for i in range(N):
+        ell = indices[i,0]
+        mp = indices[i,1]
+        m = indices[i,2]
+
+        if(abs(mp)>ell or abs(m)>ell):
+            elements[i] = 0.0+0.0j
+
+        elif(absRa<=epsilon or 2*absRa_exp*(mp-m)<min_exp+mant_dig):
+            if mp!=m:
+                elements[i] = 0.0j
             else:
-                return -Rb**(2*m)
-
-    if(absRb<=epsilon or 2*absRb_exp*(mp-m)<min_exp+mant_dig):
-        if mp!=m:
-            return 0.0j
-        else:
-            return Ra**(2*m)
-
-    rhoMin = max(0,mp-m)
-    rhoMax = min(ell+mp,ell-m)
-    if(absRa < 1.e-3):
-        # In this branch, we deal with NANs in certain cases when
-        # absRa is small by separating it out from the main sum,
-        Prefactor = coeff(ell, mp, m) * Ra**(m+mp) * Rb**(m-mp)
-        absRaSquared = absRa*absRa
-        absRbSquared = absRb*absRb
-        Sum = 0.0
-        for rho in range(rhoMax, rhoMin-1, -1):
-            aTerm = absRaSquared**(ell-m-rho);
-            if(aTerm != aTerm or aTerm<1.e-100):
-                Sum *= absRbSquared
-            else:
-                if rho%2==0:
-                    Sum = ( binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m) * aTerm
-                            + Sum * absRbSquared )
+                if (ell+mp)%2==0:
+                    elements[i] = Rb**(2*m)
                 else:
-                    Sum = ( -binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m) * aTerm
-                            + Sum * absRbSquared )
-        return Prefactor * Sum * absRbSquared**rhoMin
-    else:
-        Prefactor = coeff(ell, mp, m) * absRa**(2*ell-2*m) * Ra**(m+mp) * Rb**(m-mp)
-        Sum = 0.0
-        for rho in range(rhoMax, rhoMin-1, -1):
-            if rho%2==0:
-                Sum = (  binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m)
-                         + Sum * absRRatioSquared )
+                    elements[i] = -Rb**(2*m)
+
+        elif(absRb<=epsilon or 2*absRb_exp*(mp-m)<min_exp+mant_dig):
+            if mp!=m:
+                elements[i] = 0.0j
             else:
-                Sum = ( -binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m)
-                         + Sum * absRRatioSquared )
-        return Prefactor * Sum * absRRatioSquared**rhoMin
+                elements[i] = Ra**(2*m)
+
+        else:
+            rhoMin = max(0,mp-m)
+            rhoMax = min(ell+mp,ell-m)
+            if(absRa < 1.e-3):
+                # In this branch, we deal with NANs in certain cases when
+                # absRa is small by separating it out from the main sum,
+                Prefactor = coeff(ell, mp, m) * Ra**(m+mp) * Rb**(m-mp)
+                absRaSquared = absRa*absRa
+                absRbSquared = absRb*absRb
+                Sum = 0.0
+                for rho in range(rhoMax, rhoMin-1, -1):
+                    aTerm = absRaSquared**(ell-m-rho);
+                    if(aTerm != aTerm or aTerm<1.e-100):
+                        Sum *= absRbSquared
+                    else:
+                        if rho%2==0:
+                            Sum = ( binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m) * aTerm
+                                    + Sum * absRbSquared )
+                        else:
+                            Sum = ( -binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m) * aTerm
+                                    + Sum * absRbSquared )
+                elements[i] = Prefactor * Sum * absRbSquared**rhoMin
+            else:
+                Prefactor = coeff(ell, mp, m) * absRa**(2*ell-2*m) * Ra**(m+mp) * Rb**(m-mp)
+                Sum = 0.0
+                for rho in range(rhoMax, rhoMin-1, -1):
+                    if rho%2==0:
+                        Sum = (  binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m)
+                                 + Sum * absRRatioSquared )
+                    else:
+                        Sum = ( -binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m)
+                                 + Sum * absRRatioSquared )
+                elements[i] = Prefactor * Sum * absRRatioSquared**rhoMin
