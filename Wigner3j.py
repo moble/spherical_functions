@@ -28,6 +28,8 @@ def Wigner3j(j_1, j_2, j_3, m_1, m_2, m_3):
     """
     if(m_1 + m_2 + m_3 != 0):
         return 0
+    if( (abs(m_1) > j_1) or (abs(m_2) > j_2) or (abs(m_3) > j_3) ):
+        return 0
     prefid = (1 if (j_1 - j_2 - m_3)%2==0 else -1)
     m_3 = -m_3
     a1 = j_1 + j_2 - j_3
@@ -40,8 +42,6 @@ def Wigner3j(j_1, j_2, j_3, m_1, m_2, m_3):
     if(a3 < 0):
         return 0
 
-    if( (abs(m_1) > j_1) or (abs(m_2) > j_2) or (abs(m_3) > j_3) ):
-        return 0
 
     argsqrt = ( factorials[j_1 + j_2 - j_3] *
                 factorials[j_1 - j_2 + j_3] *
