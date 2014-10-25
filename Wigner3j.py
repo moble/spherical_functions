@@ -5,11 +5,11 @@ from . import factorials
 from math import sqrt
 
 @njit('f8(i4,i4,i4,i4,i4,i4)')
-def wigner3j(j_1, j_2, j_3, m_1, m_2, m_3):
+def Wigner3j(j_1, j_2, j_3, m_1, m_2, m_3):
     """Calculate the Wigner 3j symbol `Wigner3j(j_1,j_2,j_3,m_1,m_2,m_3)`
 
     This function is copied with minor modification from
-    sympy.physics.wigner, as written by Jens Rasch.
+    sympy.physics.Wigner, as written by Jens Rasch.
 
     The inputs must be integers.  (Half integer arguments are
     sacrificed so that we can use numba.)  Nonzero return quantities
@@ -19,10 +19,10 @@ def wigner3j(j_1, j_2, j_3, m_1, m_2, m_3):
     Examples
     ========
 
-    >>> from spherical_functions import wigner3j
-    >>> wigner3j(2, 6, 4, 0, 0, 0)
+    >>> from spherical_functions import Wigner3j
+    >>> Wigner3j(2, 6, 4, 0, 0, 0)
     0.186989398002
-    >>> wigner3j(2, 6, 4, 0, 0, 1)
+    >>> Wigner3j(2, 6, 4, 0, 0, 1)
     0
 
     """

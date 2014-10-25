@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 
-from . import njit, jit, _wigner_coefficient as coeff, binomial_coefficient, epsilon, min_exp, mant_dig, error_on_bad_indices
+from . import njit, jit, _Wigner_coefficient as coeff, binomial_coefficient, epsilon, min_exp, mant_dig, error_on_bad_indices
 import numpy as np
 import quaternion
 
@@ -14,7 +14,7 @@ def _check_valid_indices(ell, mp, m):
 
 #@jit(locals=dict(Ra='c16', Rb='c16', absRa='f8', absRb='f8', absRRatioSquared='f8'))
 #@jit
-def wignerD(*args):
+def WignerD(*args):
     """Return elements of the Wigner D matrices
 
     The conventions used for this function are discussed more fully on
@@ -24,12 +24,12 @@ def wignerD(*args):
     ===============
     The input can be in any of the following forms:
 
-    wigner(R, ell, mp, m)
-    wigner(R, indices)
-    wigner(Ra, Rb, ell, mp, m)
-    wigner(Ra, Rb, indices)
-    wigner(alpha, beta, gamma, ell, mp, m)
-    wigner(alpha, beta, gamma, indices)
+    Wigner(R, ell, mp, m)
+    Wigner(R, indices)
+    Wigner(Ra, Rb, ell, mp, m)
+    Wigner(Ra, Rb, indices)
+    Wigner(alpha, beta, gamma, ell, mp, m)
+    Wigner(alpha, beta, gamma, indices)
 
     Where
       * R is a unit quaternion (no checking of norm is done)
@@ -116,14 +116,14 @@ def wignerD(*args):
         raise ValueError("Can't understand input indices")
 
     elements = np.empty((len(indices),), dtype=complex)
-    _wignerD(Ra, Rb, indices, elements)
+    _WignerD(Ra, Rb, indices, elements)
 
     if(return_scalar):
         return elements[0]
     return elements
 
 @njit('void(complex128, complex128, int64[:,:], complex128[:])')
-def _wignerD(Ra, Rb, indices, elements):
+def _WignerD(Ra, Rb, indices, elements):
     """Main work function for computing Wigner D matrix elements
 
     This is the core function that does all the work in the
@@ -132,7 +132,7 @@ def _wignerD(Ra, Rb, indices, elements):
 
     Input arguments
     ===============
-    _wignerD(Ra, Rb, indices, elements)
+    _WignerD(Ra, Rb, indices, elements)
 
       * Ra, Rb are the complex components of the rotor
       * indices is an array of integers [ell,mp,m]

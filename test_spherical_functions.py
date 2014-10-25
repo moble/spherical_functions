@@ -49,8 +49,9 @@ def test_ladder_operator_coefficient():
             b = sp.ladder_operator_coefficient(ell,m)
             assert a==b
 
-def test_wigner3j():
+def test_Wigner3j():
     pass
+    # assert sp.Wigner3j
 
 
 if __name__=='__main__':

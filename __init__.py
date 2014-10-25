@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 
-__all__ = ['wigner3j']
+__all__ = ['Wigner3j']
 
 from numpy import array, floor
 from math import factorial, sqrt
@@ -64,15 +64,15 @@ def ladder_operator_coefficient(ell,m):
 
 
 ## Coefficients used in constructing the Wigner D matrices
-_wigner_coefficients = array([sqrt( factorials[ell+m]*factorials[ell-m] / (factorials[ell+mp]*factorials[ell-mp] ) )
+_Wigner_coefficients = array([sqrt( factorials[ell+m]*factorials[ell-m] / (factorials[ell+mp]*factorials[ell-mp] ) )
                               for ell in range(ell_max+1)
                               for mp in range(-ell, ell+1)
                               for m in range(-ell, ell+1) ])
 
 @njit('f8(i4,i4,i4)')
-def _wigner_coefficient(ell,mp,m):
-    return _wigner_coefficients[ell*(ell*(4*ell + 6) + 5)//3 + mp*(2*ell + 1) + m]
+def _Wigner_coefficient(ell,mp,m):
+    return _Wigner_coefficients[ell*(ell*(4*ell + 6) + 5)//3 + mp*(2*ell + 1) + m]
 
 
-from .wigner3j import wigner3j
-from .wignerD import wignerD
+from .Wigner3j import Wigner3j
+from .WignerD import WignerD
