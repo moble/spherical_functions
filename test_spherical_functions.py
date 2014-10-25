@@ -50,9 +50,48 @@ def test_ladder_operator_coefficient():
             assert a==b
 
 def test_Wigner3j():
-    pass
-    # assert sp.Wigner3j
+    assert abs(sp.Wigner3j(2, 6, 4, 0, 0, 0)-0.1869893980016914) < 1.e-15
+    ## The following test various symmetries and other properties fo
+    ## the Wigner 3-j symbols
+    j_max = 8
+    for j1 in range(j_max):
+        for j2 in range(j_max):
+            for j3 in range(j_max):
+                # Selection rule
+                if((j1+j2+j3)%2!=0):
+                    assert abs(sp.Wigner3j(j1,j2,j3,0,0,0)) < 1.e-15
+                for m1 in range(-j1,j1+1):
+                    for m2 in range(-j2,j2+1):
+                        # Selection rule
+                        if(abs(j1-j2)>j3 or j1+j2<j3):
+                            assert abs(sp.Wigner3j(j1,j2,j3,m1,m2,-m1-m2)) < 1.e-15
+                        # Test even permutations
+                        assert abs(sp.Wigner3j(j1,j2,j3,m1,m2,-m1-m2)-sp.Wigner3j(j2,j3,j1,m2,-m1-m2,m1)) < 1.e-15
+                        assert abs(sp.Wigner3j(j1,j2,j3,m1,m2,-m1-m2)-sp.Wigner3j(j2,j3,j1,m2,-m1-m2,m1)) < 1.e-15
+                        assert abs(sp.Wigner3j(j1,j2,j3,m1,m2,-m1-m2)-sp.Wigner3j(j3,j1,j2,-m1-m2,m1,m2)) < 1.e-15
+                        # Test odd permutations
+                        assert abs(sp.Wigner3j(j1,j2,j3,m1,m2,-m1-m2)-(-1)**(j1+j2+j3)*sp.Wigner3j(j2,j1,j3,m2,m1,-m1-m2)) < 1.e-15
+                        assert abs(sp.Wigner3j(j1,j2,j3,m1,m2,-m1-m2)-(-1)**(j1+j2+j3)*sp.Wigner3j(j1,j3,j2,m1,-m1-m2,m2)) < 1.e-15
+                        # Test sign change
+                        assert abs(sp.Wigner3j(j1,j2,j3,m1,m2,-m1-m2)-(-1)**(j1+j2+j3)*sp.Wigner3j(j1,j2,j3,-m1,-m2,m1+m2)) < 1.e-15
+                        # Regge symmetries (skip for non-integer values)
+                        if((j2+j3-m1)%2==0) :
+                            assert abs(sp.Wigner3j(j1,j2,j3,m1,m2,-m1-m2)
+                                       -sp.Wigner3j(j1,(j2+j3-m1)//2,(j2+j3+m1)//2,j3-j2,(j2-j3-m1)//2+m1+m2,(j2-j3+m1)//2-m1-m2)) < 1.e-15
+                        if((j2+j3-m1)%2==0) :
+                            assert abs(sp.Wigner3j(j1,j2,j3,m1,m2,-m1-m2)
+                                       -sp.Wigner3j(j1,(j2+j3-m1)//2,(j2+j3+m1)//2,j3-j2,(j2-j3-m1)//2+m1+m2,(j2-j3+m1)//2-m1-m2)) < 1.e-15
+                        if((j2+j3+m1)%2==0 and (j1+j3+m2)%2==0 and (j1+j2-m1-m2)%2==0):
+                            assert abs(sp.Wigner3j(j1,j2,j3,m1,m2,-m1-m2)
+                                       -(-1)**(j1+j2+j3)*sp.Wigner3j((j2+j3+m1)//2,(j1+j3+m2)//2,(j1+j2-m1-m2)//2,
+                                                                     j1-(j2+j3-m1)//2,j2-(j1+j3-m2)//2,j3-(j1+j2+m1+m2)//2)) < 1.e-15
+                        # Selection rules
 
 
 if __name__=='__main__':
     print("This script is intended to be run through py.test")
+
+
+
+
+
