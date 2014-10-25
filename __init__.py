@@ -75,4 +75,4 @@ def _wigner_coefficient(ell,mp,m):
 
 
 from .wigner3j import wigner3j
-from .wignerD_matrices import wignerD
+from .wignerD import wignerD
