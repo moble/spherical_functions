@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 
-from . import njit, jit, _Wigner_coefficient as coeff, binomial_coefficient, epsilon, min_exp, mant_dig, error_on_bad_indices
+from . import njit, jit, int64, _Wigner_coefficient as coeff, binomial_coefficient, epsilon, min_exp, mant_dig, error_on_bad_indices
 import numpy as np
 import quaternion
 
@@ -98,12 +98,12 @@ def WignerD(*args):
         if(indices.ndim==0 and indices.size==1):
             # This was just a single ell value
             ell = indices[0]
-            indices = np.array([[ell, mp, m] for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
+            indices = np.array([[ell, mp, m] for mp in xrange(-ell,ell+1) for m in xrange(-ell,ell+1)])
             if(ell==0):
                 return_scalar = True
         elif(indices.ndim==1 and indices.size>0):
             # This a list of ell values
-            indices = np.array([[ell, mp, m] for ell in indices for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
+            indices = np.array([[ell, mp, m] for ell in indices for mp in xrange(-ell,ell+1) for m in xrange(-ell,ell+1)])
         elif(indices.ndim==2):
             # This is an array of [ell,mp,m] values
             if(error_on_bad_indices):
@@ -150,10 +150,10 @@ def _WignerD(Ra, Rb, indices, elements):
     absRa = abs(Ra)
     absRb = abs(Rb)
     absRRatioSquared = (absRb*absRb/(absRa*absRa) if absRa>epsilon else 0.0)
-    absRa_exp = (int(np.log(absRa)/_log2) if absRa>epsilon else min_exp)
-    absRb_exp = (int(np.log(absRb)/_log2) if absRb>epsilon else min_exp)
+    absRa_exp = (int64(np.log(absRa)/_log2) if absRa>epsilon else min_exp)
+    absRb_exp = (int64(np.log(absRb)/_log2) if absRb>epsilon else min_exp)
 
-    for i in range(N):
+    for i in xrange(N):
         ell = indices[i,0]
         mp = indices[i,1]
         m = indices[i,2]
@@ -186,7 +186,7 @@ def _WignerD(Ra, Rb, indices, elements):
                 absRaSquared = absRa*absRa
                 absRbSquared = absRb*absRb
                 Sum = 0.0
-                for rho in range(rhoMax, rhoMin-1, -1):
+                for rho in xrange(rhoMax, rhoMin-1, -1):
                     aTerm = absRaSquared**(ell-m-rho);
                     if(aTerm != aTerm or aTerm<1.e-100):
                         Sum *= absRbSquared
@@ -201,7 +201,7 @@ def _WignerD(Ra, Rb, indices, elements):
             else:
                 Prefactor = coeff(ell, mp, m) * absRa**(2*ell-2*m) * Ra**(m+mp) * Rb**(m-mp)
                 Sum = 0.0
-                for rho in range(rhoMax, rhoMin-1, -1):
+                for rho in xrange(rhoMax, rhoMin-1, -1):
                     if rho%2==0:
                         Sum = (  binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m)
                                  + Sum * absRRatioSquared )

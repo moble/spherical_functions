@@ -28,7 +28,6 @@ def nCk(n,k):
     """Simple binomial function"""
     return int( reduce(mul, (Fraction(n-i, i+1) for i in range(k)), 1) )
 
-
 def test_factorials():
     for i in range(len(sp.factorials)):
         assert sp.factorial(i) == sp.factorials[i]
@@ -85,8 +84,14 @@ def test_Wigner3j():
                             assert abs(sp.Wigner3j(j1,j2,j3,m1,m2,-m1-m2)
                                        -(-1)**(j1+j2+j3)*sp.Wigner3j((j2+j3+m1)//2,(j1+j3+m2)//2,(j1+j2-m1-m2)//2,
                                                                      j1-(j2+j3-m1)//2,j2-(j1+j3-m2)//2,j3-(j1+j2+m1+m2)//2)) < 1.e-15
-                        # Selection rules
 
+def test_WignerD():
+    # Test the representation property for special and random angles
+    # Test symmetries
+    # Test rotations about the z axis
+    # Test various rotations onto the -z axis
+    # Test the special angles
+    pass
 
 if __name__=='__main__':
     print("This script is intended to be run through py.test")

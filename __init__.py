@@ -9,10 +9,10 @@ from sys import float_info
 ## Allow the code to function without numba, but discourage it
 ## strongly.
 try:
-    from numbapro import njit, jit
+    from numbapro import njit, jit, int64
 except ImportError:
     try:
-        from numba import njit, jit
+        from numba import njit, jit, int64
     except ImportError:
         import warnings
         warning_text = \
@@ -28,6 +28,7 @@ except ImportError:
             return _identity_decorator_inner
         njit = _identity_decorator_outer
         jit = _identity_decorator_outer
+        int64=int
 
 
 ## Module constants
@@ -75,4 +76,5 @@ def _Wigner_coefficient(ell,mp,m):
 
 
 from .Wigner3j import Wigner3j
-from .WignerD import WignerD
+from .WignerD import WignerD, _WignerD
+#from .SWSH import SWSH, SpinWeightedSphericalHarmonic, SphericalHarmonic

@@ -58,7 +58,7 @@ def Wigner3j(j_1, j_2, j_3, m_1, m_2, m_3):
     imin = max(-j_3 + j_1 + m_2, max(-j_3 + j_2 - m_1, 0))
     imax = min(j_2 + m_2, min(j_1 - m_1, j_1 + j_2 - j_3))
     sumres = 0.0;
-    for ii in range(imin,imax+1):
+    for ii in xrange(imin,imax+1):
         den = ( factorials[ii] *
                 factorials[ii + j_3 - j_1 - m_2] *
                 factorials[j_2 + m_2 - ii] *
