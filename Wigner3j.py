@@ -1,8 +1,11 @@
 from __future__ import print_function, division, absolute_import
 
-from . import njit
+from . import njit, IS_PY3
 from . import factorials
 from math import sqrt
+
+if IS_PY3:
+    xrange = range
 
 @njit('f8(i4,i4,i4,i4,i4,i4)')
 def Wigner3j(j_1, j_2, j_3, m_1, m_2, m_3):
@@ -41,7 +44,6 @@ def Wigner3j(j_1, j_2, j_3, m_1, m_2, m_3):
     a3 = -j_1 + j_2 + j_3;
     if(a3 < 0):
         return 0
-
 
     argsqrt = ( factorials[j_1 + j_2 - j_3] *
                 factorials[j_1 - j_2 + j_3] *

@@ -10,11 +10,13 @@ from sys import float_info
 ## strongly.
 try:
     from numbapro import njit, jit, int64
+    from numba.utils import IS_PY3
 except ImportError:
     try:
         from numba import njit, jit, int64
+        from numba.utils import IS_PY3
     except ImportError:
-        import warnings
+        import warnings, sys
         warning_text = \
             "\n\n" + "!"*53 + "\n" + \
             "Could not import from either numbapro or numba.\n" + \
@@ -29,7 +31,7 @@ except ImportError:
         njit = _identity_decorator_outer
         jit = _identity_decorator_outer
         int64=int
-
+        IS_PY3 = (sys.version_info[:2] >= (3, 0))
 
 ## Module constants
 ell_max = 32
