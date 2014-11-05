@@ -1,13 +1,10 @@
 from __future__ import print_function, division, absolute_import
 
-from . import (njit, jit, int64, IS_PY3,
-               _Wigner_coefficient as coeff, binomial_coefficient,
-               epsilon, min_exp, mant_dig, error_on_bad_indices)
 import numpy as np
 import quaternion
-
-if IS_PY3:
-    xrange = range
+from . import (_Wigner_coefficient as coeff, binomial_coefficient,
+               epsilon, min_exp, mant_dig, error_on_bad_indices)
+from .numba import njit, jit, int64, xrange
 
 _log2 = np.log(2)
 

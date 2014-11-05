@@ -1,11 +1,8 @@
 from __future__ import print_function, division, absolute_import
 
-from . import njit, IS_PY3
-from . import factorials
 from math import sqrt
-
-if IS_PY3:
-    xrange = range
+from . import factorials
+from .numba import njit, xrange
 
 @njit('f8(i4,i4,i4,i4,i4,i4)')
 def Wigner3j(j_1, j_2, j_3, m_1, m_2, m_3):
