@@ -4,7 +4,7 @@ import numpy as np
 import quaternion
 from . import (_Wigner_coefficient as coeff, binomial_coefficient,
                epsilon, min_exp, mant_dig, error_on_bad_indices)
-from .numba import njit, jit, int64, xrange
+from quaternion.numba_wrapper import njit, jit, int64, xrange
 
 _log2 = np.log(2)
 

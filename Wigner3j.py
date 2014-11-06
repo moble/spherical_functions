@@ -2,7 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 from math import sqrt
 from . import factorials
-from .numba import njit, xrange
+from quaternion.numba_wrapper import njit, xrange
 
 @njit('f8(i4,i4,i4,i4,i4,i4)')
 def Wigner3j(j_1, j_2, j_3, m_1, m_2, m_3):
