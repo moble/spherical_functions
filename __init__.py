@@ -10,7 +10,7 @@ from quaternion.numba_wrapper import njit
 
 ## Module constants
 ell_max = 32
-epsilon = 1.e-14
+epsilon = 1.e-15
 min_exp = float_info.min_exp
 mant_dig = float_info.mant_dig
 error_on_bad_indices = True
