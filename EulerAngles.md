@@ -19,10 +19,10 @@ literature.  And while we can work entirely without Euler angles.  So,
 to make contact with that literature, we will need to choose a
 convention for constructing a rotation from a triple of angles
 $(\alpha, \beta, \gamma)$.  We therefore define the rotor
-\begin{equation}
+\begin{equation\*}
   R\_{(\alpha, \beta, \gamma)} = e^{\alpha\, \basis{z}/2}\, e^{\beta\,
   \basis{y}/2}\, e^{\gamma\, \basis{z}/2}.
-\end{equation}
+\end{equation\*}
 This can be obtained as an `np.quaternion` object in python as
 
 ```python
@@ -45,27 +45,27 @@ It is worth noting that the standard right-handed basis vectors
 $(\basis{x}, \basis{y}, \basis{z})$ can be identified with generators
 of rotations usually seen in quantum mechanics (or generally just
 special-function theory) according to the rule
-\begin{align}
+\begin{align\*}
   \frac{\basis{x}}{2} &\mapsto -i\, J\_x, \\\\
   \frac{\basis{y}}{2} &\mapsto -i\, J\_y, \\\\
   \frac{\basis{z}}{2} &\mapsto -i\, J\_z.
-\end{align}
+\end{align\*}
 This is important when relating quaternion expressions to expressions
 more commonly seen in the literature.  In particular, with this
 identification, we have the usual commutation relations
-\begin{align}
+\begin{align\*}
   \left[\frac{\basis{x}}{2}, \frac{\basis{y}}{2}\right] = \frac{\basis{z}}{2} &\mapsto
   [J\_x, J\_y] = i\, J\_z, \\\\
   \left[\frac{\basis{y}}{2}, \frac{\basis{z}}{2}\right] = \frac{\basis{x}}{2} &\mapsto
   [J\_y, J\_z] = i\, J\_x, \\\\
   \left[\frac{\basis{z}}{2}, \frac{\basis{x}}{2}\right] = \frac{\basis{y}}{2} &\mapsto
   [J\_z, J\_x] = i\, J\_y.
-\end{align}
+\end{align\*}
 And in any case, this certainly clarifies what to do with expressions
 like the following from Wikipedia:
-\begin{equation}
+\begin{equation\*}
   \mathcal{R}(\alpha,\beta,\gamma) = e^{-i\alpha\, J\_z}\,
   e^{-i\beta\, J\_y} e^{-i\gamma\, J\_z},
-\end{equation}
+\end{equation\*}
 which shows that my interpretation of Euler angles is the same as
 Wikipedia's.
