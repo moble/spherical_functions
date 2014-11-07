@@ -97,7 +97,8 @@ those terms in Eq. \eqref{eq:QuaternionComponentProducts}.  This leads
 us to use the
 [binomial expansion](https://en.wikipedia.org/wiki/Binomial_theorem).
 After a little simplification, we can express the result as
-\begin{align\*}
+\begin{equation}
+  \label{eq:DAnalytically}
   \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
   = \sum\_{\rho} \binom{\ell+m'} {\rho}\, \binom{\ell-m'}
   {\ell-\rho-m}\, (-1)^{\rho}\, \quat{R}\_{a}^{\ell+m'-\rho}\,
@@ -105,7 +106,7 @@ After a little simplification, we can express the result as
   \quat{R}\_{b}^{\rho-m'+m}\, \co{\quat{R}}\_{b}^{\rho}\,
   \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\,
       (\ell-m')! } }.
-\end{align\*}
+\end{equation}
 Now, this expression is not the best way to implement the calculation
 in the code.  The reason is that we would need to take a bunch of
 exponents of complex numbers, and there's the possibility that the sum
@@ -146,28 +147,84 @@ For example, we can simplify the above as
   (-1)^{\rho}\, \left( \frac{\lvert \quat{R}\_{b} \rvert^2}
   {\lvert \quat{R}\_{a} \rvert^2} \right)^{\rho}.
 \end{align}
-This last expression can be evaluated pretty efficiently.  We just
-have two complex exponentials and one real exponential out front.  The
-coefficients (the square root and the binomials) can be calculated
-ahead of time and cached, and the ratio in the sum can be evaluated
-once, then reused.  The exponentiation of this is done implicitly
-using Horner form.
+Typically, this last expression can be evaluated pretty efficiently.
+We just have two complex exponentials and one real exponential out
+front.  The coefficients (the square root and the binomials) can be
+calculated ahead of time and cached, and the ratio in the sum can be
+evaluated once, then reused.  The exponentiation of this is done
+implicitly using Horner form.
 
-There are two things to be careful of when applying this formula.
-First, the sum is well behaved when the ratio at the end is small, so
-let's say when $\lvert \quat{R}\_b \rvert < \lvert \quat{R}\_a
-\rvert$.  However, if this is the case and $\lvert \quat{R}\_b \rvert$
-is *too* small, we might actually run into problems with underflow, in
-which case the exponential will come out as zero.  This can happen,
-for example, if we need to compute an $\ell=16$ matrix when $\lvert
-\quat{R}\_b \rvert \lesssim 10^{-11}$, and $m'=-16$ and $m=16$, in
-which case $\lvert \quat{R}\_b \rvert^{-m'+m} \lesssim 10^{-352}$,
-which is less than the smallest `float` that python can represent, so
-it goes to zero.
+However, there are some important caveats to be careful of.  For
+example, let's suppose that $\lvert \quat{R}\_b \rvert = 10^{-11}$,
+and we're evaluating the $\ell=16$ matrix element $(m',m)=(-16,16)$.
+We won't have triggered the condition $\lvert \quat{R}\_b \rvert <
+10^{-14}$, but we will have $\lvert \quat{R}\_b^{m-m'} \rvert \lesssim
+10^{-352}$, which is less than the smallest `float` that python can
+represent, so it goes to zero.  But this is okay, because such terms
+probably should be zero; only the $m'=m$ terms are significant when
+$\lvert \quat{R}\_b \rvert$ is small.  Thus, we are sort of
+automatically protected from underflow in that case.
 
-So we need to combine knowledge of the magnitude of $\lvert
-\quat{R}\_b \rvert$ with knowledge of the power to which it will be
-raised.
+On the other hand, if $\lvert \quat{R}\_a \rvert$ is small, the ratio
+in the sum might be very large, which could lead to overflow, while
+the initial factor of $\lvert \quat{R}\_{a} \rvert^{2\ell-2m}$ might
+underflow.  Thus, it would be better if we could find an expression
+that sort of reverses the roles of $a$ and $b$.  It turns out that
+this isn't hard.  In deriving Eq. \eqref{eq:DAnalytically}, a choice
+was made regarding the summation variable.  We can simply transform
+that summation variable as $\rho \mapsto \ell-m-\rho$, and obtain
+\begin{equation\*}
+  \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
+  = \sum\_{\rho} \binom{\ell+m'} {\ell-m-\rho}\, \binom{\ell-m'}
+  {\rho}\, (-1)^{\ell-m-\rho}\, \quat{R}\_{a}^{m'+m+\rho}\,
+  \co{\quat{R}}\_{a}^{\rho}\,
+  \quat{R}\_{b}^{\ell-m'-\rho}\, \co{\quat{R}}\_{b}^{\ell-m-\rho}\,
+  \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\,
+      (\ell-m')! } }.
+\end{equation\*}
+It's interesting to note the symmetry with the earlier version of this
+equation; we've essentially just exchanged the labels $a$ and $b$,
+while also reversing the sign of $m'$, and multiplying by an overall
+factor of $(-1)^{\ell+m}$.
+
+In any case, we can apply the same simplification to this expression
+as before:
+\begin{align}
+  \nonumber
+  \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
+  &=
+  (-1)^{\ell-m}
+  \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\, (\ell-m')! } }
+  \quat{R}\_{a}^{m'+m}\,
+  \quat{R}\_{b}^{\ell-m'}\,
+  \co{\quat{R}}\_{b}^{\ell-m}
+  \\\\
+  \nonumber
+  &\qquad
+  \times \sum\_{\rho}
+  \binom{\ell+m'} {\ell-m-\rho}\, \binom{\ell-m'} {\rho}\,
+  (-1)^\rho\,
+  \quat{R}\_{a}^{\rho}\,
+  \co{\quat{R}}\_{a}^{\rho}\,
+  \quat{R}\_{b}^{-\rho}\,
+  \co{\quat{R}}\_{b}^{-\rho}
+  \\\\
+  \nonumber
+  &=
+  (-1)^{\ell-m}
+  \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\, (\ell-m')! } }
+  \quat{R}\_{a}^{m'+m}\,
+  \quat{R}\_{b}^{m-m'}\,
+  \lvert \quat{R}\_{b} \rvert^{2\ell-2m}
+  \\\\
+  \label{eq:D\_RaLeqRb}
+  &\qquad
+  \times \sum\_{\rho}
+  \binom{\ell+m'} {\ell-m-\rho}\, \binom{\ell-m'} {\rho}\,
+  (-1)^\rho\,
+  \left( \frac{ \lvert \quat{R}\_{a} \rvert^2 }
+  { \lvert \quat{R}\_{b} \vert^2 } \right)^{\rho}
+\end{align}
 
 So we get four branches in our logic, with a different expression for
 $\mathfrak{D}$ in each branch:
@@ -179,7 +236,7 @@ $\mathfrak{D}$ in each branch:
   3. When $\lvert \quat{R}\_a \rvert \geq \lvert \quat{R}\_b \rvert$,
      use Eq. \eqref{eq:D\_RaGeqRb}.
   4. When $\lvert \quat{R}\_a \rvert < \lvert \quat{R}\_b \rvert$, use
-     Eq. {}.
+     Eq. \eqref{eq:D\_RaLeqRb}.
 
 
 [^1]: This, of course, is not a productive way of *thinking about*
