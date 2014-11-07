@@ -200,7 +200,7 @@ def _WignerD(Ra, Rb, indices, elements):
                                      + Sum * absRRatioSquared )
                     elements[i] = Prefactor * Sum * absRRatioSquared**rhoMin
 
-    else:
+    else: # absRa >= absRb
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
             if(abs(mp)>ell or abs(m)>ell):
@@ -221,60 +221,3 @@ def _WignerD(Ra, Rb, indices, elements):
                             Sum = ( -binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m)
                                      + Sum * absRRatioSquared )
                     elements[i] = Prefactor * Sum * absRRatioSquared**rhoMin
-
-
-
-    # for i in xrange(N):
-    #     ell,mp,m = indices[i,0:3]
-
-    #     if(abs(mp)>ell or abs(m)>ell):
-    #         elements[i] = 0.0+0.0j
-
-    #     elif(absRa<=epsilon):
-    #         if mp!=-m:
-    #             elements[i] = 0.0j
-    #         else:
-    #             if (ell+m)%2==0:
-    #                 elements[i] = Rb**(2*m)
-    #             else:
-    #                 elements[i] = -Rb**(2*m)
-
-    #     elif(absRb<=epsilon):
-    #         if mp!=m:
-    #             elements[i] = 0.0j
-    #         else:
-    #             elements[i] = Ra**(2*m)
-
-    #     else:
-    #         rhoMin = max(0,mp-m)
-    #         rhoMax = min(ell+mp,ell-m)
-    #         if(absRa < 1.e-3):
-    #             # In this branch, we deal with NANs in certain cases when
-    #             # absRa is small by separating it out from the main sum,
-    #             Prefactor = coeff(ell, mp, m) * Ra**(m+mp) * Rb**(m-mp)
-    #             absRaSquared = absRa*absRa
-    #             absRbSquared = absRb*absRb
-    #             Sum = 0.0
-    #             for rho in xrange(rhoMax, rhoMin-1, -1):
-    #                 aTerm = absRaSquared**(ell-m-rho);
-    #                 if(aTerm != aTerm or aTerm<1.e-100):
-    #                     Sum *= absRbSquared
-    #                 else:
-    #                     if rho%2==0:
-    #                         Sum = ( binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m) * aTerm
-    #                                 + Sum * absRbSquared )
-    #                     else:
-    #                         Sum = ( -binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m) * aTerm
-    #                                 + Sum * absRbSquared )
-    #             elements[i] = Prefactor * Sum * absRbSquared**rhoMin
-    #         else:
-    #             Prefactor = coeff(ell, mp, m) * absRa**(2*ell-2*m) * Ra**(m+mp) * Rb**(m-mp)
-    #             Sum = 0.0
-    #             for rho in xrange(rhoMax, rhoMin-1, -1):
-    #                 if rho%2==0:
-    #                     Sum = (  binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m)
-    #                              + Sum * absRRatioSquared )
-    #                 else:
-    #                     Sum = ( -binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m)
-    #                              + Sum * absRRatioSquared )
-    #             elements[i] = Prefactor * Sum * absRRatioSquared**rhoMin
