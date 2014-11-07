@@ -74,6 +74,7 @@ $\mathfrak{D}$ matrix is
 \end{equation}
 In the same way, we can calculate this for $\lvert \quat{R}_b \rvert
 \lesssim 10^{-14}$:
+{::comment}
 \begin{align\*}
   \mathbf{e}\_{(m')}(\quat{R}\, \quat{Q})
   &\approx \frac{ (\quat{R}\_{a}\, \quat{Q}\_{a})^{\ell+m'}\,
@@ -82,6 +83,7 @@ In the same way, we can calculate this for $\lvert \quat{R}_b \rvert
   &\approx (\quat{R}\_{a})^{\ell+m'}\,
   (\co{\quat{R}}\_{a})^{\ell-m'}\, \mathbf{e}\_{(m')}(\quat{Q}).
 \end{align\*}
+{:/comment}
 \begin{equation}
   \label{eq:D\_RbApprox0}
   \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
@@ -97,12 +99,12 @@ us to use the
 After a little simplification, we can express the result as
 \begin{align\*}
   \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
-  = \sum\_{\rho} \binom{\ell+m} {\rho}\, \binom{\ell-m}
-  {\ell-\rho-m'}\, (-1)^{\rho}\, \quat{R}\_{a}^{\ell+m-\rho}\,
-  \co{\quat{R}}\_{a}^{\ell-\rho-m'}\,
-  \quat{R}\_{b}^{\rho-m+m'}\, \co{\quat{R}}\_{b}^{\rho}\,
-  \sqrt{ \frac{ (\ell+m')!\, (\ell-m')! } { (\ell+m)!\,
-      (\ell-m)! } }.
+  = \sum\_{\rho} \binom{\ell+m'} {\rho}\, \binom{\ell-m'}
+  {\ell-\rho-m}\, (-1)^{\rho}\, \quat{R}\_{a}^{\ell+m'-\rho}\,
+  \co{\quat{R}}\_{a}^{\ell-\rho-m}\,
+  \quat{R}\_{b}^{\rho-m'+m}\, \co{\quat{R}}\_{b}^{\rho}\,
+  \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\,
+      (\ell-m')! } }.
 \end{align\*}
 Now, this expression is not the best way to implement the calculation
 in the code.  The reason is that we would need to take a bunch of
@@ -116,16 +118,16 @@ which is a fast and accurate way to evaluate sums.
 For example, we can simplify the above as
 \begin{align}
   \nonumber
-  \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
+  \mathfrak{D}^{(\ell)}\_{m,m'}(\quat{R})
   &=
-  \sqrt{ \frac{ (\ell+m')!\, (\ell-m')! } { (\ell+m)!\, (\ell-m)! } }\,
-  \quat{R}\_{a}^{\ell+m}\,
-  \co{\quat{R}}\_{a}^{\ell-m'}\,
-  \quat{R}\_{b}^{-m+m'} \\\\
+  \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\, (\ell-m')! } }\,
+  \quat{R}\_{a}^{\ell+m'}\,
+  \co{\quat{R}}\_{a}^{\ell-m}\,
+  \quat{R}\_{b}^{-m'+m} \\\\
   \nonumber
   &\qquad
   \times \sum\_{\rho}
-  \binom{\ell+m} {\rho}\, \binom{\ell-m} {\ell-\rho-m'}\,
+  \binom{\ell+m'} {\rho}\, \binom{\ell-m'} {\ell-\rho-m}\,
   (-1)^{\rho}\,
   \quat{R}\_{a}^{-\rho}\,
   \co{\quat{R}}\_{a}^{-\rho}\,
@@ -133,14 +135,14 @@ For example, we can simplify the above as
   \co{\quat{R}}\_{b}^{\rho}, \\\\
   \nonumber
   &=
-  \sqrt{ \frac{ (\ell+m')!\, (\ell-m')! } { (\ell+m)!\, (\ell-m)! } }\,
-  \lvert \quat{R}\_{a} \rvert^{2\ell-2m'}\,
-  \quat{R}\_{a}^{m+m'}\,
-  \quat{R}\_{b}^{-m+m'} \\\\
+  \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\, (\ell-m')! } }\,
+  \lvert \quat{R}\_{a} \rvert^{2\ell-2m}\,
+  \quat{R}\_{a}^{m'+m}\,
+  \quat{R}\_{b}^{-m'+m} \\\\
   \label{eq:D\_RaGeqRb}
   &\qquad
   \times \sum\_{\rho}
-  \binom{\ell+m} {\rho}\, \binom{\ell-m} {\ell-\rho-m'}\,
+  \binom{\ell+m'} {\rho}\, \binom{\ell-m'} {\ell-\rho-m}\,
   (-1)^{\rho}\, \left( \frac{\lvert \quat{R}\_{b} \rvert^2}
   {\lvert \quat{R}\_{a} \rvert^2} \right)^{\rho}.
 \end{align}
@@ -158,8 +160,8 @@ let's say when $\lvert \quat{R}\_b \rvert < \lvert \quat{R}\_a
 is *too* small, we might actually run into problems with underflow, in
 which case the exponential will come out as zero.  This can happen,
 for example, if we need to compute an $\ell=16$ matrix when $\lvert
-\quat{R}\_b \rvert \lesssim 10^{-11}$, and $m=-16$ and $m'=16$, in
-which case $\lvert \quat{R}\_b \rvert^{-m+m'} \lesssim 10^{-352}$,
+\quat{R}\_b \rvert \lesssim 10^{-11}$, and $m'=-16$ and $m=16$, in
+which case $\lvert \quat{R}\_b \rvert^{-m'+m} \lesssim 10^{-352}$,
 which is less than the smallest `float` that python can represent, so
 it goes to zero.
 
