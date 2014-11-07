@@ -52,7 +52,7 @@ polynomials with terms given as sums of two different things.
 This brings us to the first fork in the road.  If either $\quat{R}_a$
 or $\quat{R}_b$ is tiny (i.e., the absolute value is numerically
 small), we can (and in fact must) treat these as special cases.
-First, if $\lvert \quat{R}_a \rvert \lesssim 10^{-14}$, for example,
+First, if $\lvert \quat{R}_a \rvert \lesssim 10^{-15}$, for example,
 we can just ignore it; since $\lvert \quat{R} \rvert=1$ (within
 numerical precision), we are assured that $\lvert \quat{R}_b \rvert
 \approx 1$.  Thus, we get
@@ -73,7 +73,7 @@ $\mathfrak{D}$ matrix is
   = (-1)^{\ell+m}\, \quat{R}\_b^{2m} \delta\_{-m',m}.
 \end{equation}
 In the same way, we can calculate this for $\lvert \quat{R}_b \rvert
-\lesssim 10^{-14}$:
+\lesssim 10^{-15}$:
 {::comment}
 \begin{align\*}
   \mathbf{e}\_{(m')}(\quat{R}\, \quat{Q})
@@ -158,7 +158,7 @@ However, there are some important caveats to be careful of.  For
 example, let's suppose that $\lvert \quat{R}\_b \rvert = 10^{-11}$,
 and we're evaluating the $\ell=16$ matrix element $(m',m)=(-16,16)$.
 We won't have triggered the condition $\lvert \quat{R}\_b \rvert <
-10^{-14}$, but we will have $\lvert \quat{R}\_b^{m-m'} \rvert \lesssim
+10^{-15}$, but we will have $\lvert \quat{R}\_b^{m-m'} \rvert \lesssim
 10^{-352}$, which is less than the smallest `float` that python can
 represent, so it goes to zero.  But this is okay, because such terms
 probably should be zero; only the $m'=m$ terms are significant when
@@ -229,9 +229,9 @@ as before:
 So we get four branches in our logic, with a different expression for
 $\mathfrak{D}$ in each branch:
 
-  1. When $\lvert \quat{R}\_a \rvert \lesssim 10^{-14}$, use
+  1. When $\lvert \quat{R}\_a \rvert \lesssim 10^{-15}$, use
      Eq. \eqref{eq:D\_RaApprox0}.
-  2. When $\lvert \quat{R}\_b \rvert \lesssim 10^{-14}$, use
+  2. When $\lvert \quat{R}\_b \rvert \lesssim 10^{-15}$, use
      Eq. \eqref{eq:D\_RbApprox0}.
   3. When $\lvert \quat{R}\_a \rvert \geq \lvert \quat{R}\_b \rvert$,
      use Eq. \eqref{eq:D\_RaGeqRb}.
