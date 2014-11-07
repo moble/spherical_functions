@@ -10,6 +10,7 @@ import warnings
 import sys
 import math
 import numpy as np
+import quaternion
 import spherical_functions as sp
 import pytest
 from operator import mul    # or mul=lambda x,y:x*y
@@ -91,7 +92,7 @@ def test_WignerD():
     # Test rotations about the z axis
     # Test various rotations onto the -z axis
     # Test the special angles
-    pass
+    assert sp.WignerD(quaternion.one, 2, 2, 2) == 1.0
 
 if __name__=='__main__':
     print("This script is intended to be run through py.test")
