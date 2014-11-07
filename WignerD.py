@@ -164,10 +164,10 @@ def _WignerD(Ra, Rb, indices, elements):
             elements[i] = 0.0+0.0j
 
         elif(absRa<=epsilon or 2*absRa_exp*(mp-m)<min_exp+mant_dig):
-            if mp!=m:
+            if mp!=-m:
                 elements[i] = 0.0j
             else:
-                if (ell+mp)%2==0:
+                if (ell+m)%2==0:
                     elements[i] = Rb**(2*m)
                 else:
                     elements[i] = -Rb**(2*m)
