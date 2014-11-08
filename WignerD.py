@@ -8,14 +8,12 @@ from quaternion.numba_wrapper import njit, jit, int64, xrange
 
 _log2 = np.log(2)
 
-@njit('b1(i4,i4,i4)')
+@njit('b1(i8,i8,i8)')
 def _check_valid_indices(ell, mp, m):
     if(abs(mp)>ell or abs(m)>ell):
         return False
     return True
 
-#@jit(locals=dict(Ra='c16', Rb='c16', absRa='f8', absRb='f8', absRRatioSquared='f8'))
-#@jit
 def WignerD(*args):
     """Return elements of the Wigner D matrices
 

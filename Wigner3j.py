@@ -4,7 +4,7 @@ from math import sqrt
 from . import factorials
 from quaternion.numba_wrapper import njit, xrange
 
-@njit('f8(i4,i4,i4,i4,i4,i4)')
+@njit('f8(i8,i8,i8,i8,i8,i8)')
 def Wigner3j(j_1, j_2, j_3, m_1, m_2, m_3):
     """Calculate the Wigner 3j symbol `Wigner3j(j_1,j_2,j_3,m_1,m_2,m_3)`
 

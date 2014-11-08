@@ -17,7 +17,7 @@ error_on_bad_indices = True
 
 ## Factorial
 factorials = array([float(factorial(i)) for i in range(171)])
-@njit('f8(i4)')
+@njit('f8(i8)')
 def factorial(i):
     return factorials[i]
 
@@ -25,7 +25,7 @@ def factorial(i):
 ## Binomial coefficients
 _binomial_coefficients = array([floor(0.5+factorials[n]/(factorials[k]*factorials[n-k]))
                                 for n in range(2*ell_max+1) for k in range(n+1)])
-@njit('f8(i4,i4)')
+@njit('f8(i8,i8)')
 def binomial_coefficient(n,k):
     return _binomial_coefficients[(n*(n+1))//2+k]
 
@@ -33,7 +33,7 @@ def binomial_coefficient(n,k):
 ## Ladder-operator coefficients
 _ladder_operator_coefficients = array([sqrt(ell*(ell+1)-m*(m+1))
                                        for ell in range(ell_max+1) for m in range(-ell,ell+1)])
-@njit('f8(i4,i4)')
+@njit('f8(i8,i8)')
 def ladder_operator_coefficient(ell,m):
     return _ladder_operator_coefficients[ell*(ell+1)+m]
 
@@ -43,9 +43,14 @@ _Wigner_coefficients = array([sqrt( factorials[ell+m]*factorials[ell-m] / (facto
                               for ell in range(ell_max+1)
                               for mp in range(-ell, ell+1)
                               for m in range(-ell, ell+1) ])
-@njit('f8(i4,i4,i4)')
+@njit('f8(i8,i8,i8)')
 def _Wigner_coefficient(ell,mp,m):
     return _Wigner_coefficients[ell*(ell*(4*ell + 6) + 5)//3 + mp*(2*ell + 1) + m]
+
+
+@njit('i8(i8,i8,i8)')
+def _Wigner_index(ell,mp,m):
+    return ell*(ell*(4*ell + 6) + 5)//3 + mp*(2*ell + 1) + m
 
 
 from .Wigner3j import Wigner3j
