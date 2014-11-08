@@ -185,6 +185,8 @@ def _WignerD(Ra, Rb, indices, elements):
                 elements[i] = 0.0+0.0j
             else:
                 Prefactor = coeff(ell, mp, m) * absRb**(2*ell-2*m) * Rb**(m-mp) * Ra**(m+mp)
+                if((ell+m)%2!=0):
+                    Prefactor *= -1
                 if(Prefactor==0.0+0.0j):
                     elements[i] = 0.0+0.0j
                 else:
