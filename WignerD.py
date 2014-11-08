@@ -6,6 +6,8 @@ from . import (_Wigner_coefficient as coeff, binomial_coefficient,
                epsilon, min_exp, mant_dig, error_on_bad_indices)
 from quaternion.numba_wrapper import njit, jit, int64, xrange
 
+epsilon_squared = epsilon**2
+
 _log2 = np.log(2)
 
 @njit('b1(i8,i8,i8)')
@@ -147,46 +149,40 @@ def _WignerD(Ra, Rb, indices, elements):
 
     # These constants are the recurring quantities in the computation
     # of the matrix elements, so we calculate them here just once
-    absRa = abs(Ra)
-    absRb = abs(Rb)
-    absRRatioSquared = (-absRb*absRb/(absRa*absRa) if absRa>=absRb else -absRa*absRa/(absRb*absRb))
+    absRa_squared = float(Ra*Ra.conjugate())
+    absRb_squared = float(Rb*Rb.conjugate())
+    absRRatioSquared = (-absRb_squared/absRa_squared if absRa_squared>=absRb_squared else -absRa_squared/absRb_squared)
 
-    if(absRa<=epsilon):
+    if(absRa_squared<=epsilon_squared):
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
-            if(abs(mp)>ell or abs(m)>ell):
-                elements[i] = 0.0+0.0j
+            if(mp!=-m or abs(mp)>ell or abs(m)>ell):
+                elements[i] = 0.0j
             else:
-                if mp!=-m:
-                    elements[i] = 0.0+0.0j
+                if (ell+m)%2==0:
+                    elements[i] = Rb**(2*m)
                 else:
-                    if (ell+m)%2==0:
-                        elements[i] = Rb**(2*m)
-                    else:
-                        elements[i] = -Rb**(2*m)
+                    elements[i] = -Rb**(2*m)
 
-    elif(absRb<=epsilon):
+    elif(absRb_squared<=epsilon_squared):
+        for i in xrange(N):
+            ell,mp,m = indices[i,0:3]
+            if(mp!=m or abs(mp)>ell or abs(m)>ell):
+                elements[i] = 0.0j
+            else:
+                elements[i] = Ra**(2*m)
+
+    elif(absRa_squared<absRb_squared):
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
             if(abs(mp)>ell or abs(m)>ell):
-                elements[i] = 0.0+0.0j
+                elements[i] = 0.0j
             else:
-                if mp!=m:
-                    elements[i] = 0.0+0.0j
-                else:
-                    elements[i] = Ra**(2*m)
-
-    elif(absRa<absRb):
-        for i in xrange(N):
-            ell,mp,m = indices[i,0:3]
-            if(abs(mp)>ell or abs(m)>ell):
-                elements[i] = 0.0+0.0j
-            else:
-                Prefactor = coeff(ell, mp, m) * absRb**(2*ell-2*m) * Rb**(m-mp) * Ra**(m+mp)
+                Prefactor = coeff(ell, mp, m) * absRb_squared**(ell-m) * Rb**(m-mp) * Ra**(m+mp)
                 if((ell+m)%2!=0):
                     Prefactor *= -1
-                if(Prefactor==0.0+0.0j):
-                    elements[i] = 0.0+0.0j
+                if(Prefactor==0.0j):
+                    elements[i] = 0.0j
                 else:
                     rhoMin = max(0,-mp-m)
                     rhoMax = min(ell-mp,ell-m)
@@ -196,15 +192,15 @@ def _WignerD(Ra, Rb, indices, elements):
                                  + Sum * absRRatioSquared )
                     elements[i] = Prefactor * Sum * absRRatioSquared**rhoMin
 
-    else: # absRa >= absRb
+    else: # absRa_squared >= absRb_squared
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
             if(abs(mp)>ell or abs(m)>ell):
-                elements[i] = 0.0+0.0j
+                elements[i] = 0.0j
             else:
-                Prefactor = coeff(ell, mp, m) * absRa**(2*ell-2*m) * Ra**(m+mp) * Rb**(m-mp)
-                if(Prefactor==0.0+0.0j):
-                    elements[i] = 0.0+0.0j
+                Prefactor = coeff(ell, mp, m) * absRa_squared**(ell-m) * Ra**(m+mp) * Rb**(m-mp)
+                if(Prefactor==0.0j):
+                    elements[i] = 0.0j
                 else:
                     rhoMin = max(0,mp-m)
                     rhoMax = min(ell+mp,ell-m)
