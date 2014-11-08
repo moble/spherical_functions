@@ -9,6 +9,7 @@ from __future__ import print_function, division, absolute_import
 import warnings
 import sys
 import math
+import cmath
 import numpy as np
 import quaternion
 import spherical_functions as sp
@@ -19,6 +20,7 @@ from functools import reduce
 import random
 
 import numba # This is to check to make sure we're actually using numba
+
 
 def nCk(n,k):
     """Simple binomial function"""
@@ -96,8 +98,7 @@ def test_WignerD_negative_argument(Rs, ell_max):
     # For integer ell, D(R)=D(-R)
     LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
     for R in Rs:
-        print(R)
-        assert np.allclose( sp.WignerD(R, LMpM), sp.WignerD(-R, LMpM), rtol=precision_WignerD)
+        assert np.allclose( sp.WignerD(R, LMpM), sp.WignerD(-R, LMpM), atol=0.0, rtol=precision_WignerD)
 
 def test_WignerD_representation_property(Rs,ell_max):
     # Test the representation property for special and random angles
@@ -112,25 +113,102 @@ def test_WignerD_representation_property(Rs,ell_max):
             assert np.allclose( sp.WignerD(R1*R2, LMpM), D12, atol=precision_WignerD)
 
 def test_WignerD_symmetries(Rs, ell_max):
-    # Test symmetries
-    pass
+    LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
+    # D_{mp,m}(R) = (-1)^{mp+m} \bar{D}_{-mp,-m}(R)
+    MpPM = np.array([mp+m for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
+    LmMpmM = np.array([[ell,-mp,-m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
+    for R in Rs:
+        assert np.allclose( sp.WignerD(R, LMpM), (-1)**MpPM*np.conjugate(sp.WignerD(R, LmMpmM)), atol=0.0, rtol=precision_WignerD)
+    # D is a unitary matrix, so its conjugate transpose is its
+    # inverse.  D(R) should equal the matrix inverse of D(R^{-1}).
+    # So: D_{mp,m}(R) = \bar{D}_{m,mp}(\bar{R})
+    LMMp = np.array([[ell,m,mp] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
+    for R in Rs:
+        assert np.allclose( sp.WignerD(R, LMpM), np.conjugate(sp.WignerD(R.conjugate(), LMMp)), atol=0.0, rtol=precision_WignerD)
 
-def test_WignerD_roundoff_cases(Rs,ell_max):
+def test_WignerD_inverse(Rs, ell_max):
+    # Ensure that the matrix of the inverse rotation is the inverse of
+    # the matrix of the rotation
+    for R in Rs:
+        for ell in range(ell_max+1):
+            LMpM = np.array([[ell,mp,m] for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
+            D1 = sp.WignerD(R, LMpM).reshape((2*ell+1,2*ell+1))
+            D2 = sp.WignerD(R.inverse(), LMpM).reshape((2*ell+1,2*ell+1))
+            assert np.allclose(D1.dot(D2), np.identity(2*ell+1), atol=precision_WignerD, rtol=precision_WignerD)
+
+def test_WignerD_roundoff(Rs,ell_max):
     LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
     # Test rotations with |Ra|<1e-15
     expected = [((-1)**ell if mp==-m else 0.0) for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)]
-    assert np.allclose( sp.WignerD(quaternion.x, LMpM), expected, rtol=precision_WignerD)
+    assert np.allclose( sp.WignerD(quaternion.x, LMpM), expected, atol=0.0, rtol=precision_WignerD)
     expected = [((-1)**(ell+m) if mp==-m else 0.0) for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)]
-    assert np.allclose( sp.WignerD(quaternion.y, LMpM), expected, rtol=precision_WignerD)
+    assert np.allclose( sp.WignerD(quaternion.y, LMpM), expected, atol=0.0, rtol=precision_WignerD)
+    for theta in np.linspace(0,2*np.pi):
+        expected = [((-1)**(ell+m) * (np.cos(theta)+1j*np.sin(theta))**(2*m) if mp==-m else 0.0)
+                    for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)]
+        assert np.allclose( sp.WignerD(np.cos(theta)*quaternion.y+np.sin(theta)*quaternion.x, LMpM), expected,
+                            atol=0.0, rtol=precision_WignerD)
     # Test rotations with |Rb|<1e-15
     expected = [(1.0 if mp==m else 0.0) for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)]
-    assert np.allclose( sp.WignerD(quaternion.one, LMpM), expected, rtol=precision_WignerD)
+    assert np.allclose( sp.WignerD(quaternion.one, LMpM), expected, atol=0.0, rtol=precision_WignerD)
     expected = [((-1)**m if mp==m else 0.0) for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)]
-    assert np.allclose( sp.WignerD(quaternion.z, LMpM), expected, rtol=precision_WignerD)
+    assert np.allclose( sp.WignerD(quaternion.z, LMpM), expected, atol=0.0, rtol=precision_WignerD)
+    for theta in np.linspace(0,2*np.pi):
+        expected = [((np.cos(theta)+1j*np.sin(theta))**(2*m) if mp==m else 0.0)
+                    for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)]
+        assert np.allclose( sp.WignerD(np.cos(theta)*quaternion.one+np.sin(theta)*quaternion.z, LMpM), expected,
+                            atol=0.0, rtol=precision_WignerD)
+
+def test_WignerD_underflow(Rs,ell_max):
+    LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
     # Test rotations with |Ra|~1e-10 and large ell
     pass
     # Test rotations with |Rb|~1e-10 and large ell
     pass
+
+
+@pytest.fixture
+def special_angles():
+    return np.arange(-1*np.pi, 1*np.pi+0.1, np.pi/4.)
+def UglyWignerd(beta, ell, mp, m):
+    Prefactor = math.sqrt(math.factorial(ell+mp)*math.factorial(ell-mp)*math.factorial(ell+m)*math.factorial(ell-m))
+    s_min = max(0,m-mp)
+    s_max = min(ell+m, ell-mp)
+    return Prefactor * sum([((-1)**(mp-m+s) * math.cos(beta/2.)**(2*ell+m-mp-2*s) * math.sin(beta/2.)**(mp-m+2*s)
+                             / float(math.factorial(ell+m-s)*math.factorial(s)*math.factorial(mp-m+s)*math.factorial(ell-mp-s)))
+                            for s in range(s_min,s_max+1)])
+def UglyWignerD(alpha, beta, gamma, ell, mp, m):
+    return cmath.exp(-1j*mp*alpha)*UglyWignerd(beta, ell, mp, m)*cmath.exp(-1j*m*gamma)
+def test_WignerD_values(special_angles, ell_max):
+    LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
+    # Compare with more explicit forms given in Euler angles
+    for alpha in special_angles:
+        for beta in special_angles:
+            for gamma in special_angles:
+                assert np.allclose( np.conjugate(np.array([UglyWignerD(alpha, beta, gamma, ell, mp, m) for ell,mp,m in LMpM])),
+                                    sp.WignerD(quaternion.from_euler_angles(alpha, beta, gamma), LMpM),
+                                    atol=precision_WignerD, rtol=precision_WignerD )
+# def test_WignerD_values(special_angles, ell_max):
+#     # Compare with more explicit forms given in Euler angles
+#     for ell in range(ell_max+1):
+#         LMpM = np.array([[ell,mp,m] for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
+#         for alpha in special_angles:
+#             for beta in special_angles:
+#                 for gamma in special_angles:
+#                     print(ell)
+#                     print(alpha, beta, gamma)
+#                     opts = np.get_printoptions()
+#                     np.set_printoptions(threshold=np.nan, suppress=True, linewidth=158)
+#                     Ugly = np.array([UglyWignerD(-alpha, beta, -gamma, ell, mp, m) for ell,mp,m in LMpM])
+#                     Beautiful = sp.WignerD(quaternion.from_euler_angles(alpha, beta, gamma), LMpM)
+#                     print(Ugly.shape, Beautiful.shape)
+#                     print(Ugly.reshape((2*ell+1,2*ell+1)))
+#                     print(Beautiful.reshape((2*ell+1,2*ell+1)))
+#                     print("")
+#                     np.set_printoptions(**opts)
+#                     assert np.allclose( Ugly,
+#                                         sp.WignerD(quaternion.from_euler_angles(alpha, beta, gamma), LMpM),
+#                                         atol=precision_WignerD, rtol=precision_WignerD )
 
 if __name__=='__main__':
     print("This script is intended to be run through py.test")
