@@ -159,12 +159,23 @@ def test_WignerD_roundoff(Rs,ell_max):
         assert np.allclose( sp.WignerD(np.cos(theta)*quaternion.one+np.sin(theta)*quaternion.z, LMpM), expected,
                             atol=0.0, rtol=precision_WignerD)
 
+@pytest.mark.xfail
 def test_WignerD_underflow(Rs,ell_max):
     LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
+    # Some possible tests here:
+
+    # For the cases where I expect underflow to occur, ensure that the
+    # results are close to those where the small components are
+    # exactly zero.
+
+    # For all cases, test that the results are within some large
+    # tolerance (1e-8?) of the results where small components are
+    # exactly zero.
+
     # Test rotations with |Ra|~1e-10 and large ell
-    pass
+    assert False
     # Test rotations with |Rb|~1e-10 and large ell
-    pass
+    assert False
 
 
 @pytest.fixture
@@ -188,27 +199,6 @@ def test_WignerD_values(special_angles, ell_max):
                 assert np.allclose( np.conjugate(np.array([UglyWignerD(alpha, beta, gamma, ell, mp, m) for ell,mp,m in LMpM])),
                                     sp.WignerD(quaternion.from_euler_angles(alpha, beta, gamma), LMpM),
                                     atol=precision_WignerD, rtol=precision_WignerD )
-# def test_WignerD_values(special_angles, ell_max):
-#     # Compare with more explicit forms given in Euler angles
-#     for ell in range(ell_max+1):
-#         LMpM = np.array([[ell,mp,m] for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
-#         for alpha in special_angles:
-#             for beta in special_angles:
-#                 for gamma in special_angles:
-#                     print(ell)
-#                     print(alpha, beta, gamma)
-#                     opts = np.get_printoptions()
-#                     np.set_printoptions(threshold=np.nan, suppress=True, linewidth=158)
-#                     Ugly = np.array([UglyWignerD(-alpha, beta, -gamma, ell, mp, m) for ell,mp,m in LMpM])
-#                     Beautiful = sp.WignerD(quaternion.from_euler_angles(alpha, beta, gamma), LMpM)
-#                     print(Ugly.shape, Beautiful.shape)
-#                     print(Ugly.reshape((2*ell+1,2*ell+1)))
-#                     print(Beautiful.reshape((2*ell+1,2*ell+1)))
-#                     print("")
-#                     np.set_printoptions(**opts)
-#                     assert np.allclose( Ugly,
-#                                         sp.WignerD(quaternion.from_euler_angles(alpha, beta, gamma), LMpM),
-#                                         atol=precision_WignerD, rtol=precision_WignerD )
 
 if __name__=='__main__':
     print("This script is intended to be run through py.test")
