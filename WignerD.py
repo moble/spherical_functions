@@ -149,11 +149,11 @@ def _WignerD(Ra, Rb, indices, elements):
 
     # These constants are the recurring quantities in the computation
     # of the matrix elements, so we calculate them here just once
-    absRa = abs(Ra)
-    absRb = abs(Rb)
-    absRRatioSquared = (-absRb*absRb/(absRa*absRa) if absRa>=absRb else -absRa*absRa/(absRb*absRb))
+    absRa_squared = abs(Ra)**2
+    absRb_squared = abs(Rb)**2
+    absRRatioSquared = (-absRb_squared/absRa_squared if absRa_squared>=absRb_squared else -absRa_squared/absRb_squared)
 
-    if(absRa<=epsilon):
+    if(absRa_squared<=epsilon_squared):
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
             if(mp!=-m or abs(mp)>ell or abs(m)>ell):
@@ -164,7 +164,7 @@ def _WignerD(Ra, Rb, indices, elements):
                 else:
                     elements[i] = -Rb**(2*m)
 
-    elif(absRb<=epsilon):
+    elif(absRb_squared<=epsilon_squared):
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
             if(mp!=m or abs(mp)>ell or abs(m)>ell):
@@ -172,13 +172,13 @@ def _WignerD(Ra, Rb, indices, elements):
             else:
                 elements[i] = Ra**(2*m)
 
-    elif(absRa<absRb):
+    elif(absRa_squared<absRb_squared):
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
             if(abs(mp)>ell or abs(m)>ell):
                 elements[i] = 0.0j
             else:
-                Prefactor = coeff(ell, mp, m) * absRb**(2*ell-2*m) * Rb**(m-mp) * Ra**(m+mp)
+                Prefactor = coeff(ell, mp, m) * absRb_squared**(ell-m) * Rb**(m-mp) * Ra**(m+mp)
                 if((ell+m)%2!=0):
                     Prefactor *= -1
                 if(Prefactor==0.0j):
@@ -192,13 +192,13 @@ def _WignerD(Ra, Rb, indices, elements):
                                  + Sum * absRRatioSquared )
                     elements[i] = Prefactor * Sum * absRRatioSquared**rhoMin
 
-    else: # absRa >= absRb
+    else: # absRa_squared >= absRb_squared
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
             if(abs(mp)>ell or abs(m)>ell):
                 elements[i] = 0.0j
             else:
-                Prefactor = coeff(ell, mp, m) * absRa**(2*ell-2*m) * Ra**(m+mp) * Rb**(m-mp)
+                Prefactor = coeff(ell, mp, m) * absRa_squared**(ell-m) * Ra**(m+mp) * Rb**(m-mp)
                 if(Prefactor==0.0j):
                     elements[i] = 0.0j
                 else:
