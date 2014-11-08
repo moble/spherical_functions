@@ -18,9 +18,6 @@ by other authors.
 {% capture sidebar %}{% include_relative EulerAngles.md %}{% endcapture %}
 {{ sidebar | markdownify }}
 
-{% capture sidebar %}{% include_relative WignerDMatrices.md %}{% endcapture %}
-{{ sidebar | markdownify }}
-
 {% capture sidebar %}{% include_relative ComparingMathematica.md %}{% endcapture %}
 {{ sidebar | markdownify }}
 

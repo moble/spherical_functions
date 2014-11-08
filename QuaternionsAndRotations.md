@@ -17,8 +17,8 @@ components of the unit rotor corresponding to the rotation of which
 $\mathfrak{D}$ is a representation.  That is, we don't need to use
 Euler angles or rotation matrices at all.  In fact, the resulting
 expressions are at least as simple as those using Euler angles, but
-are faster and more accurate to compute.  The derivation is shown
-[below](#wigner-mathfrakd-matrices).
+are faster and more accurate to compute.  The derivation is shown on
+[this page](/WignerDMatrices.html).
 
 ![Spherical-coordinate system; By Andeggs, via Wikimedia Commons]({{ site.url }}/spherical_functions/images/3D_Spherical_Coords.svg){: style="float:right;height:200px"}
 

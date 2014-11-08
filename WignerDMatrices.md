@@ -1,11 +1,18 @@
-## Wigner $\mathfrak{D}$ matrices
+---
+---
 
-The Wigner $\mathfrak{D}$ matrices are derived in terms of a
-particular split of the quaternion group into two parts.  Explicitly,
-a quaternion $\quat{Q}$ can be expressed in terms of two complex
-numbers $\quat{Q}\_a = \quat{Q}\_1 + i\, \quat{Q}\_z$ and $\quat{Q}\_b
-= \quat{Q}\_y + i\, \quat{Q}\_x$.[^1]  This is only important because
-it allows us to verify the multiplication law
+# Wigner $\mathfrak{D}$ matrices
+
+The Wigner $\mathfrak{D}$ matrices allow us to represent the rotation
+group by means of finite-dimensional matrices.  They reduce to
+spherical functions in special cases, which further allows us to
+rotate spherical functions.  They are derived in terms of a particular
+split of the quaternion group into two parts.
+
+Explicitly, a quaternion $\quat{Q}$ can be expressed in terms of two
+complex numbers $\quat{Q}\_a = \quat{Q}\_1 + i\, \quat{Q}\_z$ and
+$\quat{Q}\_b = \quat{Q}\_y + i\, \quat{Q}\_x$.[^1] This is only
+important because it allows us to verify the multiplication law
 \begin{align}
   \label{eq:QuaternionComponentProducts}
   (\quat{P}\,\quat{Q})\_a &= \quat{P}\_a\, \quat{Q}\_a - \co{\quat{P}}\_b\, \quat{Q}\_b, \\\\
