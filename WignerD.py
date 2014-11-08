@@ -149,7 +149,7 @@ def _WignerD(Ra, Rb, indices, elements):
     # of the matrix elements, so we calculate them here just once
     absRa = abs(Ra)
     absRb = abs(Rb)
-    absRRatioSquared = (absRb*absRb/(absRa*absRa) if absRa>=absRb else absRa*absRa/(absRb*absRb))
+    absRRatioSquared = (-absRb*absRb/(absRa*absRa) if absRa>=absRb else -absRa*absRa/(absRb*absRb))
 
     if(absRa<=epsilon):
         for i in xrange(N):
@@ -192,12 +192,8 @@ def _WignerD(Ra, Rb, indices, elements):
                     rhoMax = min(ell-mp,ell-m)
                     Sum = 0.0
                     for rho in xrange(rhoMax, rhoMin-1, -1):
-                        if rho%2==0:
-                            Sum = (  binomial_coefficient(ell-mp,rho) * binomial_coefficient(ell+mp, ell-rho-m)
-                                     + Sum * absRRatioSquared )
-                        else:
-                            Sum = ( -binomial_coefficient(ell-mp,rho) * binomial_coefficient(ell+mp, ell-rho-m)
-                                     + Sum * absRRatioSquared )
+                        Sum = (  binomial_coefficient(ell-mp,rho) * binomial_coefficient(ell+mp, ell-rho-m)
+                                 + Sum * absRRatioSquared )
                     elements[i] = Prefactor * Sum * absRRatioSquared**rhoMin
 
     else: # absRa >= absRb
@@ -214,10 +210,6 @@ def _WignerD(Ra, Rb, indices, elements):
                     rhoMax = min(ell+mp,ell-m)
                     Sum = 0.0
                     for rho in xrange(rhoMax, rhoMin-1, -1):
-                        if rho%2==0:
-                            Sum = (  binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m)
-                                     + Sum * absRRatioSquared )
-                        else:
-                            Sum = ( -binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m)
-                                     + Sum * absRRatioSquared )
+                        Sum = (  binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m)
+                                 + Sum * absRRatioSquared )
                     elements[i] = Prefactor * Sum * absRRatioSquared**rhoMin
