@@ -22,6 +22,12 @@ import random
 import numba # This is to check to make sure we're actually using numba
 
 
+def test_finite_constant_arrays():
+    assert np.all(np.isfinite(sp.factorials))
+    assert np.all(np.isfinite(sp._binomial_coefficients))
+    assert np.all(np.isfinite(sp._ladder_operator_coefficients))
+    assert np.all(np.isfinite(sp._Wigner_coefficients))
+
 def nCk(n,k):
     """Simple binomial function"""
     return int( reduce(mul, (Fraction(n-i, i+1) for i in range(k)), 1) )
@@ -30,7 +36,6 @@ def test_factorials():
     for i in range(len(sp.factorials)):
         assert sp.factorial(i) == sp.factorials[i]
         assert float(math.factorial(i)) == sp.factorial(i)
-
 
 def test_binomial_coefficients():
     for n in range(2*sp.ell_max+1):
@@ -173,9 +178,33 @@ def test_WignerD_underflow(Rs,ell_max):
     # exactly zero.
 
     # Test rotations with |Ra|~1e-10 and large ell
+    ell=32
     assert False
     # Test rotations with |Rb|~1e-10 and large ell
     assert False
+
+
+def test_WignerD_overflow(Rs,ell_max):
+    assert sp.ell_max>=15 # Test can't work if this has been set lower
+    # Test |Ra|=1e-10
+    R = np.quaternion(1.e-10, 1, 0, 0).normalized()
+    print("Note: If this test fails, it might actually be a good thing...")
+    for ell in range(ell_max+1):
+        for mp in range(-ell,ell+1):
+            for m in range(-ell,ell+1):
+                if (mp+m)<-30:
+                    assert np.isnan(sp.WignerD(R, ell, mp, m))
+                elif (mp+m)>-30: # ==-30 is an edge case
+                    assert np.isfinite(sp.WignerD(R, ell, mp, m))
+    # Test |Rb|=1e-10
+    R = np.quaternion(1, 1.e-10, 0, 0).normalized()
+    for ell in range(ell_max+1):
+        for mp in range(-ell,ell+1):
+            for m in range(-ell,ell+1):
+                if (m-mp)<-30:
+                    assert np.isnan(sp.WignerD(R, ell, mp, m))
+                elif (m-mp)>-30: # ==-30 is an edge case
+                    assert np.isfinite(sp.WignerD(R, ell, mp, m))
 
 
 @pytest.fixture
@@ -199,6 +228,42 @@ def test_WignerD_values(special_angles, ell_max):
                 assert np.allclose( np.conjugate(np.array([UglyWignerD(alpha, beta, gamma, ell, mp, m) for ell,mp,m in LMpM])),
                                     sp.WignerD(quaternion.from_euler_angles(alpha, beta, gamma), LMpM),
                                     atol=precision_WignerD, rtol=precision_WignerD )
+
+def sYlm(ell,s,m,theta,phi):
+    "Eq. II.7 of Ajith et al. (2007) 'Data formats...'"
+    return (-1)**(-s) * math.sqrt((2*ell+1)/(4*np.pi)) * (-1)**(s+m)*UglyWignerd(theta, ell, -s, m) * cmath.exp(1j*m*phi)
+def m2Y22(iota, phi):
+    return math.sqrt(5/(64*np.pi)) * (1+math.cos(iota))**2 * cmath.exp(2j*phi)
+def m2Y21(iota, phi):
+    return math.sqrt(5/(16*np.pi)) * math.sin(iota) * (1+math.cos(iota)) * cmath.exp(1j*phi)
+def m2Y20(iota, phi):
+    return math.sqrt(15/(32*np.pi)) * math.sin(iota)**2
+def m2Y2m1(iota, phi):
+    return math.sqrt(5/(16*np.pi)) * math.sin(iota) * (1-math.cos(iota)) * cmath.exp(-1j*phi)
+def m2Y2m2(iota, phi):
+    return math.sqrt(5/(64*np.pi)) * (1-math.cos(iota))**2 * cmath.exp(-2j*phi)
+def test_SWSH_NINJA_values(special_angles, ell_max):
+    precision_SWSH = 1.e-15
+    for iota in special_angles:
+        for phi in special_angles:
+            assert abs(sYlm(2,-2, 2,iota,phi) - m2Y22(iota,phi)) < precision_SWSH
+            assert abs(sYlm(2,-2, 1,iota,phi) - m2Y21(iota,phi)) < precision_SWSH
+            assert abs(sYlm(2,-2, 0,iota,phi) - m2Y20(iota,phi)) < precision_SWSH
+            assert abs(sYlm(2,-2,-1,iota,phi) - m2Y2m1(iota,phi)) < precision_SWSH
+            assert abs(sYlm(2,-2,-2,iota,phi) - m2Y2m2(iota,phi)) < precision_SWSH
+def test_SWSH_values(special_angles, ell_max):
+    precision_SWSH = 2.e-15
+    for iota in special_angles:
+        for phi in special_angles:
+            for ell in range(ell_max+1):
+                for s in range(-ell,ell+1):
+                    for m in range(-ell,ell+1):
+                        assert abs( (-1)**(-s)*math.sqrt((2*ell+1)/(4*np.pi))
+                                    *sp.WignerD(quaternion.from_euler_angles(phi,iota,0),ell,m,-s)
+                                    - sYlm(ell,s,m,iota,phi) ) < precision_SWSH
+                        assert abs( (-1)**(s)*math.sqrt((2*ell+1)/(4*np.pi))
+                                    *sp.WignerD(quaternion.from_euler_angles(0,iota,phi),ell,s,-m).conjugate()
+                                    - sYlm(ell,s,m,iota,phi) ) < precision_SWSH
 
 if __name__=='__main__':
     print("This script is intended to be run through py.test")

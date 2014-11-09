@@ -11,10 +11,10 @@ The conventions for this package are described in detail on
 
 ## Dependencies
 
-The only true requirements for this code are `python` and `numpy`, as
-well as my accompanying
+The only true requirements for this code are `python` and the python
+package `numpy`, as well as my accompanying
 [`quaternion`](https://github.com/moble/numpy_quaternion) package
-(installation for the latter is shown below).
+(installation of which is shown below).
 
 However, this package can automatically use
 [`numba`](http://numba.pydata.org/), which uses
