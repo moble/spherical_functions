@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 
+import cmath
 import numpy as np
 import quaternion
 from . import (_Wigner_coefficient as coeff, binomial_coefficient,
@@ -149,11 +150,11 @@ def _WignerD(Ra, Rb, indices, elements):
 
     # These constants are the recurring quantities in the computation
     # of the matrix elements, so we calculate them here just once
-    absRa_squared = abs(Ra)**2
-    absRb_squared = abs(Rb)**2
-    absRRatioSquared = (-absRb_squared/absRa_squared if absRa_squared>=absRb_squared else -absRa_squared/absRb_squared)
+    ra,phia = cmath.polar(Ra)
+    rb,phib = cmath.polar(Rb)
+    absRRatioSquared = (-rb*rb/(ra*ra) if ra>=rb else -ra*ra/(rb*rb))
 
-    if(absRa_squared<=epsilon_squared):
+    if(ra<=epsilon):
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
             if(mp!=-m or abs(mp)>ell or abs(m)>ell):
@@ -164,7 +165,7 @@ def _WignerD(Ra, Rb, indices, elements):
                 else:
                     elements[i] = -Rb**(2*m)
 
-    elif(absRb_squared<=epsilon_squared):
+    elif(rb<=epsilon):
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
             if(mp!=m or abs(mp)>ell or abs(m)>ell):
@@ -172,40 +173,62 @@ def _WignerD(Ra, Rb, indices, elements):
             else:
                 elements[i] = Ra**(2*m)
 
-    elif(absRa_squared<absRb_squared):
+    elif(ra<rb):
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
             if(abs(mp)>ell or abs(m)>ell):
                 elements[i] = 0.0j
             else:
-                Prefactor = coeff(ell, mp, m) * absRb_squared**(ell-m) * Rb**(m-mp) * Ra**(m+mp)
-                if((ell+m)%2!=0):
-                    Prefactor *= -1
+                rhoMin = max(0,-mp-m)
+                # Protect against overflow by decomposing Ra,Rb as
+                # abs,angle components and pulling out the factor of
+                # absRRatioSquared**rhoMin.  Here, ra might be quite
+                # small, in which case ra**(m+mp) could be enormous
+                # when the exponent (m+mp) is very negative; adding
+                # 2*rhoMin to the exponent ensures that it is always
+                # positive, which protects from overflow.  Meanwhile,
+                # underflow just goes to zero, which is fine since
+                # nothing else should be very large.
+                Prefactor = cmath.rect( coeff(ell, mp, m) * rb**(2*ell-m-mp-2*rhoMin) * ra**(m+mp+2*rhoMin),
+                                        phib*(m-mp) + phia*(m+mp) )
                 if(Prefactor==0.0j):
                     elements[i] = 0.0j
                 else:
-                    rhoMin = max(0,-mp-m)
+                    if((ell+m+rhoMin)%2!=0):
+                        Prefactor *= -1
                     rhoMax = min(ell-mp,ell-m)
                     Sum = 0.0
                     for rho in xrange(rhoMax, rhoMin-1, -1):
                         Sum = (  binomial_coefficient(ell-mp,rho) * binomial_coefficient(ell+mp, ell-rho-m)
                                  + Sum * absRRatioSquared )
-                    elements[i] = Prefactor * Sum * absRRatioSquared**rhoMin
+                    elements[i] = Prefactor * Sum
 
-    else: # absRa_squared >= absRb_squared
+    else: # ra >= rb
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
             if(abs(mp)>ell or abs(m)>ell):
                 elements[i] = 0.0j
             else:
-                Prefactor = coeff(ell, mp, m) * absRa_squared**(ell-m) * Ra**(m+mp) * Rb**(m-mp)
+                rhoMin = max(0,mp-m)
+                # Protect against overflow by decomposing Ra,Rb as
+                # abs,angle components and pulling out the factor of
+                # absRRatioSquared**rhoMin.  Here, rb might be quite
+                # small, in which case rb**(m-mp) could be enormous
+                # when the exponent (m-mp) is very negative; adding
+                # 2*rhoMin to the exponent ensures that it is always
+                # positive, which protects from overflow.  Meanwhile,
+                # underflow just goes to zero, which is fine since
+                # nothing else should be very large.
+                Prefactor = cmath.rect( coeff(ell, mp, m) * ra**(2*ell-m+mp-2*rhoMin) * rb**(m-mp+2*rhoMin),
+                                        phia*(m+mp) + phib*(m-mp) )
                 if(Prefactor==0.0j):
                     elements[i] = 0.0j
                 else:
-                    rhoMin = max(0,mp-m)
+                    if(rhoMin%2!=0):
+                        Prefactor *= -1
                     rhoMax = min(ell+mp,ell-m)
                     Sum = 0.0
                     for rho in xrange(rhoMax, rhoMin-1, -1):
                         Sum = (  binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m)
                                  + Sum * absRRatioSquared )
-                    elements[i] = Prefactor * Sum * absRRatioSquared**rhoMin
+                    elements[i] = Prefactor * Sum
