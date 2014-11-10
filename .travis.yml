@@ -23,5 +23,13 @@ install:
   - python setup.py install
 
 script:
+  # I've had to make some tests' accuracy depend on the value of
+  # ell_max, so I run the tests for multiple values of ell_max -- in
+  # particular, for my most important use case, ell=8.  And then I run
+  # again for the largest ell_max, but only the faster tests, so that
+  # Travis isn't overtaxed.  (Those slower tests have already
+  # established their patterns anyway; the interesting tests for large
+  # ell_max are the ones like overflow and underflow, which are pretty
+  # fast anyway.)
   - py.test --ell_max 8
   - FAST=1 py.test --ell_max 32
