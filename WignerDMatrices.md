@@ -101,19 +101,19 @@ In the same way, we can calculate this for $\lvert \quat{R}_b \rvert
 Now, the other fork in that road is the general case, when both
 components have significant magnitudes.  We have powers of the sum of
 those terms in Eq. \eqref{eq:QuaternionComponentProducts}.  This leads
-us to use the
+us to use (two applications of) the
 [binomial expansion](https://en.wikipedia.org/wiki/Binomial_theorem).
 After a little simplification, we can express the result as
-\begin{equation}
+\begin{multline}
   \label{eq:DAnalytically}
   \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
   = \sum\_{\rho} \binom{\ell+m'} {\rho}\, \binom{\ell-m'}
-  {\ell-\rho-m}\, (-1)^{\rho}\, \quat{R}\_{a}^{\ell+m'-\rho}\,
+  {\ell-\rho-m}\, (-1)^{\rho}\, \\\\ \times \quat{R}\_{a}^{\ell+m'-\rho}\,
   \co{\quat{R}}\_{a}^{\ell-\rho-m}\,
   \quat{R}\_{b}^{\rho-m'+m}\, \co{\quat{R}}\_{b}^{\rho}\,
   \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\,
       (\ell-m')! } }.
-\end{equation}
+\end{multline}
 Now, this expression is not the best way to implement the calculation
 in the code.  The reason is that we would need to take a bunch of
 exponents of complex numbers, and there's the possibility that the sum
@@ -151,7 +151,7 @@ For example, we can simplify the above as
   &\qquad
   \times \sum\_{\rho}
   \binom{\ell+m'} {\rho}\, \binom{\ell-m'} {\ell-\rho-m}\,
-  (-1)^{\rho}\, \left( \frac{\lvert \quat{R}\_{b} \rvert^2}
+  \left( - \frac{\lvert \quat{R}\_{b} \rvert^2}
   {\lvert \quat{R}\_{a} \rvert^2} \right)^{\rho}.
 \end{align}
 Typically, this last expression can be evaluated pretty efficiently.
@@ -170,7 +170,7 @@ We won't have triggered the condition $\lvert \quat{R}\_b \rvert <
 represent, so it goes to zero.  But this is okay, because such terms
 probably should be zero; only the $m'=m$ terms are significant when
 $\lvert \quat{R}\_b \rvert$ is small.  Thus, we are sort of
-automatically protected from underflow in that case.
+automatically protected from *problematic* underflow in that case.
 
 On the other hand, if $\lvert \quat{R}\_a \rvert$ is small, the ratio
 in the sum might be very large, which could lead to overflow, while
@@ -180,15 +180,15 @@ that sort of reverses the roles of $a$ and $b$.  It turns out that
 this isn't hard.  In deriving Eq. \eqref{eq:DAnalytically}, a choice
 was made regarding the summation variable.  We can simply transform
 that summation variable as $\rho \mapsto \ell-m-\rho$, and obtain
-\begin{equation\*}
+\begin{multline\*}
   \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
   = \sum\_{\rho} \binom{\ell+m'} {\ell-m-\rho}\, \binom{\ell-m'}
-  {\rho}\, (-1)^{\ell-m-\rho}\, \quat{R}\_{a}^{m'+m+\rho}\,
-  \co{\quat{R}}\_{a}^{\rho}\,
+  {\rho}\, (-1)^{\ell-m-\rho}\, \\\\ \times
+  \quat{R}\_{a}^{m'+m+\rho}\, \co{\quat{R}}\_{a}^{\rho}\,
   \quat{R}\_{b}^{\ell-m'-\rho}\, \co{\quat{R}}\_{b}^{\ell-m-\rho}\,
   \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\,
       (\ell-m')! } }.
-\end{equation\*}
+\end{multline\*}
 It's interesting to note the symmetry with the earlier version of this
 equation; we've essentially just exchanged the labels $a$ and $b$,
 while also reversing the sign of $m'$, and multiplying by an overall
@@ -228,8 +228,7 @@ as before:
   &\qquad
   \times \sum\_{\rho}
   \binom{\ell+m'} {\ell-m-\rho}\, \binom{\ell-m'} {\rho}\,
-  (-1)^\rho\,
-  \left( \frac{ \lvert \quat{R}\_{a} \rvert^2 }
+  \left( - \frac{ \lvert \quat{R}\_{a} \rvert^2 }
   { \lvert \quat{R}\_{b} \vert^2 } \right)^{\rho}
 \end{align}
 
@@ -244,6 +243,15 @@ $\mathfrak{D}$ in each branch:
      use Eq. \eqref{eq:D\_RaGeqRb}.
   4. When $\lvert \quat{R}\_a \rvert < \lvert \quat{R}\_b \rvert$, use
      Eq. \eqref{eq:D\_RaLeqRb}.
+
+Note that these expressions are valid even for half-integer values of
+$\ell$, noting that if $\ell$ is half-integer, then so must $m'$ and
+$m$ be.  However, in the interests of fast implementation, the code in
+this module assumes integer values.  (It would be simple for me to
+implement the more general case.  If this is a functionality you need,
+please feel free to
+[open an issue](https://github.com/moble/spherical_functions/issues)
+on this module's github page to request it.)
 
 
 [^1]: This, of course, is not a productive way of *thinking about*
