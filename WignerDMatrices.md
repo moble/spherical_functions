@@ -99,9 +99,9 @@ In the same way, we can calculate this for $\lvert \quat{R}_b \rvert
 \end{equation}
 
 Now, the other fork in that road is the general case, when both
-components have significant magnitudes.  We have powers of the sum of
-those terms in Eq. \eqref{eq:QuaternionComponentProducts}.  This leads
-us to use (two applications of) the
+components have larger magnitudes.  We have powers of the sum of those
+terms in Eq. \eqref{eq:QuaternionComponentProducts}.  This leads us to
+use (two applications of) the
 [binomial expansion](https://en.wikipedia.org/wiki/Binomial_theorem).
 After a little simplification, we can express the result as
 \begin{multline}
@@ -114,16 +114,12 @@ After a little simplification, we can express the result as
   \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\,
       (\ell-m')! } }.
 \end{multline}
-Now, this expression is not the best way to implement the calculation
-in the code.  The reason is that we would need to take a bunch of
-exponents of complex numbers, and there's the possibility that the sum
-would cancel out to give a very small number, which would be polluted
-with roundoff, etc.  So we try to pull out as many constants as we can
-from the sum, and then try to write the sum in
-[Horner form](http://reference.wolfram.com/language/ref/HornerForm.html),
-which is a fast and accurate way to evaluate sums.
-
-For example, we can simplify the above as
+It turns out that this expression is not the best way to implement the
+calculation in the code.  The reason is that we would need to take a
+bunch of exponents of complex numbers, and there's the possibility
+that the sum would cancel out to give a very small number, which would
+be polluted with roundoff, etc.  So we manipulate it to put it in a
+better form.  For example, we can simplify the above as
 \begin{align}
   \nonumber
   \mathfrak{D}^{(\ell)}\_{m,m'}(\quat{R})
@@ -155,31 +151,62 @@ For example, we can simplify the above as
   {\lvert \quat{R}\_{a} \rvert^2} \right)^{\rho}.
 \end{align}
 Typically, this last expression can be evaluated pretty efficiently.
-We just have two complex exponentials and one real exponential out
-front.  The coefficients (the square root and the binomials) can be
-calculated ahead of time and cached, and the ratio in the sum can be
-evaluated once, then reused.  The exponentiation of this is done
-implicitly using Horner form.
 
-However, there are some important caveats to be careful of.  For
-example, let's suppose that $\lvert \quat{R}\_b \rvert = 10^{-11}$,
-and we're evaluating the $\ell=16$ matrix element $(m',m)=(-16,16)$.
-We won't have triggered the condition $\lvert \quat{R}\_b \rvert <
-10^{-15}$, but we will have $\lvert \quat{R}\_b^{m-m'} \rvert \lesssim
-10^{-352}$, which is less than the smallest `float` that python can
-represent, so it goes to zero.  But this is okay, because such terms
-probably should be zero; only the $m'=m$ terms are significant when
-$\lvert \quat{R}\_b \rvert$ is small.  Thus, we are sort of
-automatically protected from *problematic* underflow in that case.
+But to make it really fast, accurate, and robust, we have to use some
+tricks.  First of all, the various combinatorical factors are
+expensive to re-evaluate each time.  The obvious way to handle this is
+just to pre-compute them, and have a function returning the
+appropriate values with some simple indexing tricks.  These functions
+are implemented in this module's
+[initialization code](https://github.com/moble/spherical_functions/blob/master/__init__.py#L18).
 
-On the other hand, if $\lvert \quat{R}\_a \rvert$ is small, the ratio
-in the sum might be very large, which could lead to overflow, while
-the initial factor of $\lvert \quat{R}\_{a} \rvert^{2\ell-2m}$ might
-underflow.  Thus, it would be better if we could find an expression
-that sort of reverses the roles of $a$ and $b$.  It turns out that
-this isn't hard.  In deriving Eq. \eqref{eq:DAnalytically}, a choice
-was made regarding the summation variable.  We can simply transform
-that summation variable as $\rho \mapsto \ell-m-\rho$, and obtain
+Now, that sum is essentially a polynomial, and the best way to
+evaluate a polynomial uses
+[Horner form](http://reference.wolfram.com/language/ref/HornerForm.html)
+--- which is both faster and more accurate than the naive approach.
+This also allows us to pull out the lowest-order coefficient of that
+polynomial: $(-\lvert R_b \rvert / \lvert R_a \rvert)^{2
+\rho_{\mathrm{min}}}$.  We will see momentarily that being able to do
+this is very important.
+
+That deals very nicely with the sum, but we also need to deal with the
+factor in front of the sum.  And there are some fairly subtle
+complications to deal with when evaluating that factor.  First of all,
+complex exponentials are slow.  Second, there are cases where those
+terms can become really huge, only to be multiplied by something
+really tiny, leaving us reasonable values in the neighborhood of 1.
+But those exponents can be very large; if we're looking for matrix
+elements for $\ell=32$, the exponents will range from $-64$ all the
+way up to $64$.  And since the largest and smallest numbers python can
+represent are in the neighborhood of $10^{323}$ and $10^{-308}$,
+respectively, we can easily get `nan` or `0` for calculations that
+should actually give us something that is neither of those values ---
+for example, if $\lvert R_b \rvert \approx 10^{-6}$ and $-m'=m=-32$.
+But these terms only appear due to our separation of powers into the
+sum.  If we now bring out the lowest factor from the sum, we can make
+those exponents disappear.  The problem now is to cancel the exponents
+in a mixture of exponents of complex numbers and exponents of real
+numbers, and to do so efficiently.
+
+The solution to this problem is simple and, miraculously, makes the
+code 2.3 times faster!  We decompose $R_a$ and $R_b$ into magnitude
+and phase, calculate the exponents to which those must be raised, and
+then produce the result as a complex number from the separate
+magnitude and phase.  There are fast functions in the standard python
+module `cmath` that do these operations, and they are directly
+supported in `numba` since version 0.15, so this is quite a simple
+solution to implement, also.  The calculation of this prefactor is
+given in this module
+[here](https://github.com/moble/spherical_functions/blob/master/WignerD.py#L225).
+
+But this doesn't solve all our problems.  The same issues can creep up
+if $\lvert R_a \rvert$ is small (though it requires a smaller
+magnitude, and occurs for a smaller subset of $m',m$ values).  In this
+case, it would be better if we could find an expression that sort of
+reverses the roles of $a$ and $b$.  It turns out that this isn't hard.
+In deriving Eq. \eqref{eq:DAnalytically}, a choice was made regarding
+the summation variable.  We can simply transform that summation
+variable as $\rho \mapsto \ell-m-\rho$, and obtain
 \begin{multline\*}
   \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
   = \sum\_{\rho} \binom{\ell+m'} {\ell-m-\rho}\, \binom{\ell-m'}
@@ -231,6 +258,7 @@ as before:
   \left( - \frac{ \lvert \quat{R}\_{a} \rvert^2 }
   { \lvert \quat{R}\_{b} \vert^2 } \right)^{\rho}
 \end{align}
+And again, we evaluate this cleverly, as above.
 
 So we get four branches in our logic, with a different expression for
 $\mathfrak{D}$ in each branch:
