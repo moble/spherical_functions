@@ -178,49 +178,33 @@ def test_WignerD_roundoff(Rs,ell_max):
 
 def test_WignerD_underflow(Rs,ell_max):
     assert sp.ell_max>=15 # Test can't work if this has been set lower
+    ell_max = max(sp.ell_max, ell_max)
+    print("Note: If this `test_WignerD_underflow` fails, it might actually be a good thing, if things aren't underflowing...")
     # Test |Ra|=1e-10
+    LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1) if abs(mp+m)>32])
     R = np.quaternion(1.e-10, 1, 0, 0).normalized()
-    print("Note: If this test fails, it might actually be a good thing...")
-    for ell in range(ell_max+1):
-        for mp in range(-ell,ell+1):
-            for m in range(-ell,ell+1):
-                # print(ell,mp,m)
-                if abs(mp+m)>32 and (mp+m)>-30:
-                    assert sp.WignerD(R, ell, mp, m) == 0j
-                elif abs(mp+m)<17 and (mp+m)>-30: # everything else is mixed
-                    assert sp.WignerD(R, ell, mp, m) != 0j
+    assert np.all( sp.WignerD(R, LMpM) == 0j )
+    LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1) if abs(mp+m)<32])
+    R = np.quaternion(1.e-10, 1, 0, 0).normalized()
+    assert np.all( sp.WignerD(R, LMpM) != 0j )
     # Test |Rb|=1e-10
+    LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1) if abs(m-mp)>32])
     R = np.quaternion(1, 1.e-10, 0, 0).normalized()
-    for ell in range(ell_max+1):
-        for mp in range(-ell,ell+1):
-            for m in range(-ell,ell+1):
-                if abs(m-mp)>32 and (m-mp)>-30:
-                    assert sp.WignerD(R, ell, mp, m) == 0j
-                elif abs(m-mp)<17 and (m-mp)>-30: # everything else is mixed
-                    assert sp.WignerD(R, ell, mp, m) != 0j
-
+    assert np.all( sp.WignerD(R, LMpM) == 0j )
+    LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1) if abs(m-mp)<32])
+    R = np.quaternion(1, 1.e-10, 0, 0).normalized()
+    assert np.all( sp.WignerD(R, LMpM) != 0j )
 
 def test_WignerD_overflow(Rs,ell_max):
     assert sp.ell_max>=15 # Test can't work if this has been set lower
+    ell_max = max(sp.ell_max, ell_max)
+    LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
     # Test |Ra|=1e-10
     R = np.quaternion(1.e-10, 1, 0, 0).normalized()
-    print("Note: If this test fails, it might actually be a good thing...")
-    for ell in range(ell_max+1):
-        for mp in range(-ell,ell+1):
-            for m in range(-ell,ell+1):
-                if (mp+m)<-30:
-                    assert np.isnan(sp.WignerD(R, ell, mp, m))
-                elif (mp+m)>-30: # ==-30 is an edge case
-                    assert np.isfinite(sp.WignerD(R, ell, mp, m))
+    assert np.all( np.isfinite( sp.WignerD(R, LMpM) ) )
     # Test |Rb|=1e-10
     R = np.quaternion(1, 1.e-10, 0, 0).normalized()
-    for ell in range(ell_max+1):
-        for mp in range(-ell,ell+1):
-            for m in range(-ell,ell+1):
-                if (m-mp)<-30:
-                    assert np.isnan(sp.WignerD(R, ell, mp, m))
-                elif (m-mp)>-30: # ==-30 is an edge case
-                    assert np.isfinite(sp.WignerD(R, ell, mp, m))
+    assert np.all( np.isfinite( sp.WignerD(R, LMpM) ) )
 
 
 @pytest.fixture
