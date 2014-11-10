@@ -7,8 +7,6 @@ from . import (_Wigner_coefficient as coeff, binomial_coefficient,
                epsilon, min_exp, mant_dig, error_on_bad_indices)
 from quaternion.numba_wrapper import njit, jit, int64, xrange
 
-epsilon_squared = epsilon*epsilon
-
 _log2 = np.log(2)
 
 @njit('b1(i8,i8,i8)')
@@ -152,7 +150,6 @@ def _WignerD(Ra, Rb, indices, elements):
     # of the matrix elements, so we calculate them here just once
     ra,phia = cmath.polar(Ra)
     rb,phib = cmath.polar(Rb)
-    absRRatioSquared = (-rb*rb/(ra*ra) if ra>=rb else -ra*ra/(rb*rb))
 
     if(ra<=epsilon):
         for i in xrange(N):
@@ -174,6 +171,9 @@ def _WignerD(Ra, Rb, indices, elements):
                 elements[i] = Ra**(2*m)
 
     elif(ra<rb):
+        # We have to have these two versions (both this ra<rb branch,
+        # and ra>=rb below) to avoid overflows and underflows
+        absRRatioSquared = -ra*ra/(rb*rb)
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
             if(abs(mp)>ell or abs(m)>ell):
@@ -204,6 +204,9 @@ def _WignerD(Ra, Rb, indices, elements):
                     elements[i] = Prefactor * Sum
 
     else: # ra >= rb
+        # We have to have these two versions (both this ra>=rb branch,
+        # and ra<rb above) to avoid overflows and underflows
+        absRRatioSquared = -rb*rb/(ra*ra)
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
             if(abs(mp)>ell or abs(m)>ell):
