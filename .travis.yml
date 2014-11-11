@@ -19,6 +19,7 @@ install:
   - conda info -a
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy numba pip pytest
   - source activate test-environment
+  - pip install python-coveralls pytest-cov
   - pip install git+git://github.com/moble/numpy_quaternion
   - python setup.py install
 
@@ -31,5 +32,8 @@ script:
   # established their patterns anyway; the interesting tests for large
   # ell_max are the ones like overflow and underflow, which are pretty
   # fast anyway.)
-  - py.test --ell_max 8 --run_slow_tests -s
+  - py.test --cov=spherical_functions --ell_max 8 --run_slow_tests -s
   - py.test --ell_max 32
+
+after_success:
+  coveralls
