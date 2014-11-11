@@ -281,6 +281,7 @@ please feel free to
 [open an issue](https://github.com/moble/spherical_functions/issues)
 on this module's github page to request it.)
 
+---
 
 [^1]: This, of course, is not a productive way of *thinking about*
       quaternions, but it is a very useful way of *calculating with*
