@@ -138,7 +138,8 @@ Fairchild Foundation and by NSF Grants No. PHY-1306125 and
 AST-1333129.
 
 
-<br/><br/>
+<br/>
+---
 ###### <sup>1</sup> Euler angles are awful
 
 Euler angles are pretty much
