@@ -219,7 +219,6 @@ def UglyWignerd(beta, ell, mp, m):
                             for s in range(s_min,s_max+1)])
 def UglyWignerD(alpha, beta, gamma, ell, mp, m):
     return cmath.exp(-1j*mp*alpha)*UglyWignerd(beta, ell, mp, m)*cmath.exp(-1j*m*gamma)
-# @pytest.mark.skipif(os.environ.get('FAST'), reason="Takes a long time because of nested loops")
 @skip_if_fast
 def test_WignerD_values(special_angles, ell_max):
     LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
@@ -246,15 +245,15 @@ def m2Y2m1(iota, phi):
     return math.sqrt(5/(16*np.pi)) * math.sin(iota) * (1-math.cos(iota)) * cmath.exp(-1j*phi)
 def m2Y2m2(iota, phi):
     return math.sqrt(5/(64*np.pi)) * (1-math.cos(iota))**2 * cmath.exp(-2j*phi)
-def test_SWSH_NINJA_values(special_angles, ell_max):
-    for iota in special_angles:
-        for phi in special_angles:
-            assert abs(sYlm(2,-2, 2,iota,phi) - m2Y22(iota,phi)) < ell_max*precision_SWSH
-            assert abs(sYlm(2,-2, 1,iota,phi) - m2Y21(iota,phi)) < ell_max*precision_SWSH
-            assert abs(sYlm(2,-2, 0,iota,phi) - m2Y20(iota,phi)) < ell_max*precision_SWSH
-            assert abs(sYlm(2,-2,-1,iota,phi) - m2Y2m1(iota,phi)) < ell_max*precision_SWSH
-            assert abs(sYlm(2,-2,-2,iota,phi) - m2Y2m2(iota,phi)) < ell_max*precision_SWSH
-# @pytest.mark.skipif(os.environ.get('FAST'), reason="Takes a long time because of nested loops")
+## This is just to test my implementation of the equations give in the paper:
+# def test_SWSH_NINJA_values(special_angles, ell_max):
+#     for iota in special_angles:
+#         for phi in special_angles:
+#             assert abs(sYlm(2,-2, 2,iota,phi) - m2Y22(iota,phi)) < ell_max*precision_SWSH
+#             assert abs(sYlm(2,-2, 1,iota,phi) - m2Y21(iota,phi)) < ell_max*precision_SWSH
+#             assert abs(sYlm(2,-2, 0,iota,phi) - m2Y20(iota,phi)) < ell_max*precision_SWSH
+#             assert abs(sYlm(2,-2,-1,iota,phi) - m2Y2m1(iota,phi)) < ell_max*precision_SWSH
+#             assert abs(sYlm(2,-2,-2,iota,phi) - m2Y2m2(iota,phi)) < ell_max*precision_SWSH
 @skip_if_fast
 def test_SWSH_values(special_angles, ell_max):
     for iota in special_angles:
@@ -262,12 +261,16 @@ def test_SWSH_values(special_angles, ell_max):
             for ell in range(ell_max+1):
                 for s in range(-ell,ell+1):
                     for m in range(-ell,ell+1):
-                        assert abs( (-1)**(-s)*math.sqrt((2*ell+1)/(4*np.pi))
-                                    *sp.WignerD(quaternion.from_euler_angles(phi,iota,0),ell,m,-s)
-                                    - sYlm(ell,s,m,iota,phi) ) < ell_max**6*precision_SWSH
-                        assert abs( (-1)**(s)*math.sqrt((2*ell+1)/(4*np.pi))
-                                    *sp.WignerD(quaternion.from_euler_angles(0,iota,phi),ell,s,-m).conjugate()
-                                    - sYlm(ell,s,m,iota,phi) ) < ell_max**6*precision_SWSH
+                        R = quaternion.from_euler_angles(phi,iota,0)
+                        assert abs( sp.SWSH(R.a, R.b, s, np.array([[ell,m]]))
+                                    - sYlm(ell,s,m,iota,phi) ) < ell_max**6 * precision_SWSH
+
+@pytest.mark.xfail
+def test_SWSH_spin_behavior(special_angles, ell_max):
+    for s in range(4):
+        assert False
+
+
 
 if __name__=='__main__':
     print("This script is intended to be run through py.test")

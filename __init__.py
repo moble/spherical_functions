@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 
-__all__ = ['Wigner3j']
+__all__ = ['Wigner3j', 'WignerD', 'SWSH',
+           'factorial', 'binomial_coefficient', 'ladder_operator_coefficient']
 
 from numpy import array, floor
 from math import factorial, sqrt
@@ -55,4 +56,4 @@ def _Wigner_index(ell,mp,m):
 
 from .Wigner3j import Wigner3j
 from .WignerD import WignerD, _WignerD
-#from .SWSH import SWSH, SpinWeightedSphericalHarmonic, SphericalHarmonic
+from .SWSH import SWSH, _SWSH # sYlm, Ylm
