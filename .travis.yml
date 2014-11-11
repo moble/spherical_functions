@@ -31,5 +31,5 @@ script:
   # established their patterns anyway; the interesting tests for large
   # ell_max are the ones like overflow and underflow, which are pretty
   # fast anyway.)
-  - py.test --ell_max 8
-  - FAST=1 py.test --ell_max 32
+  - py.test --ell_max 8 --run_slow_tests -s
+  - py.test --ell_max 32
