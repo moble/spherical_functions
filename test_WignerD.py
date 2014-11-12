@@ -44,20 +44,6 @@ def test_Wigner_D_matrices_negative_argument(Rs, ell_max):
         assert np.allclose( a, b, rtol=ell_max*precision_Wigner_D_element)
 
 @slow
-def test_Wigner_D_element_representation_property(Rs,ell_max):
-    # Test the representation property for special and random angles
-    # Try half-integers, too
-    LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
-    print("")
-    for i,R1 in enumerate(Rs):
-        print("\t{0} of {1}: R1 = {2}".format(i, len(Rs), R1))
-        for R2 in Rs:
-            D1 = sp.Wigner_D_element(R1, LMpM)
-            D2 = sp.Wigner_D_element(R2, LMpM)
-            D12 = np.array([np.sum([D1[sp._Wigner_index(ell,mp,mpp)]*D2[sp._Wigner_index(ell,mpp,m)] for mpp in range(-ell,ell+1)])
-                            for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
-            assert np.allclose( sp.Wigner_D_element(R1*R2, LMpM), D12, atol=ell_max*precision_Wigner_D_element)
-@slow
 def test_Wigner_D_matrices_representation_property(Rs,ell_max):
     # Test the representation property for special and random angles
     # Try half-integers, too
@@ -77,14 +63,18 @@ def test_Wigner_D_matrices_representation_property(Rs,ell_max):
                             for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
             assert np.allclose( M12, D12, atol=ell_max*precision_Wigner_D_element)
 
-def test_Wigner_D_element_inverse(Rs, ell_max):
+def test_Wigner_D_matrices_inverse(Rs, ell_max):
     # Ensure that the matrix of the inverse rotation is the inverse of
     # the matrix of the rotation
     for R in Rs:
         for ell in range(ell_max+1):
             LMpM = np.array([[ell,mp,m] for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
-            D1 = sp.Wigner_D_element(R, LMpM).reshape((2*ell+1,2*ell+1))
-            D2 = sp.Wigner_D_element(R.inverse(), LMpM).reshape((2*ell+1,2*ell+1))
+            D1  = np.empty((LMpM.shape[0],), dtype=complex)
+            D2  = np.empty((LMpM.shape[0],), dtype=complex)
+            sp._Wigner_D_matrices(R.a, R.b, ell, ell, D1)
+            sp._Wigner_D_matrices(R.inverse().a, R.inverse().b, ell, ell, D2)
+            D1 = D1.reshape((2*ell+1,2*ell+1))
+            D2 = D2.reshape((2*ell+1,2*ell+1))
             assert np.allclose(D1.dot(D2), np.identity(2*ell+1),
                                atol=ell_max**4*precision_Wigner_D_element, rtol=ell_max**4*precision_Wigner_D_element)
 
