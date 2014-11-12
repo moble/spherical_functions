@@ -164,8 +164,8 @@ def test_Wigner_D_element_values(special_angles, ell_max):
 
 @slow
 def test_Wigner_D_matrix(Rs, ell_max):
-    print("")
     for l_min in [0,1,2,ell_max//2,ell_max-1]:
+        print("")
         for l_max in range(l_min+1,ell_max+1):
             print("\tWorking on (l_min,l_max)=({0},{1})".format(l_min,l_max))
             LMpM = np.array([[ell,mp,m]
