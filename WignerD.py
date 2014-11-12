@@ -390,11 +390,10 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                             # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
                             matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = 0.0j
                     else:
-                        Sign = (1 if (m+mp)%2==0 else -1)
                         if((ell+m+rhoMin)%2!=0):
                             d *= -1
                         Prefactor1 = cmath.rect( d, phib*(m-mp) + phia*(m+mp) )
-                        Prefactor2 = Sign*cmath.rect( d, phib*(m-mp) - phia*(m+mp) )
+                        Prefactor2 = cmath.rect( d, (phib+np.pi)*(m-mp) - phia*(m+mp) )
                         rhoMax = min(ell-mp,ell-m)
                         Sum = 0.0
                         for rho in xrange(rhoMax, rhoMin-1, -1):
@@ -402,15 +401,25 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                                      + Sum * absRRatioSquared )
                         matrices[i_ell+i_mpm] = Prefactor1 * Sum
                         if(abs(m)!=abs(mp)):
-                            # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = Sign * Prefactor1.conjugate() * Sum
+                            if((m+mp)%2==0):
+                                # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
+                                matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = Prefactor1.conjugate() * Sum
+                                # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
+                                matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = Prefactor2 * Sum
+                            else:
+                                # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
+                                matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = -Prefactor1.conjugate() * Sum
+                                # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
+                                matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = -Prefactor2 * Sum
                             # D_{m,mp}(R) = \bar{D}_{mp,m}(\bar{R})
                             matrices[i_ell+_linear_matrix_index(ell,m,mp)] = Prefactor2.conjugate() * Sum
-                            # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
-                            matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = Sign * Prefactor2 * Sum
                         elif(m!=0):
-                            # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = Sign * Prefactor1.conjugate() * Sum
+                            if((m+mp)%2==0):
+                                # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
+                                matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = Prefactor1.conjugate() * Sum
+                            else:
+                                # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
+                                matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = -Prefactor1.conjugate() * Sum
 
     else: # ra >= rb
         # We have to have these two versions (both this ra>=rb branch,
@@ -445,11 +454,10 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                             # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
                             matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = 0.0j
                     else:
-                        Sign = (1 if (m+mp)%2==0 else -1)
                         if(rhoMin%2!=0):
                             d *= -1
                         Prefactor1 = cmath.rect( d, phia*(m+mp) + phib*(m-mp) )
-                        Prefactor2 = Sign*cmath.rect( d, -phia*(m+mp) + phib*(m-mp) )
+                        Prefactor2 = cmath.rect( d, -phia*(m+mp) + (phib+np.pi)*(m-mp) )
                         rhoMax = min(ell+mp,ell-m)
                         Sum = 0.0
                         for rho in xrange(rhoMax, rhoMin-1, -1):
@@ -457,12 +465,22 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                                      + Sum * absRRatioSquared )
                         matrices[i_ell+i_mpm] = Prefactor1 * Sum
                         if(abs(m)!=abs(mp)):
-                            # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = Sign * Prefactor1.conjugate() * Sum
+                            if (m+mp)%2==0:
+                                # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
+                                matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = Prefactor1.conjugate() * Sum
+                                # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
+                                matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = Prefactor2 * Sum
+                            else:
+                                # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
+                                matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = -Prefactor1.conjugate() * Sum
+                                # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
+                                matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = -Prefactor2 * Sum
                             # D_{m,mp}(R) = \bar{D}_{mp,m}(\bar{R})
                             matrices[i_ell+_linear_matrix_index(ell,m,mp)] = Prefactor2.conjugate() * Sum
-                            # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
-                            matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = Sign * Prefactor2 * Sum
                         elif(m!=0):
-                            # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = Sign * Prefactor1.conjugate() * Sum
+                            if (m+mp)%2==0:
+                                # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
+                                matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = Prefactor1.conjugate() * Sum
+                            else:
+                                # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
+                                matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = -Prefactor1.conjugate() * Sum
