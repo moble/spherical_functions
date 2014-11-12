@@ -6,8 +6,9 @@
 The Wigner $\mathfrak{D}$ matrices allow us to represent the rotation
 group by means of finite-dimensional matrices.  They reduce to
 spherical functions in special cases, which further allows us to
-rotate spherical functions.  They are derived in terms of a particular
-split of the quaternion group into two parts.
+derive the rotation of those spherical functions---as described in
+more detail on [this page](SWSHs.html).  They are derived in terms of
+a particular split of the quaternion group into two parts.
 
 Explicitly, a quaternion $\quat{Q}$ can be expressed in terms of two
 complex numbers $\quat{Q}\_a = \quat{Q}\_1 + i\, \quat{Q}\_z$ and
@@ -280,6 +281,46 @@ implement the more general case.  If this is a functionality you need,
 please feel free to
 [open an issue](https://github.com/moble/spherical_functions/issues)
 on this module's github page to request it.)
+
+
+
+## Relation to the standard form using Euler angles
+
+I hope I don't have to repeat my utter disdain for the use of Euler
+angles.  However, it is important to make contact with other
+literature to be able to compare conventions.  As noted
+[previously](index.html#euler-angles), the rotation performed by the
+set $(\alpha, \beta, \gamma)$ of Euler angles (using conventions to
+agree with
+[Wikipedia's page](https://en.wikipedia.org/wiki/Wigner_D-matrix#Definition_of_the_Wigner_D-matrix)
+on $\mathfrak{D}$ matrices) can be written in quaternion form as
+\begin{align\*}
+  \quat{R}\_{(\alpha, \beta, \gamma)} &= e^{\alpha\, \basis{z}/2}\,
+  e^{\beta\, \basis{y}/2}\, e^{\gamma\, \basis{z}/2}, \\\\
+  &= \left(
+      \cos \frac{\alpha}{2}\, \cos \frac{\beta}{2}\, \cos \frac{\gamma}{2}
+      -\sin \frac{\alpha}{2}\, \cos \frac{\beta}{2}\, \sin \frac{\gamma}{2}
+    \right) \\\\
+  &\qquad + \basis{x} \left(
+      \sin \frac{\alpha}{2}\, \cos \frac{\beta}{2}\, \sin \frac{\gamma}{2}
+      -\sin \frac{\alpha}{2}\, \sin \frac{\beta}{2}\, \cos \frac{\gamma}{2}
+    \right) \\\\
+  &\qquad + \basis{y} \left(
+      \sin \frac{\alpha}{2}\, \cos \frac{\beta}{2}\, \cos \frac{\gamma}{2}
+      -\sin \frac{\alpha}{2}\, \sin \frac{\beta}{2}\, \sin \frac{\gamma}{2}
+    \right) \\\\
+  &\qquad + \basis{z} \left(
+      \sin \frac{\alpha}{2}\, \cos \frac{\beta}{2}\, \cos \frac{\gamma}{2}
+      +\cos \frac{\alpha}{2}\, \cos \frac{\beta}{2}\, \sin \frac{\gamma}{2}
+    \right).
+\end{align\*}
+Taking the complex components of this, we have
+\begin{equation\*}
+  \quat{R}\_a = e^{i\,\alpha/2}\, \cos\frac{\beta}{2}\, e^{i\,\gamma/2}
+  \qquad
+  \quat{R}\_b = e^{-i\,\alpha/2}\, \sin\frac{\beta}{2}\, e^{i\,\gamma/2}
+\end{equation\*}
+
 
 ---
 
