@@ -17,21 +17,21 @@ slow = pytest.mark.slow
 precision_Wigner_D_element = 4.e-14
 
 def test_Wigner_D_linear_indices(ell_max):
-    for ell_min in range(ell_max):
-        for ell_max in range(ell_min+1,ell_max+1):
+    for l_min in range(ell_max):
+        for l_max in range(l_min+1,ell_max+1):
             LMpM = [[ell,mp,m]
-                    for ell in range(ell_min,ell_max+1)
+                    for ell in range(l_min,l_max+1)
                     for mp in range(-ell,ell+1)
                     for m in range(-ell,ell+1)]
 
-            for ell in range(ell_min, ell_max+1):
-                assert LMpM[sp._linear_matrix_offset(ell,ell_min)]==[ell,-ell,-ell]
+            for ell in range(l_min, l_max+1):
+                assert LMpM[sp._linear_matrix_offset(ell,l_min)]==[ell,-ell,-ell]
 
-            for ell in range(ell_min, ell_max+1):
+            for ell in range(l_min, l_max+1):
                 for mp in range (-ell,ell+1):
-                    assert LMpM[sp._linear_matrix_diagonal_index(ell,mp) + sp._linear_matrix_offset(ell,ell_min)]==[ell,mp,mp]
+                    assert LMpM[sp._linear_matrix_diagonal_index(ell,mp) + sp._linear_matrix_offset(ell,l_min)]==[ell,mp,mp]
                     for m in range(-ell,ell+1):
-                        assert LMpM[sp._linear_matrix_index(ell,mp,m) + sp._linear_matrix_offset(ell,ell_min)]==[ell,mp,m]
+                        assert LMpM[sp._linear_matrix_index(ell,mp,m) + sp._linear_matrix_offset(ell,l_min)]==[ell,mp,m]
 
 def test_Wigner_D_element_negative_argument(Rs, ell_max):
     # For integer ell, D(R)=D(-R)
@@ -46,8 +46,8 @@ def test_Wigner_D_element_representation_property(Rs,ell_max):
     # Try half-integers, too
     LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
     print("")
-    for R1 in Rs:
-        print("\tR1 = {0}".format(R1))
+    for i,R1 in enumerate(Rs):
+        print("\t{0} of {1}: R1 = {2}".format(i, len(Rs), R1))
         for R2 in Rs:
             D1 = sp.Wigner_D_element(R1, LMpM)
             D2 = sp.Wigner_D_element(R2, LMpM)
@@ -161,3 +161,20 @@ def test_Wigner_D_element_values(special_angles, ell_max):
                 assert np.allclose( np.conjugate(np.array([slow_Wigner_D_element(alpha, beta, gamma, ell, mp, m) for ell,mp,m in LMpM])),
                                     sp.Wigner_D_element(quaternion.from_euler_angles(alpha, beta, gamma), LMpM),
                                     atol=ell_max**6*precision_Wigner_D_element, rtol=ell_max**6*precision_Wigner_D_element )
+
+@slow
+def test_Wigner_D_matrix(Rs, ell_max):
+    print("")
+    for l_min in [0,1,2,ell_max//2,ell_max-1]:
+        for l_max in range(l_min+1,ell_max+1):
+            print("\tWorking on (l_min,l_max)=({0},{1})".format(l_min,l_max))
+            LMpM = np.array([[ell,mp,m]
+                             for ell in range(l_min,l_max+1)
+                             for mp in range(-ell,ell+1)
+                             for m in range(-ell,ell+1)])
+            for R in Rs:
+                elements = sp.Wigner_D_element(R, LMpM)
+                matrix = np.empty(LMpM.shape[0], dtype=complex)
+                sp._Wigner_D_matrices(R.a, R.b, l_min, l_max, matrix)
+                assert np.allclose( elements, matrix,
+                                    atol=1e3*l_max*ell_max*precision_Wigner_D_element, rtol=1e3*l_max*ell_max*precision_Wigner_D_element )

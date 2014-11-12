@@ -6,7 +6,7 @@ import quaternion
 from . import (_Wigner_coefficient as coeff, binomial_coefficient,
                epsilon, min_exp, mant_dig, error_on_bad_indices,
                ell_max as sp_ell_max)
-from quaternion.numba_wrapper import njit, jit, int64, xrange
+from quaternion.numba_wrapper import njit, jit, int64, complex128, xrange
 
 _log2 = np.log(2)
 
@@ -297,10 +297,15 @@ def _linear_matrix_offset(ell,ell_min):
     """
     return ( (4*ell**2-1)*ell - (4*ell_min**2-1)*ell_min ) // 3
 
+@njit('complex128(complex128)')
+def conjugate(z):
+    return z.conjugate()
+
 def Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
     pass
 
-@njit('void(complex128, complex128, int64, int64, complex128[:])')
+@njit('void(complex128, complex128, int64, int64, complex128[:])',
+      locals={'Prefactor1': complex128, 'Prefactor2': complex128})
 def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
 
     """Main work function for computing Wigner D matrix elements
@@ -332,23 +337,23 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
     rb,phib = cmath.polar(Rb)
 
     if(ra<=epsilon):
-        for ell in range(ell_min, ell_max+1):
+        for ell in xrange(ell_min, ell_max+1):
             i_ell = _linear_matrix_offset(ell,ell_min)
-            for i in range((2*ell+1)**2):
+            for i in xrange((2*ell+1)**2):
                 matrices[i_ell+i] = 0j
-            for mpmm in range(-ell,ell+1):
+            for mpmm in xrange(-ell,ell+1):
                 i_mpmm = _linear_matrix_index(ell,mpmm,-mpmm)
                 if (ell+mpmm)%2==0:
-                    matrices[i_ell+i_mpmm] = Rb**(2*mpm)
+                    matrices[i_ell+i_mpmm] = Rb**(-2*mpmm)
                 else:
-                    matrices[i_ell+i_mpmm] = -Rb**(2*mpm)
+                    matrices[i_ell+i_mpmm] = -Rb**(-2*mpmm)
 
     if(rb<=epsilon):
-        for ell in range(ell_min, ell_max+1):
+        for ell in xrange(ell_min, ell_max+1):
             i_ell = _linear_matrix_offset(ell,ell_min)
-            for i in range((2*ell+1)**2):
+            for i in xrange((2*ell+1)**2):
                 matrices[i_ell+i] = 0j
-            for mpm in range(-ell,ell+1):
+            for mpm in xrange(-ell,ell+1):
                 i_mpm = _linear_matrix_diagonal_index(ell,mpm)
                 matrices[i_ell+i_mpm] = Ra**(2*mpm)
 
@@ -356,10 +361,10 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
         # We have to have these two versions (both this ra<rb branch,
         # and ra>=rb below) to avoid overflows and underflows
         absRRatioSquared = -ra*ra/(rb*rb)
-        for ell in range(ell_min, ell_max+1):
+        for ell in xrange(ell_min, ell_max+1):
             i_ell = _linear_matrix_offset(ell,ell_min)
-            for mp in range(-ell,1):
-                for m in range(mp,-mp+1):
+            for mp in xrange(-ell,1):
+                for m in xrange(mp,-mp+1):
                     i_mpm = _linear_matrix_index(ell,mp,m)
                     rhoMin = max(0,-mp-m)
                     # Protect against overflow by decomposing Ra,Rb as
@@ -381,6 +386,9 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                             matrices[i_ell+_linear_matrix_index(ell,m,mp)] = 0.0j
                             # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
                             matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = 0.0j
+                        elif(m!=0):
+                            # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
+                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = 0.0j
                     else:
                         Sign = (1 if (m+mp)%2==0 else -1)
                         if((ell+m+rhoMin)%2!=0):
@@ -400,15 +408,18 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                             matrices[i_ell+_linear_matrix_index(ell,m,mp)] = Prefactor2.conjugate() * Sum
                             # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
                             matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = Sign * Prefactor2 * Sum
+                        elif(m!=0):
+                            # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
+                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = Sign * Prefactor1.conjugate() * Sum
 
     else: # ra >= rb
         # We have to have these two versions (both this ra>=rb branch,
         # and ra<rb above) to avoid overflows and underflows
         absRRatioSquared = -rb*rb/(ra*ra)
-        for ell in range(ell_min, ell_max+1):
+        for ell in xrange(ell_min, ell_max+1):
             i_ell = _linear_matrix_offset(ell,ell_min)
-            for mp in range(-ell,1):
-                for m in range(mp,-mp+1):
+            for mp in xrange(-ell,1):
+                for m in xrange(mp,-mp+1):
                     i_mpm = _linear_matrix_index(ell,mp,m)
                     rhoMin = max(0,mp-m)
                     # Protect against overflow by decomposing Ra,Rb as
@@ -430,6 +441,9 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                             matrices[i_ell+_linear_matrix_index(ell,m,mp)] = 0.0j
                             # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
                             matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = 0.0j
+                        elif(m!=0):
+                            # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
+                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = 0.0j
                     else:
                         Sign = (1 if (m+mp)%2==0 else -1)
                         if(rhoMin%2!=0):
@@ -441,7 +455,7 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                         for rho in xrange(rhoMax, rhoMin-1, -1):
                             Sum = (  binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m)
                                      + Sum * absRRatioSquared )
-                        matrices[i_ell+i_mpm] = Prefactor * Sum
+                        matrices[i_ell+i_mpm] = Prefactor1 * Sum
                         if(abs(m)!=abs(mp)):
                             # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
                             matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = Sign * Prefactor1.conjugate() * Sum
@@ -449,3 +463,6 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                             matrices[i_ell+_linear_matrix_index(ell,m,mp)] = Prefactor2.conjugate() * Sum
                             # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
                             matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = Sign * Prefactor2 * Sum
+                        elif(m!=0):
+                            # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
+                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = Sign * Prefactor1.conjugate() * Sum
