@@ -72,7 +72,7 @@ def test_Wigner_D_matrices_inverse(Rs, ell_max):
             D1  = np.empty((LMpM.shape[0],), dtype=complex)
             D2  = np.empty((LMpM.shape[0],), dtype=complex)
             sp._Wigner_D_matrices(R.a, R.b, ell, ell, D1)
-            sp._Wigner_D_matrices(R.inverse().a, R.inverse().b, ell, ell, D2)
+            sp._Wigner_D_matrices(R.a.conjugate(), -R.b, ell, ell, D2)
             D1 = D1.reshape((2*ell+1,2*ell+1))
             D2 = D2.reshape((2*ell+1,2*ell+1))
             assert np.allclose(D1.dot(D2), np.identity(2*ell+1),

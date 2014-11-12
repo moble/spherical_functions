@@ -56,6 +56,21 @@ def test_SWSH_values(special_angles, ell_max):
                         assert abs( sp.SWSH(R.a, R.b, s, np.array([[ell,m]]))
                                     - slow_sYlm(ell,s,m,iota,phi) ) < ell_max**6 * precision_SWSH
 
+def test_SWSH_WignerD_expression(special_angles, ell_max):
+    for iota in special_angles:
+        for phi in special_angles:
+            for ell in range(ell_max+1):
+                for s in range(ell):
+                    R = quaternion.from_euler_angles(phi,iota,0)
+                    LM = np.array([[ell,m] for m in range(-ell,ell+1)])
+                    Y = sp.SWSH(R.a, R.b, s, LM)
+                    LMS = np.array([[ell,m,-s] for m in range(-ell,ell+1)])
+                    D = np.empty(Y.shape[0], dtype=complex)
+                    sp._Wigner_D_element(R.a, R.b, LMS, D)
+                    D = (-1)**(s)*math.sqrt((2*ell+1)/(4*np.pi))*D
+                    assert np.allclose(Y, D, atol=ell_max**6*precision_SWSH, rtol=ell_max**6*precision_SWSH)
+
+
 @pytest.mark.xfail
 def test_SWSH_spin_behavior(special_angles, ell_max):
     for s in range(4):
