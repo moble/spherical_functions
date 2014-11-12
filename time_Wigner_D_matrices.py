@@ -18,7 +18,7 @@ ru = lambda : random.uniform(-1,1)
 q = np.quaternion(ru(), ru(), ru(), ru())
 q = q/q.abs()
 
-ells = range(16+1)
+ells = range(16+1) + [24,32]
 evals = np.empty_like(ells, dtype=int)
 nanoseconds = np.empty_like(ells, dtype=float)
 for i,ell_max in enumerate(ells):

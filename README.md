@@ -1,4 +1,4 @@
-# Spherical Functions <a href="https://travis-ci.org/moble/spherical_functions"><img align="right" hspace="3" alt="Status of automatic build and test suite" src="https://travis-ci.org/moble/spherical_functions.svg?branch=master"></a> <a href="https://travis-ci.org/moble/spherical_functions/blob/master/LICENSE"><img align="right" hspace="3" alt="Code distributed under the open-source MIT license" src="http://moble.github.io/spherical_functions/images/MITLicenseBadge.svg"></a>
+# Spherical Functions <a href="https://travis-ci.org/moble/spherical_functions"><img align="right" hspace="3" alt="Status of automatic build and test suite" src="https://travis-ci.org/moble/spherical_functions.svg?branch=master"></a> <a href="https://github.com/moble/spherical_functions/blob/master/LICENSE"><img align="right" hspace="3" alt="Code distributed under the open-source MIT license" src="http://moble.github.io/spherical_functions/images/MITLicenseBadge.svg"></a>
 
 Python/numba package for evaluating and transforming Wigner's 𝔇
 matrices, Wigner's 3-j symbols, and spin-weighted (and scalar)

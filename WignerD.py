@@ -302,7 +302,7 @@ def conjugate(z):
     return z.conjugate()
 
 def Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
-    pass
+    raise NotImplementedError("This function doesn't exist yet")
 
 @njit('void(complex128, complex128, int64, int64, complex128[:])',
       locals={'Prefactor1': complex128, 'Prefactor2': complex128})
