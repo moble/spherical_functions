@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 
-__all__ = ['Wigner3j', 'WignerD', 'SWSH',
+__all__ = ['Wigner3j', 'Wigner_D_element', 'Wigner_D_matrices', 'SWSH',
            'factorial', 'binomial_coefficient', 'ladder_operator_coefficient']
 
 from numpy import array, floor
@@ -53,7 +53,8 @@ def _Wigner_coefficient(ell,mp,m):
 def _Wigner_index(ell,mp,m):
     return ell*(ell*(4*ell + 6) + 5)//3 + mp*(2*ell + 1) + m
 
-
 from .Wigner3j import Wigner3j
-from .WignerD import WignerD, _WignerD
+from .WignerD import (Wigner_D_element, _Wigner_D_element,
+                      Wigner_D_matrices, _Wigner_D_matrices,
+                      _linear_matrix_index, _linear_matrix_diagonal_index, _linear_matrix_offset)
 from .SWSH import SWSH, _SWSH # sYlm, Ylm

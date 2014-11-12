@@ -1,7 +1,7 @@
 [run]
 omit =
     setup.py
-    time_WignerD.py
+    time_Wigner_D_element.py
 
 [report]
 # Regexes for lines to exclude from consideration

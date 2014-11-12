@@ -4,18 +4,19 @@ import cmath
 import numpy as np
 import quaternion
 from . import (_Wigner_coefficient as coeff, binomial_coefficient,
-               epsilon, min_exp, mant_dig, error_on_bad_indices)
+               epsilon, min_exp, mant_dig, error_on_bad_indices,
+               ell_max as sp_ell_max)
 from quaternion.numba_wrapper import njit, jit, int64, xrange
 
 _log2 = np.log(2)
 
 @njit('b1(i8,i8,i8)')
 def _check_valid_indices(ell, mp, m):
-    if(abs(mp)>ell or abs(m)>ell):
+    if(ell>sp_ell_max or abs(mp)>ell or abs(m)>ell):
         return False
     return True
 
-def WignerD(*args):
+def Wigner_D_element(*args):
     """Return elements of the Wigner D matrices
 
     The conventions used for this function are discussed more fully on
@@ -25,12 +26,12 @@ def WignerD(*args):
     ===============
     The input can be in any of the following forms:
 
-    Wigner(R, ell, mp, m)
-    Wigner(R, indices)
-    Wigner(Ra, Rb, ell, mp, m)
-    Wigner(Ra, Rb, indices)
-    Wigner(alpha, beta, gamma, ell, mp, m)
-    Wigner(alpha, beta, gamma, indices)
+    Wigner_D_element(R, ell, mp, m)
+    Wigner_D_element(R, indices)
+    Wigner_D_element(Ra, Rb, ell, mp, m)
+    Wigner_D_element(Ra, Rb, indices)
+    Wigner_D_element(alpha, beta, gamma, ell, mp, m)
+    Wigner_D_element(alpha, beta, gamma, indices)
 
     Where
       * R is a unit quaternion (no checking of norm is done)
@@ -117,14 +118,14 @@ def WignerD(*args):
         raise ValueError("Can't understand input indices")
 
     elements = np.empty((len(indices),), dtype=complex)
-    _WignerD(Ra, Rb, indices, elements)
+    _Wigner_D_element(Ra, Rb, indices, elements)
 
     if(return_scalar):
         return elements[0]
     return elements
 
 @njit('void(complex128, complex128, int64[:,:], complex128[:])')
-def _WignerD(Ra, Rb, indices, elements):
+def _Wigner_D_element(Ra, Rb, indices, elements):
     """Main work function for computing Wigner D matrix elements
 
     This is the core function that does all the work in the
@@ -133,7 +134,7 @@ def _WignerD(Ra, Rb, indices, elements):
 
     Input arguments
     ===============
-    _WignerD(Ra, Rb, indices, elements)
+    _Wigner_D_element(Ra, Rb, indices, elements)
 
       * Ra, Rb are the complex components of the rotor
       * indices is an array of integers [ell,mp,m]
@@ -235,3 +236,216 @@ def _WignerD(Ra, Rb, indices, elements):
                         Sum = (  binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m)
                                  + Sum * absRRatioSquared )
                     elements[i] = Prefactor * Sum
+
+
+
+
+@njit('int64(int64, int64, int64)')
+def _linear_matrix_index(ell,mp,m):
+    """Index of array corresponding to matrix element
+
+    This gives the index based at the first element of the matrix, so
+    if the array is actually a series of matrices (linearized), then
+    that initial index for this matrix must be added.
+
+    This assumes that the input array corresponds to
+
+    [[ell,mp,m] for ell in range(ell_min,ell_max+1)
+                for mp in range(-ell,ell+1)
+                for m in range(-ell,ell+1)]
+
+    """
+    return (ell+m) + (ell+mp)*(2*ell+1)
+
+@njit('int64(int64, int64)')
+def _linear_matrix_diagonal_index(ell,mpm):
+    """Index of array corresponding to matrix diagonal element
+
+    This gives the index based at the first element of the matrix, so
+    if the array is actually a series of matrices (linearized), then
+    that initial index for this matrix must be added.
+
+    This assumes that the input array corresponds to
+
+    [[ell,mp,m] for ell in range(ell_min,ell_max+1)
+                for mp in range(-ell,ell+1)
+                for m in range(-ell,ell+1)]
+
+    """
+    return (ell+mpm)*(2*ell+2)
+
+@njit('int64(int64, int64)')
+def _linear_matrix_offset(ell,ell_min):
+    """Index of initial element in linear array of matrices
+
+    This gives the index based at the first element of the matrix with
+    weight `ell`.  This is the quantity to be added to the result of
+    `_linear_matrix_index`.
+
+    This assumes that the input array corresponds to
+
+    [[ell,mp,m] for ell in range(ell_min,ell_max+1)
+                for mp in range(-ell,ell+1)
+                for m in range(-ell,ell+1)]
+
+    This result can be calculated from sympy as
+
+    from sympy import symbols, summation
+    ell_min,ell = symbols('ell_min,ell', integer=True)
+    summation((2*ell + 1)**2, (ell, ell_min, ell-1))
+
+    """
+    return ( (4*ell**2-1)*ell - (4*ell_min**2-1)*ell_min ) // 3
+
+def Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
+    pass
+
+@njit('void(complex128, complex128, int64, int64, complex128[:])')
+def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
+
+    """Main work function for computing Wigner D matrix elements
+
+    This is the core function that does all the work in the
+    computation, but it is strict about its input, and does not check
+    them for validity.
+
+    Input arguments
+    ===============
+    _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, elements)
+
+      * Ra, Rb are the complex components of the rotor
+      * ell_min, ell_max are the limits of the matrices
+      * matrix is a one-dimensional array of complex numbers to be
+        filled with the elements of the matrices; the correct shape is
+        assumed
+
+    The `matrices` variable is needed because numba cannot create
+    arrays at the moment, but this is modified in place, so after
+    calling this function, the input array will contain the correct
+    values.
+
+    """
+
+    # These constants are the recurring quantities in the computation
+    # of the matrix elements, so we calculate them here just once
+    ra,phia = cmath.polar(Ra)
+    rb,phib = cmath.polar(Rb)
+
+    if(ra<=epsilon):
+        for ell in range(ell_min, ell_max+1):
+            i_ell = _linear_matrix_offset(ell,ell_min)
+            for i in range((2*ell+1)**2):
+                matrices[i_ell+i] = 0j
+            for mpmm in range(-ell,ell+1):
+                i_mpmm = _linear_matrix_index(ell,mpmm,-mpmm)
+                if (ell+mpmm)%2==0:
+                    matrices[i_ell+i_mpmm] = Rb**(2*mpm)
+                else:
+                    matrices[i_ell+i_mpmm] = -Rb**(2*mpm)
+
+    if(rb<=epsilon):
+        for ell in range(ell_min, ell_max+1):
+            i_ell = _linear_matrix_offset(ell,ell_min)
+            for i in range((2*ell+1)**2):
+                matrices[i_ell+i] = 0j
+            for mpm in range(-ell,ell+1):
+                i_mpm = _linear_matrix_diagonal_index(ell,mpm)
+                matrices[i_ell+i_mpm] = Ra**(2*mpm)
+
+    elif(ra<rb):
+        # We have to have these two versions (both this ra<rb branch,
+        # and ra>=rb below) to avoid overflows and underflows
+        absRRatioSquared = -ra*ra/(rb*rb)
+        for ell in range(ell_min, ell_max+1):
+            i_ell = _linear_matrix_offset(ell,ell_min)
+            for mp in range(-ell,1):
+                for m in range(mp,-mp+1):
+                    i_mpm = _linear_matrix_index(ell,mp,m)
+                    rhoMin = max(0,-mp-m)
+                    # Protect against overflow by decomposing Ra,Rb as
+                    # abs,angle components and pulling out the factor of
+                    # absRRatioSquared**rhoMin.  Here, ra might be quite
+                    # small, in which case ra**(m+mp) could be enormous
+                    # when the exponent (m+mp) is very negative; adding
+                    # 2*rhoMin to the exponent ensures that it is always
+                    # positive, which protects from overflow.  Meanwhile,
+                    # underflow just goes to zero, which is fine since
+                    # nothing else should be very large.
+                    d = coeff(ell, mp, m) * rb**(2*ell-m-mp-2*rhoMin) * ra**(m+mp+2*rhoMin)
+                    if(d==0.0j):
+                        matrices[i_ell+i_mpm] = 0.0j
+                        if(abs(m)!=abs(mp)):
+                            # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
+                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = 0.0j
+                            # D_{m,mp}(R) = \bar{D}_{mp,m}(\bar{R})
+                            matrices[i_ell+_linear_matrix_index(ell,m,mp)] = 0.0j
+                            # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
+                            matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = 0.0j
+                    else:
+                        Sign = (1 if (m+mp)%2==0 else -1)
+                        if((ell+m+rhoMin)%2!=0):
+                            d *= -1
+                        Prefactor1 = cmath.rect( d, phib*(m-mp) + phia*(m+mp) )
+                        Prefactor2 = Sign*cmath.rect( d, phib*(m-mp) - phia*(m+mp) )
+                        rhoMax = min(ell-mp,ell-m)
+                        Sum = 0.0
+                        for rho in xrange(rhoMax, rhoMin-1, -1):
+                            Sum = (  binomial_coefficient(ell-mp,rho) * binomial_coefficient(ell+mp, ell-rho-m)
+                                     + Sum * absRRatioSquared )
+                        matrices[i_ell+i_mpm] = Prefactor1 * Sum
+                        if(abs(m)!=abs(mp)):
+                            # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
+                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = Sign * Prefactor1.conjugate() * Sum
+                            # D_{m,mp}(R) = \bar{D}_{mp,m}(\bar{R})
+                            matrices[i_ell+_linear_matrix_index(ell,m,mp)] = Prefactor2.conjugate() * Sum
+                            # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
+                            matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = Sign * Prefactor2 * Sum
+
+    else: # ra >= rb
+        # We have to have these two versions (both this ra>=rb branch,
+        # and ra<rb above) to avoid overflows and underflows
+        absRRatioSquared = -rb*rb/(ra*ra)
+        for ell in range(ell_min, ell_max+1):
+            i_ell = _linear_matrix_offset(ell,ell_min)
+            for mp in range(-ell,1):
+                for m in range(mp,-mp+1):
+                    i_mpm = _linear_matrix_index(ell,mp,m)
+                    rhoMin = max(0,mp-m)
+                    # Protect against overflow by decomposing Ra,Rb as
+                    # abs,angle components and pulling out the factor of
+                    # absRRatioSquared**rhoMin.  Here, rb might be quite
+                    # small, in which case rb**(m-mp) could be enormous
+                    # when the exponent (m-mp) is very negative; adding
+                    # 2*rhoMin to the exponent ensures that it is always
+                    # positive, which protects from overflow.  Meanwhile,
+                    # underflow just goes to zero, which is fine since
+                    # nothing else should be very large.
+                    d = coeff(ell, mp, m) * ra**(2*ell-m+mp-2*rhoMin) * rb**(m-mp+2*rhoMin)
+                    if(d==0.0j):
+                        matrices[i_ell+i_mpm] = 0.0j
+                        if(abs(m)!=abs(mp)):
+                            # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
+                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = 0.0j
+                            # D_{m,mp}(R) = \bar{D}_{mp,m}(\bar{R})
+                            matrices[i_ell+_linear_matrix_index(ell,m,mp)] = 0.0j
+                            # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
+                            matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = 0.0j
+                    else:
+                        Sign = (1 if (m+mp)%2==0 else -1)
+                        if(rhoMin%2!=0):
+                            d *= -1
+                        Prefactor1 = cmath.rect( d, phia*(m+mp) + phib*(m-mp) )
+                        Prefactor2 = Sign*cmath.rect( d, -phia*(m+mp) + phib*(m-mp) )
+                        rhoMax = min(ell+mp,ell-m)
+                        Sum = 0.0
+                        for rho in xrange(rhoMax, rhoMin-1, -1):
+                            Sum = (  binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m)
+                                     + Sum * absRRatioSquared )
+                        matrices[i_ell+i_mpm] = Prefactor * Sum
+                        if(abs(m)!=abs(mp)):
+                            # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
+                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = Sign * Prefactor1.conjugate() * Sum
+                            # D_{m,mp}(R) = \bar{D}_{mp,m}(\bar{R})
+                            matrices[i_ell+_linear_matrix_index(ell,m,mp)] = Prefactor2.conjugate() * Sum
+                            # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
+                            matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = Sign * Prefactor2 * Sum
