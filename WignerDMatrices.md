@@ -123,7 +123,7 @@ be polluted with roundoff, etc.  So we manipulate it to put it in a
 better form.  For example, we can simplify the above as
 \begin{align}
   \nonumber
-  \mathfrak{D}^{(\ell)}\_{m,m'}(\quat{R})
+  \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
   &=
   \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\, (\ell-m')! } }\,
   \quat{R}\_{a}^{\ell+m'}\,
@@ -284,7 +284,7 @@ on this module's github page to request it.)
 
 
 
-## Relation to the standard form using Euler angles
+## Relation to the antiquated form of $\mathfrak{D}$ using Euler angles
 
 I hope I don't have to repeat my utter disdain for the use of Euler
 angles.  However, it is important to make contact with other
@@ -316,10 +316,17 @@ on $\mathfrak{D}$ matrices) can be written in quaternion form as
 \end{align\*}
 Taking the complex components of this, we have
 \begin{equation\*}
-  \quat{R}\_a = e^{i\,\alpha/2}\, \cos\frac{\beta}{2}\, e^{i\,\gamma/2}
+  \quat{R}\_a = e^{i\,\alpha/2}\, \cos\frac{\beta}{2}\, e^{i\,\gamma/2},
   \qquad
-  \quat{R}\_b = e^{-i\,\alpha/2}\, \sin\frac{\beta}{2}\, e^{i\,\gamma/2}
+  \quat{R}\_b = e^{i\,\alpha/2}\, \sin\frac{\beta}{2}\, e^{i\,\gamma/2}.
 \end{equation\*}
+We can plug these values into, e.g., Eq. \eqref{eq:D\_RaGeqRb}, and
+get the standard, hideous, reprehensible form of the $\mathfrak{D}$
+matrices in terms of Euler angles.
+
+Again, of course, this is not a form that should be used for
+calculations, but could be useful for comparing conventions with
+antiquated research.
 
 
 ---

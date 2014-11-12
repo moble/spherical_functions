@@ -115,9 +115,26 @@ vectors can be expressed simply in the form of the rotor
 \begin{equation\*}
   \rthetaphi = e^{\varphi \basis{z}/2}\, e^{\vartheta \basis{y}/2}.
 \end{equation\*}
-
-It is not hard to show using the expressions for the $\mathfrak{D}$
-matrices that these
+Or, to put this in a form more useful for us, we have
+\begin{equation\*}
+  \quat{R}\_a = e^{i\,\varphi/2}\, \cos\frac{\beta}{2},
+  \qquad
+  \quat{R}\_b = e^{i\,\varphi/2}\, \sin\frac{\beta}{2}.
+\end{equation\*}
+Plugging these expressions into the expression for $\mathfrak{D}$
+given [here](WignerDMatrices.html#mjx-eqn-eqD_RaGeqRb), for example,
+and comparing to the expressions in
+[the data-formats paper](http://arxiv.org/abs/0709.0093), we see that
+SWSHs can be written as
+\begin{equation\*}
+  {}\_{s}Y\_{\ell,m} (\vartheta, \varphi)
+  =
+  {}\_{s}Y\_{\ell,m} (\quat{R}\_{(\vartheta, \varphi)})
+  =
+  (-1)^s\, \sqrt{\frac{2\ell+1} {4\pi}}\,
+  \mathfrak{D}^{(\ell)}\_{m,-s} \left(\quat{R}\_{(\vartheta, \varphi)}
+  \right).
+\end{equation\*}
 
 
 
@@ -141,4 +158,7 @@ matrices that these
       standard NR conventions, we will have some negative signs
       relative to Newman and Penrose.  (Though Newman and Penrose were
       never specific enough for us to actually be in conflict with
-      them; essentially $\gamma=-\psi$, which is perfectly cromulent.)
+      them; essentially $\gamma=-\psi$, which is perfectly cromulent.
+      It's also reasonable to view this as a distinction between
+      active and passive transformations; we assume passive in this
+      case.)
