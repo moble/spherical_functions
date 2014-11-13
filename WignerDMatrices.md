@@ -21,11 +21,14 @@ important because it allows us to verify the multiplication law
 \end{align}
 Given a rotor $\rotor{R}$, these two complex numbers are the
 quantities actually used in computing the $\mathfrak{D}$ matrix
-elements.
+elements.  Note that there is a series of basic choices leading to
+both the decomposition of a quaternion into two complex numbers, and
+the product law.  None of these choices is set in stone; we just
+choose something with an eye to the desired result.
 
-This is essentially the same as Wigner's original derivation, but with
-more elegance, and more sensitivity to numerical issues and special
-cases.  This version of the derivation comes from
+The following is essentially the same as Wigner's original derivation,
+but with more elegance, and more sensitivity to numerical issues and
+special cases.  This version of the derivation comes from
 [a paper](http://arxiv.org/abs/1302.2919) I wrote a couple years ago,
 and is the source of the code used in this module.
 
@@ -104,7 +107,8 @@ components have larger magnitudes.  We have powers of the sum of those
 terms in Eq. \eqref{eq:QuaternionComponentProducts}.  This leads us to
 use (two applications of) the
 [binomial expansion](https://en.wikipedia.org/wiki/Binomial_theorem).
-After a little simplification, we can express the result as
+After [a little simplification](WignerDDerivation.html), we can
+express the result as
 \begin{multline}
   \label{eq:DAnalytically}
   \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
