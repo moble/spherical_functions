@@ -7,12 +7,15 @@
 
 $z$-$x'$-$z''$
 
-Goldstein claims that this convention is widely used in celestial
-mechanics and applied mechanics, and frequently in molecular and
-solid-state physics.
+Goldstein (p. 151) claims that this convention is widely used in
+celestial mechanics and applied mechanics, and frequently in molecular
+and solid-state physics.  Goldstein also has an Appendix on the
+various conventions.
 
-## Cohen-Tannoudji
+## Shankar
 
+
+## Sakurai
 
 
 ## Wikipedia
