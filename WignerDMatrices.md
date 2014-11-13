@@ -306,12 +306,12 @@ on $\mathfrak{D}$ matrices) can be written in quaternion form as
       -\sin \frac{\alpha}{2}\, \cos \frac{\beta}{2}\, \sin \frac{\gamma}{2}
     \right) \\\\
   &\qquad + \basis{x} \left(
-      \sin \frac{\alpha}{2}\, \cos \frac{\beta}{2}\, \sin \frac{\gamma}{2}
+      \cos \frac{\alpha}{2}\, \sin \frac{\beta}{2}\, \sin \frac{\gamma}{2}
       -\sin \frac{\alpha}{2}\, \sin \frac{\beta}{2}\, \cos \frac{\gamma}{2}
     \right) \\\\
   &\qquad + \basis{y} \left(
-      \sin \frac{\alpha}{2}\, \cos \frac{\beta}{2}\, \cos \frac{\gamma}{2}
-      -\sin \frac{\alpha}{2}\, \sin \frac{\beta}{2}\, \sin \frac{\gamma}{2}
+      \cos \frac{\alpha}{2}\, \sin \frac{\beta}{2}\, \cos \frac{\gamma}{2}
+      +\sin \frac{\alpha}{2}\, \sin \frac{\beta}{2}\, \sin \frac{\gamma}{2}
     \right) \\\\
   &\qquad + \basis{z} \left(
       \sin \frac{\alpha}{2}\, \cos \frac{\beta}{2}\, \cos \frac{\gamma}{2}
@@ -322,7 +322,7 @@ Taking the complex components of this, we have
 \begin{equation\*}
   \quat{R}\_a = e^{i\,\alpha/2}\, \cos\frac{\beta}{2}\, e^{i\,\gamma/2},
   \qquad
-  \quat{R}\_b = e^{i\,\alpha/2}\, \sin\frac{\beta}{2}\, e^{i\,\gamma/2}.
+  \quat{R}\_b = e^{-i\,\alpha/2}\, \sin\frac{\beta}{2}\, e^{i\,\gamma/2}.
 \end{equation\*}
 We can plug these values into, e.g., Eq. \eqref{eq:D\_RaGeqRb}, and
 get the standard, hideous, reprehensible form of the $\mathfrak{D}$
