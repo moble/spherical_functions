@@ -243,7 +243,7 @@ case, it would be better if we could find an expression that sort of
 reverses the roles of $a$ and $b$.  It turns out that this isn't hard.
 In deriving Eq. \eqref{eq:DAnalytically}, a choice was made regarding
 the summation variable.  We can simply transform that summation
-variable as $\rho \mapsto \ell-m-\rho$, and obtain
+variable as $\rho \mapsto \ell-m'-\rho$, and obtain
 \begin{multline\*}
   \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
   = \sum\_{\rho} \binom{\ell+m} {\ell-m'-\rho}\, \binom{\ell-m}
