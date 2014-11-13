@@ -51,28 +51,31 @@ def test_SWSH_NINJA_values(special_angles, ell_max):
 
 
 
-# @pytest.mark.parametrize("Sign, Conjugate, phiSign, iotaSign, sSign, mSign",
-#                          [(Sign, Conjugate, phiSign, iotaSign, sSign, mSign)
-#                           for Sign in [lambda ell,m,s: m+s, lambda ell,m,s: m, lambda ell,m,s:s, lambda ell,m,s:0,
-#                                        lambda ell,m,s: ell+m+s, lambda ell,m,s: ell+m, lambda ell,m,s:ell+s, lambda ell,m,s:ell]
-#                           for Conjugate in [lambda x: x.conjugate(), lambda x:x]
-#                           for phiSign in [1,-1]
-#                           for iotaSign in [1,-1]
-#                           for sSign in [1,-1]
-#                           for mSign in [1,-1]])
-# def test_SWSH_WignerD_values(special_angles, ell_max, Sign, Conjugate, phiSign, iotaSign, sSign, mSign):
-#     # i = 0
-#     # print("")
-#     for iota in special_angles:
-#         for phi in special_angles:
-#             for ell in range(ell_max+1):
-#                 for s in range(-ell,ell+1):
-#                     for m in range(-ell,ell+1):
-#                         # i += 1
-#                         # print("\t{0}: {1}Y{{{2},{3}}}({4},{5})".format(i,s,ell,m,iota,phi))
-#                         assert abs( (-1)**(Sign(ell,m,s)) * np.sqrt((2*ell+1)/(4*np.pi))
-#                                     * Conjugate(sp.Wigner_D_element(0.0, iotaSign*iota, phiSign*phi, ell, sSign*s, mSign*m))
-#                                     - slow_sYlm(s,ell,m,iota,phi) ) < 1e4 * ell_max**6 * precision_SWSH
+@pytest.mark.parametrize("iSign, Sign, Conjugate, phiSign, iotaSign, sSign, mSign",
+                         [(iSign, Sign, Conjugate, phiSign, iotaSign, sSign, mSign)
+                          for iSign in [lambda ell,m,s: m+s, lambda ell,m,s: m, lambda ell,m,s:s, lambda ell,m,s:0,
+                                       lambda ell,m,s: ell+m+s, lambda ell,m,s: ell+m, lambda ell,m,s:ell+s, lambda ell,m,s:ell]
+                          for Sign in [lambda ell,m,s: m+s, lambda ell,m,s: m, lambda ell,m,s:s, lambda ell,m,s:0,
+                                       lambda ell,m,s: ell+m+s, lambda ell,m,s: ell+m, lambda ell,m,s:ell+s, lambda ell,m,s:ell]
+                          for Conjugate in [lambda x: x.conjugate(), lambda x:x]
+                          for phiSign in [1,-1]
+                          for iotaSign in [1,-1]
+                          for sSign in [1,-1]
+                          for mSign in [1,-1]])
+def test_SWSH_WignerD_values1(special_angles, ell_max, iSign, Sign, Conjugate, phiSign, iotaSign, sSign, mSign):
+    # i = 0
+    # print("")
+    for iota in special_angles:
+        for phi in special_angles:
+            for ell in range(ell_max+1):
+                for s in range(-ell,ell+1):
+                    for m in range(-ell,ell+1):
+                        # i += 1
+                        # print("\t{0}: {1}Y{{{2},{3}}}({4},{5})".format(i,s,ell,m,iota,phi))
+                        assert abs( (1j)**(iSign(ell,m,s)) * (-1)**(Sign(ell,m,s)) * np.sqrt((2*ell+1)/(4*np.pi))
+                                    * Conjugate(sp.Wigner_D_element(0.0, iotaSign*iota, phiSign*phi, ell, sSign*s, mSign*m))
+                                    - slow_sYlm(s,ell,m,iota,phi) ) < 1e4 * ell_max**6 * precision_SWSH
+    # print("\n", "Sign", ("Conjugate" if Conjugate(1j)==-1j else "NoConjugate"), phiSign, iotaSign, sSign, mSign)
 
 
 # def test_SWSH_WignerD_values2(special_angles, ell_max):
@@ -86,15 +89,15 @@ def test_SWSH_NINJA_values(special_angles, ell_max):
 #                                     - slow_sYlm(s,ell,m,iota,phi) ) < 1e4 * ell_max**6 * precision_SWSH
 
 
-# def test_SWSH_WignerD_values3(special_angles, ell_max):
-#     for iota in special_angles:
-#         for phi in special_angles:
-#             for ell in range(ell_max+1):
-#                 for s in range(-ell,ell+1):
-#                     for m in range(-ell,ell+1):
-#                         assert abs( (-1)**m * np.sqrt((2*ell+1)/(4*np.pi))
-#                                     * sp.Wigner_D_element(phi, iota, 0.0, ell, m, -s).conjugate()
-#                                     - slow_sYlm(s,ell,m,iota,phi) ) < 1e4 * ell_max**6 * precision_SWSH
+def test_SWSH_WignerD_values3(special_angles, ell_max):
+    for iota in special_angles:
+        for phi in special_angles:
+            for ell in range(ell_max+1):
+                for s in range(-ell,ell+1):
+                    for m in range(-ell,ell+1):
+                        assert abs( (-1)**m * np.sqrt((2*ell+1)/(4*np.pi))
+                                    * sp.Wigner_D_element(phi, iota, 0.0, ell, m, -s).conjugate()
+                                    - slow_sYlm(s,ell,m,iota,phi) ) < 1e4 * ell_max**6 * precision_SWSH
 
 
 @slow
