@@ -171,9 +171,9 @@ def test_Wigner_D_element_values(special_angles, ell_max):
     for alpha in special_angles:
         print("\talpha={0}".format(alpha)) # Need to show some progress to Travis
         for beta in special_angles:
-            print("\t\tbeta={0}".format(beta))
+            # print("\t\tbeta={0}".format(beta))
             for gamma in special_angles:
-                print("\t\t\tgamma={0}".format(gamma))
+                # print("\t\t\tgamma={0}".format(gamma))
                 assert np.allclose( np.array([slow_Wigner_D_element(alpha, -beta, gamma, ell, mp, m) for ell,mp,m in LMpM]),
                                     sp.Wigner_D_element(quaternion.from_euler_angles(alpha, beta, gamma), LMpM),
                                     atol=ell_max**6*precision_Wigner_D_element, rtol=ell_max**6*precision_Wigner_D_element )

@@ -25,7 +25,7 @@ def SWSH(Ra, Rb, s, indices):
     _SWSH(Ra, Rb, s, indices, values)
     return values
 
-@njit('void(complex128, complex128, int64, int64[:,:], complex128[:])')
+#@njit('void(complex128, complex128, int64, int64[:,:], complex128[:])')
 def _SWSH(Ra, Rb, s, indices, values):
     """Compute spin-weighted spherical harmonics from rotor components
 
@@ -62,9 +62,9 @@ def _SWSH(Ra, Rb, s, indices, values):
                 values[i] = 0.0j
             else:
                 if (ell)%2==0:
-                    values[i] = math.sqrt((2*ell+1)/(4*np.pi))*Rb**(-2*s)
+                    values[i] = math.sqrt((2*ell+1)/(4*np.pi))*Rb.conjugate()**(2*s)
                 else:
-                    values[i] = -math.sqrt((2*ell+1)/(4*np.pi))*Rb**(-2*s)
+                    values[i] = -math.sqrt((2*ell+1)/(4*np.pi))*Rb.conjugate()**(2*s)
 
     elif(rb<=epsilon):
         for i in xrange(N):
@@ -86,27 +86,27 @@ def _SWSH(Ra, Rb, s, indices, values):
             if(abs(m)>ell or abs(s)>ell):
                 values[i] = 0.0j
             else:
-                rhoMin = max(0,-m+s)
+                rhoMin = max(0,-s-m)
                 # Protect against overflow by decomposing Ra,Rb as
                 # abs,angle components and pulling out the factor of
                 # absRRatioSquared**rhoMin.  Here, ra might be quite
-                # small, in which case ra**(-s+m) could be enormous
-                # when the exponent (-s+m) is very negative; adding
+                # small, in which case ra**(-s-m) could be enormous
+                # when the exponent (-s-m) is very negative; adding
                 # 2*rhoMin to the exponent ensures that it is always
                 # positive, which protects from overflow.  Meanwhile,
                 # underflow just goes to zero, which is fine since
                 # nothing else should be very large.
-                Prefactor = cmath.rect( coeff(ell, m, -s) * rb**(2*ell+s-m-2*rhoMin) * ra**(-s+m+2*rhoMin),
-                                        phib*(-s-m) + phia*(-s+m) )
+                Prefactor = cmath.rect( coeff(ell, s, m) * rb**(2*ell-m-s-2*rhoMin) * ra**(m+s+2*rhoMin),
+                                        -phib*(m-s) - phia*(m+s) )
                 if(Prefactor==0.0j):
                     values[i] = 0.0j
                 else:
                     if((ell+rhoMin)%2!=0):
                         Prefactor *= -1
-                    rhoMax = min(ell-m,ell+s)
+                    rhoMax = min(ell-m,ell-s)
                     Sum = 0.0
                     for rho in xrange(rhoMax, rhoMin-1, -1):
-                        Sum = (  binomial_coefficient(ell-m,rho) * binomial_coefficient(ell+m, ell-rho+s)
+                        Sum = (  binomial_coefficient(ell-s,rho) * binomial_coefficient(ell+s, ell-rho-m)
                                  + Sum * absRRatioSquared )
                     values[i] = math.sqrt((2*ell+1)/(4*np.pi)) * Prefactor * Sum
 
