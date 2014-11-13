@@ -174,7 +174,7 @@ def test_Wigner_D_element_values(special_angles, ell_max):
             print("\t\tbeta={0}".format(beta))
             for gamma in special_angles:
                 print("\t\t\tgamma={0}".format(gamma))
-                assert np.allclose( np.array([slow_Wigner_D_element(alpha, beta, gamma, ell, m, mp) for ell,mp,m in LMpM]),
+                assert np.allclose( np.array([slow_Wigner_D_element(alpha, -beta, gamma, ell, mp, m) for ell,mp,m in LMpM]),
                                     sp.Wigner_D_element(quaternion.from_euler_angles(alpha, beta, gamma), LMpM),
                                     atol=ell_max**6*precision_Wigner_D_element, rtol=ell_max**6*precision_Wigner_D_element )
 

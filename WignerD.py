@@ -124,7 +124,7 @@ def Wigner_D_element(*args):
         return elements[0]
     return elements
 
-#@njit('void(complex128, complex128, int64[:,:], complex128[:])')
+@njit('void(complex128, complex128, int64[:,:], complex128[:])')
 def _Wigner_D_element(Ra, Rb, indices, elements):
     """Main work function for computing Wigner D matrix elements
 
@@ -153,7 +153,6 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
     rb,phib = cmath.polar(Rb)
 
     if(ra<=epsilon):
-        print("Branch 1")
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
             if(mp!=-m or abs(mp)>ell or abs(m)>ell):
@@ -165,7 +164,6 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
                     elements[i] = -Rb**(-2*m)
 
     elif(rb<=epsilon):
-        print("Branch 2")
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
             if(mp!=m or abs(mp)>ell or abs(m)>ell):
@@ -174,7 +172,6 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
                 elements[i] = Ra**(2*m)
 
     elif(ra<rb):
-        print("Branch 3")
         # We have to have these two versions (both this ra<rb branch,
         # and ra>=rb below) to avoid overflows and underflows
         absRRatioSquared = -ra*ra/(rb*rb)
@@ -208,7 +205,6 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
                     elements[i] = Prefactor * Sum
 
     else: # ra >= rb
-        print("Branch 4")
         # We have to have these two versions (both this ra>=rb branch,
         # and ra<rb above) to avoid overflows and underflows
         absRRatioSquared = -rb*rb/(ra*ra)
