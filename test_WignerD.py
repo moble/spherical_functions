@@ -153,6 +153,7 @@ def test_Wigner_D_element_overflow(Rs,ell_max):
 
 
 def slow_Wignerd(beta, ell, mp, m):
+    # https://en.wikipedia.org/wiki/Wigner_D-matrix#Wigner_.28small.29_d-matrix
     Prefactor = math.sqrt(math.factorial(ell+mp)*math.factorial(ell-mp)*math.factorial(ell+m)*math.factorial(ell-m))
     s_min = max(0,m-mp)
     s_max = min(ell+m, ell-mp)
@@ -160,6 +161,7 @@ def slow_Wignerd(beta, ell, mp, m):
                              / float(math.factorial(ell+m-s)*math.factorial(s)*math.factorial(mp-m+s)*math.factorial(ell-mp-s)))
                             for s in range(s_min,s_max+1)])
 def slow_Wigner_D_element(alpha, beta, gamma, ell, mp, m):
+    # https://en.wikipedia.org/wiki/Wigner_D-matrix#Definition_of_the_Wigner_D-matrix
     return cmath.exp(-1j*mp*alpha)*slow_Wignerd(beta, ell, mp, m)*cmath.exp(-1j*m*gamma)
 @slow
 def test_Wigner_D_element_values(special_angles, ell_max):
