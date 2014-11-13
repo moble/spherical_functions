@@ -5,12 +5,28 @@
 
 ## Goldstein-Poole-Safko "Classical Mechanics"
 
-$z$-$x'$-$z''$
+### Euler angles
+
+ 1. $\phi$ about $z$
+ 2. $\theta$ about $x'$
+ 3. $\psi$ about $z''$
 
 Goldstein (p. 151) claims that this convention is widely used in
 celestial mechanics and applied mechanics, and frequently in molecular
 and solid-state physics.  Goldstein also has an Appendix on the
-various conventions.
+various conventions.  I would write Goldstein's rotation as
+\begin{equation}
+  \label{eq:GoldsteinEulerAngles}
+  e^{\phi \basis{z}/2}\, e^{\theta \basis{x}/2}\, e^{\psi \basis{z}/2}.
+\end{equation}
+That's right, he uses $x$!  I think this means that my coordinate
+$\gamma$ would be related to his $\psi$ according to $\gamma = \psi -
+\pi/2$.
+
+### Wigner $\mathfrak{D}$; harmonics
+
+I know of nowhere that Goldstein uses either
+
 
 ## Shankar
 
