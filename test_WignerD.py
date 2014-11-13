@@ -104,7 +104,7 @@ def test_Wigner_D_element_roundoff(Rs,ell_max):
     assert np.allclose( sp.Wigner_D_element(quaternion.y, LMpM), expected,
                         atol=ell_max*precision_Wigner_D_element, rtol=ell_max*precision_Wigner_D_element)
     for theta in np.linspace(0,2*np.pi):
-        expected = [((-1)**(ell+m) * (np.cos(theta)+1j*np.sin(theta))**(2*m) if mp==-m else 0.0)
+        expected = [((-1)**(ell+m) * (np.cos(theta)+1j*np.sin(theta))**(-2*m) if mp==-m else 0.0)
                     for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)]
         assert np.allclose( sp.Wigner_D_element(np.cos(theta)*quaternion.y+np.sin(theta)*quaternion.x, LMpM), expected,
                             atol=ell_max*precision_Wigner_D_element, rtol=ell_max*precision_Wigner_D_element)
@@ -116,7 +116,7 @@ def test_Wigner_D_element_roundoff(Rs,ell_max):
     assert np.allclose( sp.Wigner_D_element(quaternion.z, LMpM), expected,
                         atol=ell_max*precision_Wigner_D_element, rtol=ell_max*precision_Wigner_D_element)
     for theta in np.linspace(0,2*np.pi):
-        expected = [((np.cos(theta)+1j*np.sin(theta))**(2*m) if mp==m else 0.0)
+        expected = [((np.cos(theta)-1j*np.sin(theta))**(2*m) if mp==m else 0.0)
                     for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)]
         assert np.allclose( sp.Wigner_D_element(np.cos(theta)*quaternion.one+np.sin(theta)*quaternion.z, LMpM), expected,
                             atol=ell_max*precision_Wigner_D_element, rtol=ell_max*precision_Wigner_D_element)
@@ -153,6 +153,7 @@ def test_Wigner_D_element_overflow(Rs,ell_max):
 
 
 def slow_Wignerd(beta, ell, mp, m):
+    # https://en.wikipedia.org/wiki/Wigner_D-matrix#Wigner_.28small.29_d-matrix
     Prefactor = math.sqrt(math.factorial(ell+mp)*math.factorial(ell-mp)*math.factorial(ell+m)*math.factorial(ell-m))
     s_min = max(0,m-mp)
     s_max = min(ell+m, ell-mp)
@@ -160,6 +161,7 @@ def slow_Wignerd(beta, ell, mp, m):
                              / float(math.factorial(ell+m-s)*math.factorial(s)*math.factorial(mp-m+s)*math.factorial(ell-mp-s)))
                             for s in range(s_min,s_max+1)])
 def slow_Wigner_D_element(alpha, beta, gamma, ell, mp, m):
+    # https://en.wikipedia.org/wiki/Wigner_D-matrix#Definition_of_the_Wigner_D-matrix
     return cmath.exp(-1j*mp*alpha)*slow_Wignerd(beta, ell, mp, m)*cmath.exp(-1j*m*gamma)
 @slow
 def test_Wigner_D_element_values(special_angles, ell_max):
@@ -169,15 +171,18 @@ def test_Wigner_D_element_values(special_angles, ell_max):
     for alpha in special_angles:
         print("\talpha={0}".format(alpha)) # Need to show some progress to Travis
         for beta in special_angles:
+            print("\t\tbeta={0}".format(beta))
             for gamma in special_angles:
-                assert np.allclose( np.conjugate(np.array([slow_Wigner_D_element(alpha, beta, gamma, ell, mp, m) for ell,mp,m in LMpM])),
+                print("\t\t\tgamma={0}".format(gamma))
+                assert np.allclose( np.array([slow_Wigner_D_element(alpha, beta, gamma, ell, m, mp) for ell,mp,m in LMpM]),
                                     sp.Wigner_D_element(quaternion.from_euler_angles(alpha, beta, gamma), LMpM),
                                     atol=ell_max**6*precision_Wigner_D_element, rtol=ell_max**6*precision_Wigner_D_element )
 
 @slow
 def test_Wigner_D_matrix(Rs, ell_max):
+    np.set_printoptions(linewidth=158)
     for l_min in [0,1,2,ell_max//2,ell_max-1]:
-        print("")
+        # print("")
         for l_max in range(l_min+1,ell_max+1):
             print("\tWorking on (l_min,l_max)=({0},{1})".format(l_min,l_max))
             LMpM = np.array([[ell,mp,m]
@@ -188,5 +193,9 @@ def test_Wigner_D_matrix(Rs, ell_max):
                 elements = sp.Wigner_D_element(R, LMpM)
                 matrix = np.empty(LMpM.shape[0], dtype=complex)
                 sp._Wigner_D_matrices(R.a, R.b, l_min, l_max, matrix)
+                # print(R)
+                # print(elements[1:].reshape((3,3)))
+                # print(matrix[1:].reshape((3,3)))
+                # print("")
                 assert np.allclose( elements, matrix,
                                     atol=1e3*l_max*ell_max*precision_Wigner_D_element, rtol=1e3*l_max*ell_max*precision_Wigner_D_element )

@@ -40,7 +40,7 @@ def ladder_operator_coefficient(ell,m):
 
 
 ## Coefficients used in constructing the Wigner D matrices
-_Wigner_coefficients = array([sqrt( factorials[ell+m]*factorials[ell-m] / (factorials[ell+mp]*factorials[ell-mp] ) )
+_Wigner_coefficients = array([sqrt( factorials[ell+mp]*factorials[ell-mp] / (factorials[ell+m]*factorials[ell-m] ) )
                               for ell in range(ell_max+1)
                               for mp in range(-ell, ell+1)
                               for m in range(-ell, ell+1) ])
