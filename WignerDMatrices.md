@@ -11,50 +11,53 @@ more detail on [this page](SWSHs.html).  They are derived in terms of
 a particular split of the quaternion group into two parts.
 
 Explicitly, a quaternion $\quat{Q}$ can be expressed in terms of two
-complex numbers $\quat{Q}\_a = \quat{Q}\_1 + i\, \quat{Q}\_z$ and
+complex numbers $\quat{Q}\_a = \quat{Q}\_1 - i\, \quat{Q}\_z$ and
 $\quat{Q}\_b = \quat{Q}\_y + i\, \quat{Q}\_x$.[^1] This is only
 important because it allows us to verify the multiplication law
 \begin{align}
   \label{eq:QuaternionComponentProducts}
-  (\quat{P}\,\quat{Q})\_a &= \quat{P}\_a\, \quat{Q}\_a - \co{\quat{P}}\_b\, \quat{Q}\_b, \\\\
-  (\quat{P}\,\quat{Q})\_b &= \quat{P}\_b\, \quat{Q}\_a + \co{\quat{P}}\_a\, \quat{Q}\_b.
+  (\quat{P}\,\quat{Q})\_a &= \quat{P}\_a\, \quat{Q}\_a - \quat{P}\_b\, \co{\quat{Q}}\_b, \\\\
+  (\quat{P}\,\quat{Q})\_b &= \quat{P}\_a\, \quat{Q}\_b + \quat{P}\_b\, \co{\quat{Q}}\_a.
 \end{align}
 Given a rotor $\rotor{R}$, these two complex numbers are the
 quantities actually used in computing the $\mathfrak{D}$ matrix
-elements.
+elements.  Note that there is a series of simple conventions leading
+to both the decomposition of a quaternion into two complex numbers,
+and the product law.  None of these conventions is set in stone; we
+just choose something with an eye to the desired result.
 
-This is essentially the same as Wigner's original derivation, but with
-more elegance, and more sensitivity to numerical issues and special
-cases.  This version of the derivation comes from
+The following is essentially the same as Wigner's original derivation,
+but with more elegance, and more sensitivity to numerical issues and
+special cases.  This version of the derivation comes from
 [a paper](http://arxiv.org/abs/1302.2919) I wrote a couple years ago,
 and is the source of the code used in this module.
 
 The basic idea of the derivation is to construct a
 $(2\ell+1)$-dimensional vector space of homogeneous polynomials in
-these complex numbers $\quat{Q}\_a$ and $\quat{Q}\_b$.  To make that a
+these complex numbers $\quat{P}\_a$ and $\quat{P}\_b$.  To make that a
 little more concrete, the basis of this vector space is
 \begin{equation\*}
   \label{WignerBasisComponent}
-  \mathbf{e}\_{(m)}(\quat{Q}) \defined
-    \frac{\quat{Q}\_{a}^{\ell+m}\, \quat{Q}\_{b}^{\ell-m}}
+  \mathbf{e}\_{(m)}(\quat{P}) \defined
+    \frac{\quat{P}\_{a}^{\ell+m}\, \quat{P}\_{b}^{\ell-m}}
     {\sqrt{ (\ell+m)!\, (\ell-m)! }}.
 \end{equation\*}
 Here, $m$ ranges from $-\ell$ to $\ell$ in steps of $1$, but $\ell$
 (and hence $m$) can be a half-integer.  Now, the key idea is that a
-rotation of $\quat{Q}$ by some new rotor $\quat{R}$ gives us a new
+rotation of $\quat{P}$ by some new rotor $\quat{R}$ gives us a new
 vector basis, which we can represent in terms of the basis shown
 above.  In fact, we get a matrix transforming one set of basis vectors
 to another.  We'll write this as
 \begin{equation\*}
-  \mathbf{e}\_{(m')}(\quat{R}\, \quat{Q})
-  = \sum\_{m} \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})\, \mathbf{e}\_{(m)}(\quat{Q}).
+  \mathbf{e}\_{(m)}(\quat{P}\, \quat{R})
+  = \sum\_{m'} \mathbf{e}\_{(m')}(\quat{P})\, \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R}).
 \end{equation\*}
 
 So now, we've defined the $\mathfrak{D}$ matrices.  But we can also
-plug $\quat{R}\, \quat{Q}$ into the original expression for
+plug $\quat{P}\, \quat{R}$ into the original expression for
 $\mathbf{e}$, and figure out what $\mathfrak{D}$ should actually be.
-We'll have to use the expressions for $(\quat{R}\, \quat{Q})_a$ and
-$(\quat{R}\, \quat{Q})_b$ given above, and we'll find that we have
+We'll have to use the expressions for $(\quat{P}\, \quat{R})_a$ and
+$(\quat{P}\, \quat{R})_b$ given above, and we'll find that we have
 polynomials with terms given as sums of two different things.
 
 This brings us to the first fork in the road.  If either $\quat{R}_a$
@@ -65,37 +68,35 @@ we can just ignore it; since $\lvert \quat{R} \rvert=1$ (within
 numerical precision), we are assured that $\lvert \quat{R}_b \rvert
 \approx 1$.  Thus, we get
 \begin{align\*}
-  \mathbf{e}\_{(m')}(\quat{R}\, \quat{Q})
-  &\approx \frac{ (- \co{\quat{R}}\_{b}\, \quat{Q}\_{b})^{\ell+m'}\,
-    (\quat{R}\_{b}\, \quat{Q}\_{a})^{\ell-m'} } { \sqrt{
-      (\ell+m')!\, (\ell-m')! } }, \\\\
-  &\approx (- \co{\quat{R}}\_{b})^{\ell+m'}\,
-  (\quat{R}\_{b})^{\ell-m'}\, \mathbf{e}\_{(-m')}(\quat{Q}).
+  \mathbf{e}\_{(m)}(\quat{P}\, \quat{R})
+  &\approx \frac{ (- \co{\quat{R}}\_{b}\, \quat{P}\_{b})^{\ell+m}\,
+    (\quat{R}\_{b}\, \quat{P}\_{a})^{\ell-m} } { \sqrt{
+      (\ell+m)!\, (\ell-m)! } }, \\\\
+  &\approx (- \co{\quat{R}}\_{b})^{\ell+m}\,
+  (\quat{R}\_{b})^{\ell-m}\, \mathbf{e}\_{(-m)}(\quat{P}).
 \end{align\*}
 In this case, it's not hard to see that the expression for the
 $\mathfrak{D}$ matrix is
 \begin{equation}
   \label{eq:D\_RaApprox0}
   \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
-  = (-1)^{\ell+m'}\, \quat{R}\_b^{-2m'} \delta\_{-m',m}
-  = (-1)^{\ell+m}\, \quat{R}\_b^{2m} \delta\_{-m',m}.
+  = (-1)^{\ell+m}\, \quat{R}\_b^{-2m} \delta\_{m',-m}.
 \end{equation}
 In the same way, we can calculate this for $\lvert \quat{R}_b \rvert
 \lesssim 10^{-15}$:
 {::comment}
 \begin{align\*}
-  \mathbf{e}\_{(m')}(\quat{R}\, \quat{Q})
-  &\approx \frac{ (\quat{R}\_{a}\, \quat{Q}\_{a})^{\ell+m'}\,
-    (\co{\quat{R}}\_{a}\, \quat{Q}\_{b})^{\ell-m'} } { \sqrt{
-      (\ell+m')!\, (\ell-m')! } }, \\\\
-  &\approx (\quat{R}\_{a})^{\ell+m'}\,
-  (\co{\quat{R}}\_{a})^{\ell-m'}\, \mathbf{e}\_{(m')}(\quat{Q}).
+  \mathbf{e}\_{(m)}(\quat{P}\, \quat{R})
+  &\approx \frac{ (\quat{R}\_{a}\, \quat{P}\_{a})^{\ell+m}\,
+    (\co{\quat{R}}\_{a}\, \quat{P}\_{b})^{\ell-m} } { \sqrt{
+      (\ell+m)!\, (\ell-m)! } }, \\\\
+  &\approx (\co{\quat{R}}\_{a})^{\ell-m}\,
+  (\quat{R}\_{a})^{\ell+m}\, \mathbf{e}\_{(m)}(\quat{P}).
 \end{align\*}
 {:/comment}
 \begin{equation}
   \label{eq:D\_RbApprox0}
   \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
-  = \quat{R}\_a^{2m'} \delta\_{m',m}
   = \quat{R}\_a^{2m} \delta\_{m',m}.
 \end{equation}
 
@@ -104,16 +105,51 @@ components have larger magnitudes.  We have powers of the sum of those
 terms in Eq. \eqref{eq:QuaternionComponentProducts}.  This leads us to
 use (two applications of) the
 [binomial expansion](https://en.wikipedia.org/wiki/Binomial_theorem).
+{::comment}
+\begin{align\*}
+  \mathbf{e}\_{(m)}(\quat{P}\, \quat{R})
+  &= \frac{
+      (\quat{P}\_a\, \quat{R}\_a - \quat{P}\_{b}\, \co{\quat{R}}\_{b})^{\ell+m}\,
+      (\quat{P}\_a\, \quat{R}\_b + \quat{P}\_b\, \co{\quat{R}}\_a)^{\ell-m} }
+    { \sqrt{ (\ell+m)!\, (\ell-m)! } }, \\\\
+  &= \sum\_\rho \binom{\ell+m}{\rho}
+    \frac{
+      (\quat{P}\_a\, \quat{R}\_a)^{\ell+m-\rho}\, (- \quat{P}\_{b}\, \co{\quat{R}}\_{b})^{\rho}\,
+      (\quat{P}\_a\, \quat{R}\_b + \quat{P}\_b\, \co{\quat{R}}\_a)^{\ell-m} }
+    { \sqrt{ (\ell+m)!\, (\ell-m)! } }, \\\\
+  &= \sum\_{\rho,\rho'} \binom{\ell+m}{\rho} \binom{\ell-m}{\rho'}
+    \frac{
+      (\quat{P}\_a\, \quat{R}\_a)^{\ell+m-\rho}\, (- \quat{P}\_{b}\, \co{\quat{R}}\_{b})^{\rho}\,
+      (\quat{P}\_a\, \quat{R}\_b)^{\ell-m-\rho'}\, (\quat{P}\_b\, \co{\quat{R}}\_a)^{\rho'} }
+    { \sqrt{ (\ell+m)!\, (\ell-m)! } }, \\\\
+  &= \sum\_{\rho,m'} \binom{\ell+m}{\rho} \binom{\ell-m}{\ell-\rho-m'}
+    \frac{
+      (\quat{P}\_a\, \quat{R}\_a)^{\ell+m-\rho}\, (- \quat{P}\_{b}\, \co{\quat{R}}\_{b})^{\rho}\,
+      (\quat{P}\_a\, \quat{R}\_b)^{m'-m+\rho}\, (\quat{P}\_b\, \co{\quat{R}}\_a)^{\ell-\rho-m'} }
+    { \sqrt{ (\ell+m)!\, (\ell-m)! } }, \\\\
+  &= \sum\_{\rho,m'} \binom{\ell+m}{\rho} \binom{\ell-m}{\ell-\rho-m'} (-1)^\rho
+      \quat{R}\_a^{\ell+m-\rho}\, \co{\quat{R}}\_{b}^{\rho}\,
+      \quat{R}\_b^{m'-m+\rho}\, \co{\quat{R}}\_a^{\ell-\rho-m'}
+    \frac{
+      \quat{P}\_a^{\ell+m'}\, \quat{P}\_b^{\ell-m'} }
+    { \sqrt{ (\ell+m)!\, (\ell-m)! } }, \\\\
+  &= \sum_{m'} \mathbf{e}\_{(m')}(\quat{P})
+    \sum\_{\rho} \binom{\ell+m}{\rho} \binom{\ell-m}{\ell-\rho-m'} (-1)^\rho
+      \quat{R}\_a^{\ell+m-\rho}\, \co{\quat{R}}\_{b}^{\rho}\,
+      \quat{R}\_b^{m'-m+\rho}\, \co{\quat{R}}\_a^{\ell-\rho-m'}
+    \sqrt{ \frac{(\ell+m')!\, (\ell-m')!} { (\ell+m)!\, (\ell-m)! } }, \\\\
+\end{align\*}
+{:/comment}
 After a little simplification, we can express the result as
 \begin{multline}
   \label{eq:DAnalytically}
   \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
-  = \sum\_{\rho} \binom{\ell+m'} {\rho}\, \binom{\ell-m'}
-  {\ell-\rho-m}\, (-1)^{\rho}\, \\\\ \times \quat{R}\_{a}^{\ell+m'-\rho}\,
-  \co{\quat{R}}\_{a}^{\ell-\rho-m}\,
-  \quat{R}\_{b}^{\rho-m'+m}\, \co{\quat{R}}\_{b}^{\rho}\,
-  \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\,
-      (\ell-m')! } }.
+  = \sum\_{\rho} \binom{\ell+m} {\rho}\, \binom{\ell-m}
+  {\ell-\rho-m'}\, (-1)^{\rho}\, \\\\ \times \quat{R}\_{a}^{\ell+m-\rho}\,
+  \co{\quat{R}}\_{a}^{\ell-\rho-m'}\,
+  \quat{R}\_{b}^{\rho-m+m'}\, \co{\quat{R}}\_{b}^{\rho}\,
+  \sqrt{ \frac{ (\ell+m')!\, (\ell-m')! } { (\ell+m)!\,
+      (\ell-m)! } }.
 \end{multline}
 It turns out that this expression is not the best way to implement the
 calculation in the code.  The reason is that we would need to take a
@@ -125,14 +161,14 @@ better form.  For example, we can simplify the above as
   \nonumber
   \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
   &=
-  \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\, (\ell-m')! } }\,
-  \quat{R}\_{a}^{\ell+m'}\,
-  \co{\quat{R}}\_{a}^{\ell-m}\,
-  \quat{R}\_{b}^{-m'+m} \\\\
+  \sqrt{ \frac{ (\ell+m')!\, (\ell-m')! } { (\ell+m)!\, (\ell-m)! } }\,
+  \quat{R}\_{a}^{\ell+m}\,
+  \co{\quat{R}}\_{a}^{\ell-m'}\,
+  \quat{R}\_{b}^{-m+m'} \\\\
   \nonumber
   &\qquad
   \times \sum\_{\rho}
-  \binom{\ell+m'} {\rho}\, \binom{\ell-m'} {\ell-\rho-m}\,
+  \binom{\ell+m} {\rho}\, \binom{\ell-m} {\ell-\rho-m'}\,
   (-1)^{\rho}\,
   \quat{R}\_{a}^{-\rho}\,
   \co{\quat{R}}\_{a}^{-\rho}\,
@@ -140,14 +176,14 @@ better form.  For example, we can simplify the above as
   \co{\quat{R}}\_{b}^{\rho}, \\\\
   \nonumber
   &=
-  \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\, (\ell-m')! } }\,
-  \lvert \quat{R}\_{a} \rvert^{2\ell-2m}\,
-  \quat{R}\_{a}^{m'+m}\,
-  \quat{R}\_{b}^{-m'+m} \\\\
+  \sqrt{ \frac{ (\ell+m')!\, (\ell-m')! } { (\ell+m)!\, (\ell-m)! } }\,
+  \lvert \quat{R}\_{a} \rvert^{2\ell-2m'}\,
+  \quat{R}\_{a}^{m+m'}\,
+  \quat{R}\_{b}^{-m+m'} \\\\
   \label{eq:D\_RaGeqRb}
   &\qquad
   \times \sum\_{\rho}
-  \binom{\ell+m'} {\rho}\, \binom{\ell-m'} {\ell-\rho-m}\,
+  \binom{\ell+m} {\rho}\, \binom{\ell-m} {\ell-\rho-m'}\,
   \left( - \frac{\lvert \quat{R}\_{b} \rvert^2}
   {\lvert \quat{R}\_{a} \rvert^2} \right)^{\rho}.
 \end{align}
@@ -210,17 +246,17 @@ the summation variable.  We can simply transform that summation
 variable as $\rho \mapsto \ell-m-\rho$, and obtain
 \begin{multline\*}
   \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
-  = \sum\_{\rho} \binom{\ell+m'} {\ell-m-\rho}\, \binom{\ell-m'}
-  {\rho}\, (-1)^{\ell-m-\rho}\, \\\\ \times
-  \quat{R}\_{a}^{m'+m+\rho}\, \co{\quat{R}}\_{a}^{\rho}\,
-  \quat{R}\_{b}^{\ell-m'-\rho}\, \co{\quat{R}}\_{b}^{\ell-m-\rho}\,
-  \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\,
-      (\ell-m')! } }.
+  = \sum\_{\rho} \binom{\ell+m} {\ell-m'-\rho}\, \binom{\ell-m}
+  {\rho}\, (-1)^{\ell-m'-\rho}\, \\\\ \times
+  \quat{R}\_{a}^{m+m'+\rho}\, \co{\quat{R}}\_{a}^{\rho}\,
+  \quat{R}\_{b}^{\ell-m-\rho}\, \co{\quat{R}}\_{b}^{\ell-m'-\rho}\,
+  \sqrt{ \frac{ (\ell+m')!\, (\ell-m')! } { (\ell+m)!\,
+      (\ell-m)! } }.
 \end{multline\*}
 It's interesting to note the symmetry with the earlier version of this
 equation; we've essentially just exchanged the labels $a$ and $b$,
-while also reversing the sign of $m'$, and multiplying by an overall
-factor of $(-1)^{\ell+m}$.
+while also reversing the sign of $m$, and multiplying by an overall
+factor of $(-1)^{\ell+m'}$.
 
 In any case, we can apply the same simplification to this expression
 as before:
@@ -228,16 +264,16 @@ as before:
   \nonumber
   \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
   &=
-  (-1)^{\ell-m}
-  \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\, (\ell-m')! } }
-  \quat{R}\_{a}^{m'+m}\,
-  \quat{R}\_{b}^{\ell-m'}\,
-  \co{\quat{R}}\_{b}^{\ell-m}
+  (-1)^{\ell-m'}
+  \sqrt{ \frac{ (\ell+m')!\, (\ell-m')! } { (\ell+m)!\, (\ell-m)! } }
+  \quat{R}\_{a}^{m+m'}\,
+  \quat{R}\_{b}^{\ell-m}\,
+  \co{\quat{R}}\_{b}^{\ell-m'}
   \\\\
   \nonumber
   &\qquad
   \times \sum\_{\rho}
-  \binom{\ell+m'} {\ell-m-\rho}\, \binom{\ell-m'} {\rho}\,
+  \binom{\ell+m} {\ell-m'-\rho}\, \binom{\ell-m} {\rho}\,
   (-1)^\rho\,
   \quat{R}\_{a}^{\rho}\,
   \co{\quat{R}}\_{a}^{\rho}\,
@@ -246,16 +282,16 @@ as before:
   \\\\
   \nonumber
   &=
-  (-1)^{\ell-m}
-  \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\, (\ell-m')! } }
-  \quat{R}\_{a}^{m'+m}\,
-  \quat{R}\_{b}^{m-m'}\,
-  \lvert \quat{R}\_{b} \rvert^{2\ell-2m}
+  (-1)^{\ell-m'}
+  \sqrt{ \frac{ (\ell+m')!\, (\ell-m')! } { (\ell+m)!\, (\ell-m)! } }
+  \quat{R}\_{a}^{m+m'}\,
+  \quat{R}\_{b}^{m'-m}\,
+  \lvert \quat{R}\_{b} \rvert^{2\ell-2m'}
   \\\\
   \label{eq:D\_RaLeqRb}
   &\qquad
   \times \sum\_{\rho}
-  \binom{\ell+m'} {\ell-m-\rho}\, \binom{\ell-m'} {\rho}\,
+  \binom{\ell+m} {\ell-m'-\rho}\, \binom{\ell-m} {\rho}\,
   \left( - \frac{ \lvert \quat{R}\_{a} \rvert^2 }
   { \lvert \quat{R}\_{b} \vert^2 } \right)^{\rho}
 \end{align}
@@ -316,7 +352,7 @@ on $\mathfrak{D}$ matrices) can be written in quaternion form as
 \end{align\*}
 Taking the complex components of this, we have
 \begin{equation\*}
-  \quat{R}\_a = e^{i\,\alpha/2}\, \cos\frac{\beta}{2}\, e^{i\,\gamma/2},
+  \quat{R}\_a = e^{-i\,\alpha/2}\, \cos\frac{\beta}{2}\, e^{-i\,\gamma/2},
   \qquad
   \quat{R}\_b = e^{i\,\alpha/2}\, \sin\frac{\beta}{2}\, e^{i\,\gamma/2}.
 \end{equation\*}

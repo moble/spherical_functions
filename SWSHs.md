@@ -117,7 +117,7 @@ vectors can be expressed simply in the form of the rotor
 \end{equation\*}
 Or, to put this in a form more useful for us, we have
 \begin{equation\*}
-  \quat{R}\_a = e^{i\,\varphi/2}\, \cos\frac{\beta}{2},
+  \quat{R}\_a = e^{-i\,\varphi/2}\, \cos\frac{\beta}{2},
   \qquad
   \quat{R}\_b = e^{i\,\varphi/2}\, \sin\frac{\beta}{2}.
 \end{equation\*}
