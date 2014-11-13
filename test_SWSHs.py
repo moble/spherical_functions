@@ -63,7 +63,7 @@ def test_SWSH_WignerD_expression(special_angles, ell_max):
     for iota in special_angles:
         for phi in special_angles:
             for ell in range(ell_max+1):
-                for s in range(ell):
+                for s in range(-ell,ell+1):
                     R = quaternion.from_euler_angles(phi,iota,0)
                     LM = np.array([[ell,m] for m in range(-ell,ell+1)])
                     Y = sp.SWSH(R.a, R.b, s, LM)
@@ -73,9 +73,22 @@ def test_SWSH_WignerD_expression(special_angles, ell_max):
                     D = (-1)**(s)*math.sqrt((2*ell+1)/(4*np.pi))*D
                     assert np.allclose(Y, D, atol=ell_max**6*precision_SWSH, rtol=ell_max**6*precision_SWSH)
 
-
-@pytest.mark.xfail
-def test_SWSH_spin_behavior(special_angles, ell_max):
-    for s in range(4):
-        assert False
+@slow
+def test_SWSH_spin_behavior(Rs, special_angles, ell_max):
+    # We expect that the SWSHs behave according to
+    #   sYlm( R * exp(gamma*z/2) ) = sYlm(R) * exp(-1j*s*gamma)
+    # See http://moble.github.io/spherical_functions/SWSHs.html#fn:2
+    # for a more detailed explanation
+    # print("")
+    for i,R in enumerate(Rs):
+        # print("\t{0} of {1}: R = {2}".format(i, len(Rs), R))
+        for gamma in special_angles:
+            for ell in range(ell_max+1):
+                for s in range(-ell,ell+1):
+                    LM = np.array([[ell,m] for m in range(-ell,ell+1)])
+                    Rgamma = R * np.quaternion(math.cos(gamma/2.), 0, 0, math.sin(gamma/2.))
+                    sYlm1 = sp.SWSH(Rgamma.a, Rgamma.b, s, LM)
+                    sYlm2 = sp.SWSH(R.a, R.b, s, LM) * cmath.exp(-1j*s*gamma)
+                    # print(R, gamma, ell, s, np.max(np.abs(sYlm1-sYlm2)))
+                    assert np.allclose( sYlm1, sYlm2, atol=ell**6*precision_SWSH, rtol=ell**6*precision_SWSH)
 
