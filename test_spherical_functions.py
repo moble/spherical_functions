@@ -44,3 +44,18 @@ def test_ladder_operator_coefficient():
             a = math.sqrt(ell*(ell+1)-m*(m+1))
             b = sp.ladder_operator_coefficient(ell,m)
             assert a==b
+
+def test_LM_range(ell_max):
+    for l_max in range(ell_max+1):
+        for l_min in range(l_max+1):
+            assert np.array_equal( sp.LM_range(l_min, l_max),
+                                   np.array([[ell,m] for ell in range(l_min,l_max+1) for m in range(-ell,ell+1)]) )
+
+def test_LMpM_range(ell_max):
+    for l_max in range(ell_max+1):
+        for l_min in range(l_max+1):
+            assert np.array_equal( sp.LMpM_range(l_min, l_max),
+                                   np.array([[ell,mp,m]
+                                             for ell in range(l_min,l_max+1)
+                                             for mp in range(-ell,ell+1)
+                                             for m in range(-ell,ell+1)]) )
