@@ -7,7 +7,7 @@ from numpy import array, empty, floor
 from math import factorial, sqrt
 from sys import float_info
 
-from quaternion.numba_wrapper import njit
+from quaternion.numba_wrapper import njit, xrange
 
 ## Module constants
 ell_max = 32
