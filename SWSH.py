@@ -9,7 +9,7 @@ from . import (_Wigner_coefficient as coeff, binomial_coefficient,
 from quaternion.numba_wrapper import njit, jit, int64, xrange
 
 
-def SWSH(Ra, Rb, s, indices):
+def SWSH(R, s, indices):
     """Spin-weighted spherical harmonic calculation from rotor
 
      * `Ra`, `Rb` are the complex components of the rotor
@@ -22,7 +22,7 @@ def SWSH(Ra, Rb, s, indices):
 
     """
     values = np.empty((indices.shape[0],), dtype=complex)
-    _SWSH(Ra, Rb, s, indices, values)
+    _SWSH(R.a, R.b, s, indices, values)
     return values
 
 @njit('void(complex128, complex128, int64, int64[:,:], complex128[:])')

@@ -56,7 +56,7 @@ def test_SWSH_values(special_angles, ell_max):
                 for s in range(-ell,ell+1):
                     for m in range(-ell,ell+1):
                         R = quaternion.from_euler_angles(phi,iota,0)
-                        assert abs( sp.SWSH(R.a, R.b, s, np.array([[ell,m]]))
+                        assert abs( sp.SWSH(R, s, np.array([[ell,m]]))
                                     - slow_sYlm(s,ell,m,iota,phi) ) < ell_max**6 * precision_SWSH
 
 def test_SWSH_WignerD_expression(special_angles, ell_max):
@@ -66,12 +66,12 @@ def test_SWSH_WignerD_expression(special_angles, ell_max):
                 for s in range(-ell,ell+1):
                     R = quaternion.from_euler_angles(phi,iota,0)
                     LM = np.array([[ell,m] for m in range(-ell,ell+1)])
-                    Y = sp.SWSH(R.a, R.b, s, LM)
+                    Y = sp.SWSH(R, s, LM)
                     LMS = np.array([[ell,m,-s] for m in range(-ell,ell+1)])
                     D = np.empty(Y.shape[0], dtype=complex)
                     sp._Wigner_D_element(R.a, R.b, LMS, D)
                     D = (-1)**(s)*math.sqrt((2*ell+1)/(4*np.pi))*D
-                    assert np.allclose(Y, D, atol=ell_max**6*precision_SWSH, rtol=ell_max**6*precision_SWSH)
+                    assert np.allclose(Y, D, atol=ell**6*precision_SWSH, rtol=ell**6*precision_SWSH)
 
 @slow
 def test_SWSH_spin_behavior(Rs, special_angles, ell_max):
@@ -87,8 +87,8 @@ def test_SWSH_spin_behavior(Rs, special_angles, ell_max):
                 for s in range(-ell,ell+1):
                     LM = np.array([[ell,m] for m in range(-ell,ell+1)])
                     Rgamma = R * np.quaternion(math.cos(gamma/2.), 0, 0, math.sin(gamma/2.))
-                    sYlm1 = sp.SWSH(Rgamma.a, Rgamma.b, s, LM)
-                    sYlm2 = sp.SWSH(R.a, R.b, s, LM) * cmath.exp(-1j*s*gamma)
+                    sYlm1 = sp.SWSH(Rgamma, s, LM)
+                    sYlm2 = sp.SWSH(R, s, LM) * cmath.exp(-1j*s*gamma)
                     # print(R, gamma, ell, s, np.max(np.abs(sYlm1-sYlm2)))
                     assert np.allclose( sYlm1, sYlm2, atol=ell**6*precision_SWSH, rtol=ell**6*precision_SWSH)
 
