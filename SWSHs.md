@@ -15,6 +15,10 @@ function is expanded in a basis of SWSHs, we can derive a formula for
 the coefficients of that expansion with respect to a rotated frame.
 These properties will all be derived and discussed below.
 
+This discussion is essentially an updated version of the one found in
+[my paper](http://arxiv.org/abs/1302.2919) of a couple years ago.  For
+more references, see the citations therein.
+
 ## Spin-weighted functions
 
 Spin-weighted functions on the sphere are unusual objects.  They take
@@ -126,7 +130,8 @@ given [here](WignerDMatrices.html#mjx-eqn-eqD_RaGeqRb), for example,
 and comparing to the expressions in
 [the data-formats paper](http://arxiv.org/abs/0709.0093), we see that
 SWSHs can be written as
-\begin{equation\*}
+\begin{equation}
+  \label{eq:SWSHFromWignerD}
   {}\_{s}Y\_{\ell,m} (\vartheta, \varphi)
   =
   {}\_{s}Y\_{\ell,m} (\quat{R}\_{(\vartheta, \varphi)})
@@ -134,8 +139,121 @@ SWSHs can be written as
   (-1)^s\, \sqrt{\frac{2\ell+1} {4\pi}}\,
   \mathfrak{D}^{(\ell)}\_{m,-s} \left(\quat{R}\_{(\vartheta, \varphi)}
   \right).
-\end{equation\*}
+\end{equation}
 
+
+## Rotating SWSHs
+
+Now, using Eq. \eqref{eq:SWSHFromWignerD} and the representation
+property of Wigner's $\mathfrak{D}$ matrices, we can show how to
+rotate the SWSH functions, and show the transformation of modes of a
+decomposition of a general spin-weighted function by SWSHs.
+
+We start of with the fact that the $\mathfrak{D}$ matrices form a
+representation of the rotation group.  That is, given any two rotors
+$\quat{R}\_1$ and $\quat{R}\_2$, we have
+\begin{equation}
+  \mathfrak{D}^{(\ell)}\_{m',m} (\quat{R}\_1\, \quat{R}\_2) =
+  \sum\_{m''}
+  \mathfrak{D}^{(\ell)}\_{m',m''} (\quat{R}\_1)\,
+  \mathfrak{D}^{(\ell)}\_{m'',m} (\quat{R}\_2).
+\end{equation}
+From Eq. \eqref{eq:SWSHFromWignerD}, we see that it is possible to
+rewrite this as
+\begin{equation}
+  {}\_{s}Y\_{\ell,m} (\quat{R}\_1\, \quat{R}\_2) =
+  \sum\_{m'}
+  \mathfrak{D}^{(\ell)}\_{m,m'} (\quat{R}\_1)\,
+  {}\_{s}Y\_{\ell,m'}(\quat{R}\_2).
+\end{equation}
+In principle, this is the rotation law needed for SWSHs.
+
+As we saw above, spin-weighted functions should be regarded as
+functions on the rotation group, rather than as functions on points of
+the sphere.  Unfortunately, this is not the standard treatment; a
+canonical tangent basis is assumed from the coordinate system.  So we
+need to write the arguments of the SWSHs in terms of spherical
+coordinates.  But there's a wrinkle here.  If we assume that the
+argument of the SWSH on the left-hand side above can be written as
+spherical coordinates $\quat{R}\_{(\vartheta', \varphi')}$, the
+argument of the SWSH on the right-hand side cannot be written purely
+as spherical coordinates; there is some additional rotation needed.
+In general, then, we must write the transformation in the form
+\begin{equation}
+  \quat{R}\_{(\vartheta', \varphi')} = \quat{R}\,
+  \quat{R}\_{(\vartheta, \varphi)}\, e^{\gamma\, \basis{z}/2},
+\end{equation}
+for some angle $\gamma$, corresponding to a final rotation about the
+vector joining the origin to the point at $(\vartheta', \varphi')$.
+Fortunately, we can factor out this term using the known behavior of
+spin-weighted functions:
+\begin{align}
+  {}\_{s}Y\_{\ell,m} (\quat{R}\_{(\vartheta', \varphi')}) &=
+  \sum\_{m'}
+  \mathfrak{D}^{(\ell)}\_{m,m'} (\quat{R})\,
+  {}\_{s}Y\_{\ell,m'}(\quat{R}\_{(\vartheta, \varphi)}\, e^{\gamma\,
+  \basis{z}/2})
+  \nonumber \\\\ \label{eq:SWSHRotation}
+  &= \sum\_{m'}
+  \mathfrak{D}^{(\ell)}\_{m,m'} (\quat{R})\,
+  {}\_{s}Y\_{\ell,m'}(\quat{R}\_{(\vartheta, \varphi)})\, e^{-i\, s\, \gamma}.
+\end{align}
+We see an interesting result from this: the spin-weighted spherical
+harmonics do *not* transform among themselves under rotations---except
+in the familiar case of $s=0$.
+
+This curious factor of $e^{-i\, s\, \gamma}$, however, is precisely
+what is needed to ensure that *modes* of an expansion in SWSHs *do*
+transform among themselves under rotations.  To be more precise, let
+us take a function ${}\_{s}f$, with a well defined spin weight $s$.
+This can be expanded in the basis of SWSHs as
+\begin{equation\*}
+  {}\_{s}f(\quat{R}\_{(\vartheta, \varphi)}) = \sum\_m f^{\ell,m}
+  {}\_{s}Y\_{\ell,m}(\quat{R}\_{(\vartheta, \varphi)}).
+\end{equation\*}
+Now, there is another field ${}\_{s}f'$ representing the physically
+rotated field having the same magnitude at $(\vartheta', \varphi')$
+as ${}\_{s}f$ has at $(\vartheta, \varphi)$.  This has a similar
+expansion:
+\begin{equation\*}
+  {}\_{s}f'(\quat{R}\_{(\vartheta', \varphi')}) = \sum\_m f'^{\ell,m}
+  {}\_{s}Y\_{\ell,m}(\quat{R}\_{(\vartheta', \varphi')}).
+\end{equation\*}
+Now, recalling Eq. \eqref{eq:SpinWeightedTransformation}
+${}\_{s}f'(\quat{R}\_{(\vartheta', \varphi')}) =
+{}\_{s}f(\quat{R}\_{(\vartheta, \varphi)})\, e^{-i\, s\, \gamma}$, we
+can combine the last three equations.
+{::comment}
+\begin{align\*}
+  {}\_{s}f'(\quat{R}\_{(\vartheta', \varphi')})
+  &=
+  \sum\_m f'^{\ell,m} {}\_{s}Y\_{\ell,m}(\quat{R}\_{(\vartheta', \varphi')})
+  \\\\ &=
+  \sum\_m f'^{\ell,m} \sum\_{m'}
+  \mathfrak{D}^{(\ell)}\_{m,m'} (\quat{R})\,
+  {}\_{s}Y\_{\ell,m'}(\quat{R}\_{(\vartheta, \varphi)})\, e^{-i\, s\, \gamma}
+  \\\\ &=
+  \sum\_{m',m} f'^{\ell,m'}
+  \mathfrak{D}^{(\ell)}\_{m',m} (\quat{R})\,
+  {}\_{s}Y\_{\ell,m}(\quat{R}\_{(\vartheta, \varphi)})\, e^{-i\, s\, \gamma}
+  \\\\ &=
+  {}\_{s}f(\quat{R}\_{(\vartheta, \varphi)})\, e^{-i\, s\, \gamma}
+  \\\\ &=
+  \sum\_m f^{\ell,m} {}\_{s}Y\_{\ell,m}(\quat{R}\_{(\vartheta,
+  \varphi)})\, e^{-i\, s\, \gamma}
+\end{align\*}
+{:/comment}
+Using orthogonality of the SWSHs, we can pull out the transformation
+law for the modes:
+\begin{equation}
+  f^{\ell,m} = \sum\_{m'} f'^{\ell,m'}\, \mathfrak{D}^{(\ell)}\_{m',m} (\quat{R}).
+\end{equation}
+
+We should note the meaning of $\quat{R}$, now that we understand how
+it fits into the transformations.  It is a rotation taking a physical
+system $f$ with some value at the point $(\vartheta, \varphi)$ into a
+physical system $f'$ with that value at the point $(\vartheta',
+\varphi')$.
 
 
 
