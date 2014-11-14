@@ -161,6 +161,7 @@ $\quat{R}\_1$ and $\quat{R}\_2$, we have
 From Eq. \eqref{eq:SWSHFromWignerD}, we see that it is possible to
 rewrite this as
 \begin{equation}
+  \label{eq:SWSHTransformation1}
   {}\_{s}Y\_{\ell,m} (\quat{R}\_1\, \quat{R}\_2) =
   \sum\_{m'}
   \mathfrak{D}^{(\ell)}\_{m,m'} (\quat{R}\_1)\,
@@ -180,27 +181,39 @@ argument of the SWSH on the right-hand side cannot be written purely
 as spherical coordinates; there is some additional rotation needed.
 In general, then, we must write the transformation in the form
 \begin{equation}
-  \quat{R}\_{(\vartheta', \varphi')} = \quat{R}\,
-  \quat{R}\_{(\vartheta, \varphi)}\, e^{\gamma\, \basis{z}/2},
+  \quat{R}\_{(\vartheta', \varphi')} = \quat{R}\_{\text{phys}}\,
+  \quat{R}\_{(\vartheta, \varphi)}\, e^{\gamma\, \basis{z}/2}.
 \end{equation}
-for some angle $\gamma$, corresponding to a final rotation about the
-vector joining the origin to the point at $(\vartheta', \varphi')$.
-Fortunately, we can factor out this term using the known behavior of
-spin-weighted functions:
+The final term in this equation represents an *initial* rotation about
+the $\basis{z}$ basis vector, which is equivalent to a *final*
+rotation about the vector joining the origin to the point
+$(\vartheta', \varphi')$.  This term must be included because that is
+the only way the equation can be true for general sets of angles and
+overall rotation $\quat{R}\_{\text{phys}}$.  We have placed a
+subscript "$\text{phys}$" on this overall rotor because, as will be
+discussed below, this represents a transformation of the physical
+system.
+
+This $\gamma$ factor at first appears troubling.  It is a function of
+both $\quat{R}\_{\text{phys}}$ and $(\vartheta, \varphi)$.  In fact,
+if we insert our rotations into Eq. \eqref{eq:SWSHTransformation1}, we
+obtain a surprising result.  Using the known behavior of spin-weighted
+functions we obtain
 \begin{align}
   {}\_{s}Y\_{\ell,m} (\quat{R}\_{(\vartheta', \varphi')}) &=
   \sum\_{m'}
-  \mathfrak{D}^{(\ell)}\_{m,m'} (\quat{R})\,
+  \mathfrak{D}^{(\ell)}\_{m,m'} (\quat{R}\_{\text{phys}})\,
   {}\_{s}Y\_{\ell,m'}(\quat{R}\_{(\vartheta, \varphi)}\, e^{\gamma\,
   \basis{z}/2})
   \nonumber \\\\ \label{eq:SWSHRotation}
   &= \sum\_{m'}
-  \mathfrak{D}^{(\ell)}\_{m,m'} (\quat{R})\,
+  \mathfrak{D}^{(\ell)}\_{m,m'} (\quat{R}\_{\text{phys}})\,
   {}\_{s}Y\_{\ell,m'}(\quat{R}\_{(\vartheta, \varphi)})\, e^{-i\, s\, \gamma}.
 \end{align}
-We see an interesting result from this: the spin-weighted spherical
-harmonics do *not* transform among themselves under rotations---except
-in the familiar case of $s=0$.
+The spin-weighted spherical harmonics, regarded as functions of the
+spherical coordinates alone, *do not* transform among themselves under
+a representation of the rotation group---except in the familiar case
+of $s=0$!
 
 This curious factor of $e^{-i\, s\, \gamma}$, however, is precisely
 what is needed to ensure that *modes* of an expansion in SWSHs *do*
@@ -219,8 +232,8 @@ expansion:
   {}\_{s}f'(\quat{R}\_{(\vartheta', \varphi')}) = \sum\_m f'^{\ell,m}
   {}\_{s}Y\_{\ell,m}(\quat{R}\_{(\vartheta', \varphi')}).
 \end{equation\*}
-Now, recalling Eq. \eqref{eq:SpinWeightedTransformation}
-${}\_{s}f'(\quat{R}\_{(\vartheta', \varphi')}) =
+Now, recalling from Eq. \eqref{eq:SpinWeightedTransformation} the
+relation ${}\_{s}f'(\quat{R}\_{(\vartheta', \varphi')}) =
 {}\_{s}f(\quat{R}\_{(\vartheta, \varphi)})\, e^{-i\, s\, \gamma}$, we
 can combine the last three equations.
 {::comment}
@@ -230,11 +243,11 @@ can combine the last three equations.
   \sum\_m f'^{\ell,m} {}\_{s}Y\_{\ell,m}(\quat{R}\_{(\vartheta', \varphi')})
   \\\\ &=
   \sum\_m f'^{\ell,m} \sum\_{m'}
-  \mathfrak{D}^{(\ell)}\_{m,m'} (\quat{R})\,
+  \mathfrak{D}^{(\ell)}\_{m,m'} (\quat{R}\_{\text{phys}})\,
   {}\_{s}Y\_{\ell,m'}(\quat{R}\_{(\vartheta, \varphi)})\, e^{-i\, s\, \gamma}
   \\\\ &=
   \sum\_{m',m} f'^{\ell,m'}
-  \mathfrak{D}^{(\ell)}\_{m',m} (\quat{R})\,
+  \mathfrak{D}^{(\ell)}\_{m',m} (\quat{R}\_{\text{phys}})\,
   {}\_{s}Y\_{\ell,m}(\quat{R}\_{(\vartheta, \varphi)})\, e^{-i\, s\, \gamma}
   \\\\ &=
   {}\_{s}f(\quat{R}\_{(\vartheta, \varphi)})\, e^{-i\, s\, \gamma}
@@ -246,15 +259,96 @@ can combine the last three equations.
 Using orthogonality of the SWSHs, we can pull out the transformation
 law for the modes:
 \begin{equation}
-  f^{\ell,m} = \sum\_{m'} f'^{\ell,m'}\, \mathfrak{D}^{(\ell)}\_{m',m} (\quat{R}).
+  f^{\ell,m} = \sum\_{m'} f'^{\ell,m'}\, \mathfrak{D}^{(\ell)}\_{m',m}
+  (\quat{R}\_{\text{phys}}).
+\end{equation}
+Note that the spin dependence $e^{-i\, s\, \gamma}$ has canceled out.
+We can also rewrite this as
+\begin{equation}
+  f'^{\ell,m} = \sum\_{m'} f^{\ell,m'}\, \mathfrak{D}^{(\ell)}\_{m',m}
+  (\quat{R}^{-1}\_{\text{phys}}).
+\end{equation}
+This is the more interesting formula, because we assume that we've
+started with the field ${}\_{s}f$, and wish to derive the modes of the
+rotated field ${}\_{s}f'$.
+
+We should note the meaning of $\quat{R}\_{\text{phys}}$, now that we
+understand how it fits into the transformations.  It is a rotation
+taking a physical system $f$ with some value at the point $(\vartheta,
+\varphi)$ into a physical system $f'$ with that value at the point
+$(\vartheta', \varphi')$.  We can think of the rotor
+$\quat{R}^{-1}\_{\text{phys}}$ as the *same* rotation, but applied to
+the coordinate basis itself, while leaving the physical system in
+place.  We will therefore write it as $\quat{R}\_{\text{basis}}$---the
+rotation being applied to the basis itself, while leaving the physical
+system fixed.  The field ${}\_{s}f$ is measured with respect to the
+original basis, and ${}\_{s}f'$ is the field measured with respect to
+this rotated basis.  Then we have
+\begin{equation}
+  f'^{\ell,m} = \sum\_{m'} f^{\ell,m'}\, \mathfrak{D}^{(\ell)}\_{m',m}
+  (\quat{R}\_{\text{basis}}).
 \end{equation}
 
-We should note the meaning of $\quat{R}$, now that we understand how
-it fits into the transformations.  It is a rotation taking a physical
-system $f$ with some value at the point $(\vartheta, \varphi)$ into a
-physical system $f'$ with that value at the point $(\vartheta',
-\varphi')$.
+## Composing rotations
 
+The final detail we need to understand is the composition of
+rotations.  We can write down a basic rule:
+
+ * rotations of the physical system compose by left-multiplication;
+ * rotations of the coordinate basis compose by right-multiplication.
+
+Thus, for example, if we have an initial rotation of the physical
+system $\quat{R}\_{\text{p}1}$ and then apply a second rotation of the
+physical system $\quat{R}\_{\text{p}2}$, this is equivalent to
+applying a single rotation $\quat{R}\_{\text{p}2}\,
+\quat{R}\_{\text{p}1}$ (note the ordering).  Similarly, if we have an
+initial rotation of the coordinate basis $\quat{R}\_{\text{b}1}$ and
+then apply a second rotation of the coordinate basis
+$\quat{R}\_{\text{b}2}$, this is equivalent to applying a single
+rotation $\quat{R}\_{\text{b}1}\, \quat{R}\_{\text{b}2}$.
+
+It is instructive to see explicitly how these rotations play out in
+terms of the rotation of modes.  We start out with modes $f^{\ell,m}$
+in the initial system; we then apply the first rotation (of either the
+physical system or the basis) to obtain the modes $f'^{\ell,m}$; and
+finally apply the second rotation to obtain the modes $f''^{\ell,m}$.
+
+First, for rotations of the physical
+system:
+\begin{align\*}
+  f''^{\ell,m}
+  &=
+  \sum\_{m''} \left( f'^{\ell,m''} \right)\, \mathfrak{D}^{(\ell)}\_{m'',m}
+  (\quat{R}^{-1}\_{\text{p}2}) \\\\
+  &=
+  \sum\_{m'',m'} \left( f^{\ell,m'}\, \mathfrak{D}^{(\ell)}\_{m',m''}
+  (\quat{R}^{-1}\_{\text{p}1}) \right)\, \mathfrak{D}^{(\ell)}\_{m'',m}
+  (\quat{R}^{-1}\_{\text{p}2}) \\\\
+  &=
+  \sum\_{m'} f^{\ell,m'}\, \mathfrak{D}^{(\ell)}\_{m',m}
+  (\quat{R}^{-1}\_{\text{p}1}\, \quat{R}^{-1}\_{\text{p}2}) \\\\
+  &=
+  \sum\_{m'} f^{\ell,m'}\, \mathfrak{D}^{(\ell)}\_{m',m}
+  \left( (\quat{R}\_{\text{p}2}\, \quat{R}\_{\text{p}1})^{-1} \right)
+\end{align\*}
+Next, for rotations of the basis with respect to which the modes are
+measured:
+\begin{align\*}
+  f''^{\ell,m}
+  &=
+  \sum\_{m''} \left( f'^{\ell,m''} \right)\, \mathfrak{D}^{(\ell)}\_{m'',m}
+  (\quat{R}\_{\text{b}2}) \\\\
+  &=
+  \sum\_{m'',m'} \left( f^{\ell,m'}\, \mathfrak{D}^{(\ell)}\_{m',m''}
+  (\quat{R}\_{\text{b}1}) \right)\, \mathfrak{D}^{(\ell)}\_{m'',m}
+  (\quat{R}\_{\text{b}2}) \\\\
+  &=
+  \sum\_{m'} f^{\ell,m'}\, \mathfrak{D}^{(\ell)}\_{m',m}
+  (\quat{R}\_{\text{b}1}\, \quat{R}\_{\text{b}2})
+\end{align\*}
+Thus, we see that applying the rotations in the natural order is fine,
+but if we wish to keep track of what those rotations were, we need to
+remember that rotations do not commute.
 
 
 ---
