@@ -19,23 +19,20 @@ precision_Wigner_D_element = 4.e-14
 def test_Wigner_D_linear_indices(ell_max):
     for l_min in range(ell_max):
         for l_max in range(l_min+1,ell_max+1):
-            LMpM = [[ell,mp,m]
-                    for ell in range(l_min,l_max+1)
-                    for mp in range(-ell,ell+1)
-                    for m in range(-ell,ell+1)]
+            LMpM = sp.LMpM_range(l_min, l_max)
 
             for ell in range(l_min, l_max+1):
-                assert LMpM[sp._linear_matrix_offset(ell,l_min)]==[ell,-ell,-ell]
+                assert list(LMpM[sp._linear_matrix_offset(ell,l_min)]) == [ell,-ell,-ell]
 
             for ell in range(l_min, l_max+1):
                 for mp in range (-ell,ell+1):
-                    assert LMpM[sp._linear_matrix_diagonal_index(ell,mp) + sp._linear_matrix_offset(ell,l_min)]==[ell,mp,mp]
+                    assert list(LMpM[sp._linear_matrix_diagonal_index(ell,mp) + sp._linear_matrix_offset(ell,l_min)]) == [ell,mp,mp]
                     for m in range(-ell,ell+1):
-                        assert LMpM[sp._linear_matrix_index(ell,mp,m) + sp._linear_matrix_offset(ell,l_min)]==[ell,mp,m]
+                        assert list(LMpM[sp._linear_matrix_index(ell,mp,m) + sp._linear_matrix_offset(ell,l_min)]) == [ell,mp,m]
 
 def test_Wigner_D_matrices_negative_argument(Rs, ell_max):
     # For integer ell, D(R)=D(-R)
-    LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
+    LMpM = sp.LMpM_range(0, ell_max)
     a = np.empty((LMpM.shape[0],), dtype=complex)
     b = np.empty((LMpM.shape[0],), dtype=complex)
     for R in Rs:
@@ -47,7 +44,7 @@ def test_Wigner_D_matrices_negative_argument(Rs, ell_max):
 def test_Wigner_D_matrices_representation_property(Rs,ell_max):
     # Test the representation property for special and random angles
     # Try half-integers, too
-    LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
+    LMpM = sp.LMpM_range(0, ell_max)
     print("")
     D1  = np.empty((LMpM.shape[0],), dtype=complex)
     D2  = np.empty((LMpM.shape[0],), dtype=complex)
@@ -68,7 +65,7 @@ def test_Wigner_D_matrices_inverse(Rs, ell_max):
     # the matrix of the rotation
     for R in Rs:
         for ell in range(ell_max+1):
-            LMpM = np.array([[ell,mp,m] for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
+            LMpM = sp.LMpM_range(ell, ell)
             D1  = np.empty((LMpM.shape[0],), dtype=complex)
             D2  = np.empty((LMpM.shape[0],), dtype=complex)
             sp._Wigner_D_matrices(R.a, R.b, ell, ell, D1)
@@ -79,7 +76,7 @@ def test_Wigner_D_matrices_inverse(Rs, ell_max):
                                atol=ell_max**4*precision_Wigner_D_element, rtol=ell_max**4*precision_Wigner_D_element)
 
 def test_Wigner_D_element_symmetries(Rs, ell_max):
-    LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
+    LMpM = sp.LMpM_range(0, ell_max)
     # D_{mp,m}(R) = (-1)^{mp+m} \bar{D}_{-mp,-m}(R)
     MpPM = np.array([mp+m for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
     LmMpmM = np.array([[ell,-mp,-m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
@@ -95,7 +92,7 @@ def test_Wigner_D_element_symmetries(Rs, ell_max):
                             atol=ell_max**4*precision_Wigner_D_element, rtol=ell_max**4*precision_Wigner_D_element)
 
 def test_Wigner_D_element_roundoff(Rs,ell_max):
-    LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
+    LMpM = sp.LMpM_range(0, ell_max)
     # Test rotations with |Ra|<1e-15
     expected = [((-1)**ell if mp==-m else 0.0) for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)]
     assert np.allclose( sp.Wigner_D_element(quaternion.x, LMpM), expected,
@@ -143,7 +140,7 @@ def test_Wigner_D_element_underflow(Rs,ell_max):
 def test_Wigner_D_element_overflow(Rs,ell_max):
     assert sp.ell_max>=15 # Test can't work if this has been set lower
     ell_max = max(sp.ell_max, ell_max)
-    LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
+    LMpM = sp.LMpM_range(0, ell_max)
     # Test |Ra|=1e-10
     R = np.quaternion(1.e-10, 1, 0, 0).normalized()
     assert np.all( np.isfinite( sp.Wigner_D_element(R, LMpM) ) )
@@ -165,7 +162,7 @@ def slow_Wigner_D_element(alpha, beta, gamma, ell, mp, m):
     return cmath.exp(-1j*mp*alpha)*slow_Wignerd(beta, ell, mp, m)*cmath.exp(-1j*m*gamma)
 @slow
 def test_Wigner_D_element_values(special_angles, ell_max):
-    LMpM = np.array([[ell,mp,m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
+    LMpM = sp.LMpM_range(0, ell_max)
     # Compare with more explicit forms given in Euler angles
     print("")
     for alpha in special_angles:
@@ -182,10 +179,7 @@ def test_Wigner_D_matrix(Rs, ell_max):
         print("")
         for l_max in range(l_min+1,ell_max+1):
             print("\tWorking on (l_min,l_max)=({0},{1})".format(l_min,l_max))
-            LMpM = np.array([[ell,mp,m]
-                             for ell in range(l_min,l_max+1)
-                             for mp in range(-ell,ell+1)
-                             for m in range(-ell,ell+1)])
+            LMpM = sp.LMpM_range(l_min, l_max)
             for R in Rs:
                 elements = sp.Wigner_D_element(R, LMpM)
                 matrix = np.empty(LMpM.shape[0], dtype=complex)

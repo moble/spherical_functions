@@ -53,6 +53,10 @@ def test_LM_range(ell_max):
 
 def test_LMpM_range(ell_max):
     for l_max in range(ell_max+1):
+        assert np.array_equal( sp.LMpM_range(l_max, l_max),
+                               np.array([[l_max,mp,m]
+                                         for mp in range(-l_max,l_max+1)
+                                         for m in range(-l_max,l_max+1)]) )
         for l_min in range(l_max+1):
             assert np.array_equal( sp.LMpM_range(l_min, l_max),
                                    np.array([[ell,mp,m]
