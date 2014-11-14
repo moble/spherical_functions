@@ -5,14 +5,14 @@ import numpy as np
 import quaternion
 from . import (_Wigner_coefficient as coeff, binomial_coefficient,
                epsilon, min_exp, mant_dig, error_on_bad_indices,
-               ell_max as sp_ell_max)
+               ell_max as sf_ell_max)
 from quaternion.numba_wrapper import njit, jit, int64, complex128, xrange
 
 _log2 = np.log(2)
 
 @njit('b1(i8,i8,i8)')
 def _check_valid_indices(ell, mp, m):
-    if(ell>sp_ell_max or abs(mp)>ell or abs(m)>ell):
+    if(ell>sf_ell_max or abs(mp)>ell or abs(m)>ell):
         return False
     return True
 
@@ -52,8 +52,8 @@ def Wigner_D_element(*args):
     Also note that, by default, a ValueError will be raised if the
     input (ell, mp, m) values are not valid.  (For example, |m|>ell.)
     If instead, you would simply like a return value of 0.0, after
-    importing this module as sp, simply evaluate
-    >>> sp.error_on_bad_indices = False
+    importing this module as sf, simply evaluate
+    >>> sf.error_on_bad_indices = False
 
 
     Return value

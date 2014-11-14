@@ -15,7 +15,7 @@ import random
 import quaternion
 import numbapro as nb
 from numbapro import *
-import spherical_functions as sp
+import spherical_functions as sf
 
 ru = lambda : random.uniform(-1,1)
 
@@ -28,7 +28,7 @@ nanoseconds = np.empty_like(ells, dtype=float)
 for i,ell_max in enumerate(ells):
     indices = np.array([[ell, mp, m] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)], dtype=int)
     elements = np.zeros((indices.shape[0],), dtype=complex)
-    result = ipython.magic("timeit -o sp._Wigner_D_matrices(q.a, q.b, 0, ell_max, elements)")
+    result = ipython.magic("timeit -o sf._Wigner_D_matrices(q.a, q.b, 0, ell_max, elements)")
     evals[i] = len(indices)
     nanoseconds[i] = 1e9*result.best/evals[i]
     print("With ell_max={0}, and {1} evaluations, each D component averages {2:.0f} ns".format(ell_max,evals[i],nanoseconds[i]))

@@ -58,10 +58,10 @@ though it breaks my heart to do
 so:<sup>[1](#euler-angles-are-awful)</sup>
 
 ```python
->>> import spherical_functions as sp
+>>> import spherical_functions as sf
 >>> alpha, beta, gamma = 0.1, 0.2, 0.3
 >>> ell,mp,m = 3,2,1
->>> sp.Wigner_D_element(alpha, beta, gamma, ell, mp, m)
+>>> sf.Wigner_D_element(alpha, beta, gamma, ell, mp, m)
 
 ```
 
@@ -73,7 +73,7 @@ rotations:
 >>> import quaternion
 >>> R = np.quaternion(1,2,3,4).normalized()
 >>> ell,mp,m = 3,2,1
->>> sp.Wigner_D_element(R, ell, mp, m)
+>>> sf.Wigner_D_element(R, ell, mp, m)
 
 ```
 
@@ -85,7 +85,7 @@ once.  The following calculates all modes for ℓ from 2 to 8
 ```python
 >>> indices = np.array([[ell,mp,m] for ell in range(2,9)
 ... for mp in range(-ell, ell+1) for m in range(-ell, ell+1)])
->>> sp.Wigner_D_element(R, indices)
+>>> sf.Wigner_D_element(R, indices)
 
 ```
 
@@ -94,7 +94,7 @@ willing to guarantee that the input arguments are correct, you can use
 a special hidden form of the function:
 
 ```python
->>> sp._Wigner_D_element(R.a, R.b, indices, elements)
+>>> sf._Wigner_D_element(R.a, R.b, indices, elements)
 
 ```
 
