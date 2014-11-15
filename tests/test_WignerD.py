@@ -24,6 +24,8 @@ def test_Wigner_D_linear_indices(ell_max):
         for l_max in range(l_min+1,ell_max+1):
             LMpM = sf.LMpM_range(l_min, l_max)
 
+            assert len(LMpM)==sf._total_size_D_matrices(l_min, l_max)
+
             for ell in range(l_min, l_max+1):
                 assert list(LMpM[sf._linear_matrix_offset(ell,l_min)]) == [ell,-ell,-ell]
 

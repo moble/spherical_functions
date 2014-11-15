@@ -95,5 +95,6 @@ def _LMpM_range(ell_min, ell_max, LMpM):
 from .Wigner3j import Wigner3j
 from .WignerD import (Wigner_D_element, _Wigner_D_element,
                       Wigner_D_matrices, _Wigner_D_matrices,
-                      _linear_matrix_index, _linear_matrix_diagonal_index, _linear_matrix_offset)
+                      _linear_matrix_index, _linear_matrix_diagonal_index,
+                      _linear_matrix_offset, _total_size_D_matrices)
 from .SWSH import SWSH, _SWSH # sYlm, Ylm

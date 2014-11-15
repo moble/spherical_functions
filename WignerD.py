@@ -300,6 +300,10 @@ def _linear_matrix_offset(ell,ell_min):
     """
     return ( (4*ell**2-1)*ell - (4*ell_min**2-1)*ell_min ) // 3
 
+@njit('int64(int64,int64)')
+def _total_size_D_matrices(ell_min, ell_max):
+    return ( ((4*ell_max+12)*ell_max+11)*ell_max + 3 - (4*ell_min**2-1)*ell_min ) // 3
+
 @njit('complex128(complex128)')
 def conjugate(z):
     return z.conjugate()
