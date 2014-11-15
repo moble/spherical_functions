@@ -4,7 +4,7 @@ defaults:
       path: "" # an empty string here means all files in the project
     values:
       layout: "default"
-
+exclude: [serve.sh]
 markdown:    kramdown
 kramdown:
   input: GFM
