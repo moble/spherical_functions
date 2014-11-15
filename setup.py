@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+# Copyright (c) 2014, Michael Boyle
+# See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
+
 from distutils.core import setup
 
 setup(name='spherical_functions',

@@ -1,3 +1,6 @@
+# Copyright (c) 2014, Michael Boyle
+# See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
+
 import os
 import pytest
 import numpy as np
