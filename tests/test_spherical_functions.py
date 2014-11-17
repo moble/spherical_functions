@@ -54,6 +54,13 @@ def test_LM_range(ell_max):
             assert np.array_equal( sf.LM_range(l_min, l_max),
                                    np.array([[ell,m] for ell in range(l_min,l_max+1) for m in range(-ell,ell+1)]) )
 
+def test_LM_index(ell_max):
+    for ell_min in range(ell_max+1):
+        LM = sf.LM_range(ell_min, ell_max)
+        for ell in range(ell_min,ell_max+1):
+            for m in range(-ell,ell+1):
+                assert np.array_equal(np.array([ell,m]), LM[sf.LM_index(ell,m,ell_min)])
+
 def test_LMpM_range(ell_max):
     for l_max in range(ell_max+1):
         assert np.array_equal( sf.LMpM_range(l_max, l_max),
@@ -66,3 +73,11 @@ def test_LMpM_range(ell_max):
                                              for ell in range(l_min,l_max+1)
                                              for mp in range(-ell,ell+1)
                                              for m in range(-ell,ell+1)]) )
+
+def test_LMpM_index(ell_max):
+    for ell_min in range(ell_max+1):
+        LMpM = sf.LMpM_range(ell_min, ell_max)
+        for ell in range(ell_min,ell_max+1):
+            for mp in range(-ell,ell+1):
+                for m in range(-ell,ell+1):
+                    assert np.array_equal(np.array([ell,mp,m]), LMpM[sf.LMpM_index(ell,mp,m,ell_min)])

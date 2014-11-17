@@ -279,7 +279,7 @@ def _linear_matrix_diagonal_index(ell,mpm):
 
 @njit('int64(int64, int64)')
 def _linear_matrix_offset(ell,ell_min):
-    """Index of initial element in linear array of matrices
+    """Index of initial element in linear array of D matrices
 
     This gives the index based at the first element of the matrix with
     weight `ell`.  This is the quantity to be added to the result of

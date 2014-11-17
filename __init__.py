@@ -72,6 +72,27 @@ def _LM_range(ell_min, ell_max, LM):
             LM[i,0] = ell
             LM[i,1] = m
             i+=1
+@njit('i8(i8,i8,i8)')
+def LM_index(ell, m, ell_min):
+    """Array index for given (ell,m) mode
+
+    Assuming an array of
+
+    [[ell,m] for ell in range(ell_min, ell_max+1)
+             for m in range(-ell,ell+1)]
+
+    this function returns the index of the (ell,m) element.  (Note that
+    ell_max doesn't actually come into this calculation, so it is not taken
+    as an argument to the function.)
+
+    This can be calculated in sympy as
+
+      from sympy import symbols, summation
+      ell,m,ell_min, = symbols('ell,m,ell_min,', integer=True)
+      summation(2*ell + 1, (ell, ell_min, ell-1)) + (ell+m)
+
+    """
+    return ell*(ell+1) - ell_min**2 + m
 
 def LMpM_range(ell_min, ell_max):
     # # Sympy commands to calculate the total size:
@@ -91,6 +112,31 @@ def _LMpM_range(ell_min, ell_max, LMpM):
                 LMpM[i,1] = mp
                 LMpM[i,2] = m
                 i+=1
+@njit('i8(i8,i8,i8,i8)')
+def LMpM_index(ell, mp, m, ell_min):
+    """Array index for given (ell,mp,m) mode
+
+    Assuming an array of
+
+    [[ell,mp,m] for ell in range(ell_min, ell_max+1)
+                for mp in range(-ell,ell+1)
+                for m in range(-ell,ell+1)]
+
+    this function returns the index of the (ell,mp,m) element.  (Note that
+    ell_max doesn't actually come into this calculation, so it is not taken
+    as an argument to the function.)
+
+    This can be calculated in sympy as
+
+      from sympy import symbols, summation
+      ell,mp,m,ell_min, = symbols('ell,mp,m,ell_min,', integer=True)
+      summation((2*ell + 1)**2, (ell, ell_min, ell-1)) + (2*ell+1)*(ell+mp) + (ell+m)
+
+    """
+    # raw output is: 4*ell**3/3 + 2*ell**2 + 2*ell*mp + 5*ell/3 - 4*ell_min**3/3 + ell_min/3 + m + mp
+    # We rearrange that to act more nicely
+    return (((4*ell + 6)*ell + 6*mp + 5)*ell + ell_min*(1- 4*ell_min**2) + 3*(m + mp)) // 3
+
 
 from .Wigner3j import Wigner3j
 from .WignerD import (Wigner_D_element, _Wigner_D_element,
