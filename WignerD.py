@@ -8,6 +8,7 @@ import numpy as np
 import quaternion
 from . import (_Wigner_coefficient as coeff, binomial_coefficient,
                epsilon, min_exp, mant_dig, error_on_bad_indices,
+               LMpM_total_size,
                ell_max as sf_ell_max)
 from quaternion.numba_wrapper import njit, jit, int64, complex128, xrange
 
@@ -308,13 +309,43 @@ def _total_size_D_matrices(ell_min, ell_max):
 def conjugate(z):
     return z.conjugate()
 
-def Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
-    raise NotImplementedError("This function doesn't exist yet")
+def Wigner_D_matrices(R, ell_min, ell_max):
+    """Return linear array of Wigner D matrix elements for range of ell values
+
+    Parameters
+    ----------
+    R : quaternion
+        The rotor for the D matrices
+    ell_min : int
+        Lowest ell value included in array
+    ell_max : int
+        Highest ell value included in array
+
+    Returns
+    -------
+    numpy.ndarray
+        Linear array of all matrix elements
+
+        The array is in the standard order, essentially of the form
+
+            [D(ell,mp,m) for ell in range(ell_min, ell_max+1)
+                         for mp in range(-ell,ell+1)
+                         for m in range(-ell,ell+1)]
+
+    See Also
+    --------
+    LMpM_total_size: Calculate total size of this array
+    LMpM_index: Find index in this array of element (ell,mp,m)
+    LMpM_range: Construct list of corresponding (ell,mp,m) values
+
+    """
+    matrices = np.empty((LMpM_total_size(ell_min,ell_max),), dtype=complex)
+    _Wigner_D_matrices(R.a, R.b, ell_min, ell_max, matrices)
+    return matrices
 
 @njit('void(complex128, complex128, int64, int64, complex128[:])',
       locals={'Prefactor1': complex128, 'Prefactor2': complex128})
 def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
-
     """Main work function for computing Wigner D matrix elements
 
     This is the core function that does all the work in the
