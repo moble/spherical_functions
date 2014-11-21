@@ -23,7 +23,7 @@ def test_finite_constant_arrays():
     assert np.all(np.isfinite(sf._Wigner_coefficients))
 
 def nCk(n,k):
-    """Simple binomial function"""
+    """Simple binomial function, so we don't have to import anything"""
     from operator import mul # or mul=lambda x,y:x*y
     from fractions import Fraction
     from functools import reduce
@@ -46,7 +46,10 @@ def test_ladder_operator_coefficient():
         for m in range(-ell,ell+1):
             a = math.sqrt(ell*(ell+1)-m*(m+1))
             b = sf.ladder_operator_coefficient(ell,m)
-            assert a==b
+            if(m==ell):
+                assert b==0.0
+            else:
+                assert abs(a-b) / (abs(a)+abs(b)) < 3e-16
 
 def test_LM_range(ell_max):
     for l_max in range(ell_max+1):

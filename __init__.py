@@ -1,60 +1,100 @@
 # Copyright (c) 2014, Michael Boyle
 # See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
 
+"""Evaluating Wigner D matrices, spin-weighted spherical harmonics, and related.
+
+This module contains code for evaluating the Wigner 3j symbols, the Wigner D
+matrices, scalar spherical harmonics, and spin-weighted spherical harmonics.
+The code is wrapped by numba where possible, allowing the results to be
+delivered at speeds approaching or exceeding speeds attained by pure C code.
+
+"""
+
 from __future__ import print_function, division, absolute_import
 
 __all__ = ['Wigner3j', 'Wigner_D_element', 'Wigner_D_matrices', 'SWSH',
            'factorial', 'binomial_coefficient', 'ladder_operator_coefficient']
 
-from numpy import array, empty, floor
+import numpy as np
 from math import factorial, sqrt
 from sys import float_info
 
 from quaternion.numba_wrapper import njit, xrange
 
 ## Module constants
-ell_max = 32
+ell_max = 84 # More than this, and you start to get overflow for many rotations
 epsilon = 1.e-15
-min_exp = float_info.min_exp
-mant_dig = float_info.mant_dig
 error_on_bad_indices = True
 
+
+# # The coefficients were originally produced with the following code,
+# # though obviously this doesn't need to be run each time.
+#
+# import mpmath
+# mpmath.mp.dps=64
+# ell_max=84
+#
+# _binomial_coefficients = np.empty((((2*ell_max+1)*(2*ell_max+2))//2,), dtype=float)
+# _Wigner_coefficients = np.empty(((4*ell_max**3 + 12*ell_max**2 + 11*ell_max + 3)//3,), dtype=float)
+# _ladder_operator_coefficients = np.empty((((ell_max+2)*ell_max+1),), dtype=float)
+#
+# i=0
+# for n in range(2*ell_max+1):
+#     for k in range(n+1):
+#         _binomial_coefficients[i]=float(mpmath.binomial(n,k))
+#         i+=1
+# print(i, _binomial_coefficients.shape)
+# np.save('binomial_coefficients',_binomial_coefficients)
+#
+# i=0
+# for ell in range(ell_max+1):
+#     for m in range(-ell,ell+1):
+#         _ladder_operator_coefficients[i]=mpmath.sqrt(ell*(ell+1)-m*(m+1))
+#         i+=1
+# print(i, _ladder_operator_coefficients.shape)
+# np.save('ladder_operator_coefficients',_ladder_operator_coefficients)
+#
+# i=0
+# for ell in range(ell_max+1):
+#     for mp in range(-ell,ell+1):
+#         for m in range(-ell,ell+1):
+#             _Wigner_coefficients[i] = float( mpmath.sqrt( mpmath.fac(ell+m)*mpmath.fac(ell-m)
+#                                                          / (mpmath.fac(ell+mp)*mpmath.fac(ell-mp)) ) )
+#             i += 1
+# print(i, _Wigner_coefficients.shape)
+# np.save('Wigner_coefficients',_Wigner_coefficients)
+
+
 ## Factorial
-factorials = array([float(factorial(i)) for i in range(171)])
+factorials = np.array([float(factorial(i)) for i in range(171)])
 @njit('f8(i8)')
 def factorial(i):
     return factorials[i]
 
 
 ## Binomial coefficients
-_binomial_coefficients = array([floor(0.5+factorials[n]/(factorials[k]*factorials[n-k]))
-                                for n in range(2*ell_max+1) for k in range(n+1)])
+_binomial_coefficients = np.load('binomial_coefficients.npy')
 @njit('f8(i8,i8)')
 def binomial_coefficient(n,k):
     return _binomial_coefficients[(n*(n+1))//2+k]
 
 
 ## Ladder-operator coefficients
-_ladder_operator_coefficients = array([sqrt(ell*(ell+1)-m*(m+1))
-                                       for ell in range(ell_max+1) for m in range(-ell,ell+1)])
+_ladder_operator_coefficients = np.load('ladder_operator_coefficients.npy')
 @njit('f8(i8,i8)')
 def ladder_operator_coefficient(ell,m):
     return _ladder_operator_coefficients[ell*(ell+1)+m]
 
 
 ## Coefficients used in constructing the Wigner D matrices
-_Wigner_coefficients = array([sqrt( factorials[ell+m]*factorials[ell-m] / (factorials[ell+mp]*factorials[ell-mp] ) )
-                              for ell in range(ell_max+1)
-                              for mp in range(-ell, ell+1)
-                              for m in range(-ell, ell+1) ])
+_Wigner_coefficients = np.load('Wigner_coefficients.npy')
 @njit('f8(i8,i8,i8)')
 def _Wigner_coefficient(ell,mp,m):
     return _Wigner_coefficients[ell*(ell*(4*ell + 6) + 5)//3 + mp*(2*ell + 1) + m]
-
-
 @njit('i8(i8,i8,i8)')
 def _Wigner_index(ell,mp,m):
     return ell*(ell*(4*ell + 6) + 5)//3 + mp*(2*ell + 1) + m
+
 
 def LM_range(ell_min, ell_max):
     """Array of (ell,m) indices in standard order
@@ -72,7 +112,7 @@ def LM_range(ell_min, ell_max):
     # from sympy import symbols, summation
     # ell_min,ell,ell_max = symbols('ell_min,ell,ell_max', integer=True)
     # summation((2*ell + 1), (ell, ell_min, ell_max))
-    LM = empty((ell_max*(ell_max+2) - ell_min**2 + 1,2), dtype=int)
+    LM = np.empty((ell_max*(ell_max+2) - ell_min**2 + 1,2), dtype=int)
     _LM_range(ell_min, ell_max, LM)
     return LM
 @njit('void(i8,i8,i8[:,:])')
@@ -141,7 +181,7 @@ def LMpM_range(ell_min, ell_max):
     # from sympy import symbols, summation
     # ell_min,ell,ell_max = symbols('ell_min,ell,ell_max', integer=True)
     # summation((2*ell + 1)**2, (ell, ell_min, ell_max))
-    LMpM = empty(((ell_max*(11 + ell_max*(12 + 4*ell_max)) + ell_min*(1 - 4*ell_min**2) + 3) // 3, 3), dtype=int)
+    LMpM = np.empty(((ell_max*(11 + ell_max*(12 + 4*ell_max)) + ell_min*(1 - 4*ell_min**2) + 3) // 3, 3), dtype=int)
     _LMpM_range(ell_min, ell_max, LMpM)
     return LMpM
 @njit('void(i8,i8,i8[:,:])')

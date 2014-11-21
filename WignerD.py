@@ -1,14 +1,22 @@
 # Copyright (c) 2014, Michael Boyle
 # See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
 
+"""Module for computing Wigner D functions.
+
+This module contains various functions such as Wigner_D_element and
+Wigner_D_matrices (as well as faster variants, designated by underscores,
+which assume correct inputs), which calculate the elements and complete
+matrices (respectively) of Wigner's D symbols.
+
+"""
+
 from __future__ import print_function, division, absolute_import
 
 import cmath
 import numpy as np
 import quaternion
 from . import (_Wigner_coefficient as coeff, binomial_coefficient,
-               epsilon, min_exp, mant_dig, error_on_bad_indices,
-               LMpM_total_size,
+               epsilon, error_on_bad_indices, LMpM_total_size,
                ell_max as sf_ell_max)
 from quaternion.numba_wrapper import njit, jit, int64, complex128, xrange
 

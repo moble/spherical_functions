@@ -1,6 +1,12 @@
 # Copyright (c) 2014, Michael Boyle
 # See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
 
+"""Module for computing Wigner's 3-j symbols
+
+This module uses code from sympy, originally written by Jens Rasch.
+
+"""
+
 from __future__ import print_function, division, absolute_import
 
 from math import sqrt
