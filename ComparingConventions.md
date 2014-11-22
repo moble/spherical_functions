@@ -27,6 +27,44 @@ $\gamma$ would be related to his $\psi$ according to $\gamma = \psi -
 
 I know of nowhere that Goldstein uses either
 
+## Varshalovich et al.
+
+"Quantum theory of angular momentum"
+
+
+## Devanathan
+
+"Angular Momentum Techniques in Quantum Mechanics"
+
+
+\begin{align\*}
+  R\_{\text{Devanathan}}(\alpha, \beta, \gamma)
+  &=
+  e^{\gamma \basis{z}''/2}\, e^{\beta \basis{y}'/2}\, e^{\alpha \basis{z}/2} \\\\
+  &=
+  e^{\gamma \basis{z}''/2}\, e^{\beta e^{\alpha \basis{z}/2}\, \basis{y}\,
+  e^{-\alpha \basis{z}/2}/2}\, e^{\alpha \basis{z}/2} \\\\
+  &=
+  e^{\gamma \basis{z}''/2}\, e^{\alpha \basis{z}/2}\, e^{\beta
+  \basis{y}/2}\, e^{-\alpha \basis{z}/2}\, e^{\alpha \basis{z}/2} \\\\
+  &=
+  e^{\gamma \basis{z}''/2}\, e^{\alpha \basis{z}/2}\, e^{\beta
+  \basis{y}/2} \\\\
+  &=
+  e^{\gamma e^{\alpha \basis{z}/2}\, e^{\beta \basis{y}/2} \basis{z}\,
+  e^{-\beta \basis{y}/2}\, e^{-\alpha \basis{z}/2}/2}\, e^{\alpha
+  \basis{z}/2}\, e^{\beta \basis{y}/2} \\\\
+  &=
+  e^{\alpha \basis{z}/2}\, e^{\beta \basis{y}/2}\, e^{\gamma \basis{z}/2}\,
+  e^{-\beta \basis{y}/2}\, e^{-\alpha \basis{z}/2}\, e^{\alpha
+  \basis{z}/2}\, e^{\beta \basis{y}/2} \\\\
+  &=
+  e^{\alpha \basis{z}/2}\, e^{\beta \basis{y}/2}\, e^{\gamma \basis{z}/2}
+  \\\\
+  &= R\_{\text{spherical_functions}}(\gamma, \beta, \alpha)
+\end{align\*}
+
+
 
 ## Shankar
 
@@ -44,6 +82,21 @@ The Euler angles correspond to what I would have considered the
 
 ## Sympy
 
+### Euler angles
+
+The
+[`sympy.physics.quantum.spin.Rotation`](http://docs.sympy.org/dev/modules/physics/quantum/spin.html#sympy.physics.quantum.spin.Rotation)
+class uses the $z''$-$y'$-$z$ convention (which the documentation refers to
+as the "passive $z$-$y$-$z$" convention).  This basically means that I have
+to swap the $\alpha$ and $\gamma$ arguments to keep mine consistent with
+sympy:
+\begin{equation\*}
+  R\_{\text{sympy}}(\alpha,\beta,\gamma) =
+  R\_{\text{spherical_functions}}(\gamma,\beta,\alpha).
+\end{equation\*}
+
+### $\mathfrak{D}$ matrices
+
 [Sympy](http://sympy.org/en/index.html) (the symbolic math package for
 python) implements the $\mathfrak{D}$ matrices as the function
 `sympy.physics.quantum.spin.WignerD`.  Note that
@@ -56,6 +109,12 @@ and $m$, you will get the expected result---up to the interpretation
 of the Euler angles.  Don't be alarmed by the fact that the
 documentation lists the arguments as $(m,m')$.
 
+```python
+alpha,beta,gamma = R.euler_angles()
+Dsympy = sympy.physics.quantum.spin.Rotation.D(ell, mp, m, gamma, beta, alpha).doit().evalf(n=32).conjugate()
+Dsf = sf.Wigner_D_element(R, ell, mp, m)
+abs(Dsympy-Dsf) < 1e-13 # True for ell<29
+```
 
 ## Wigner
 
