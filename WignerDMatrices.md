@@ -165,14 +165,17 @@ appropriate values with some simple indexing tricks.  These functions
 are implemented in this module's
 [initialization code](https://github.com/moble/spherical_functions/blob/master/__init__.py#L18).
 
-Now, that sum is essentially a polynomial, and the best way to
-evaluate a polynomial uses
-[Horner form](http://reference.wolfram.com/language/ref/HornerForm.html)
---- which is both faster and more accurate than the naive approach.
-This also allows us to pull out the lowest-order coefficient of that
-polynomial: $(-\lvert R_b \rvert / \lvert R_a \rvert)^{2
-\rho_{\mathrm{min}}}$.  We will see momentarily that being able to do
-this is very important.
+Now, that sum is essentially a polynomial, and the best way to evaluate a
+polynomial uses
+[Horner form](http://reference.wolfram.com/language/ref/HornerForm.html) ---
+which is both faster and more accurate than the naive approach.  Also, since
+the coefficients involve factorials of the summation index, we can factor
+out the $\rho\_{\text{min}}$ binomials, and be left with just a few
+factorials, which we can then
+[evaluate more efficiently](PolynomialsWithFactorials.html).  This also
+allows us to pull out the lowest-order coefficient of that polynomial:
+$(-\lvert R_b \rvert / \lvert R_a \rvert)^{2 \rho_{\mathrm{min}}}$.  We will
+see momentarily that being able to do this is very important.
 
 That deals very nicely with the sum, but we also need to deal with the
 factor in front of the sum.  And there are some fairly subtle
