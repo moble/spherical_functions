@@ -22,7 +22,7 @@ from sys import float_info
 from quaternion.numba_wrapper import njit, xrange
 
 ## Module constants
-ell_max = 84 # More than this, and you start to get overflow for many rotations
+ell_max = 32 # More than 29, and you get roundoff building quickly
 epsilon = 1.e-15
 error_on_bad_indices = True
 
@@ -31,12 +31,12 @@ error_on_bad_indices = True
 # # though obviously this doesn't need to be run each time.
 #
 # import mpmath
-# mpmath.mp.dps=64
-# ell_max=84
+# mpmath.mp.dps=128
+# ell_max=32
 #
 # _binomial_coefficients = np.empty((((2*ell_max+1)*(2*ell_max+2))//2,), dtype=float)
-# _Wigner_coefficients = np.empty(((4*ell_max**3 + 12*ell_max**2 + 11*ell_max + 3)//3,), dtype=float)
 # _ladder_operator_coefficients = np.empty((((ell_max+2)*ell_max+1),), dtype=float)
+# _Wigner_coefficients = np.empty(((4*ell_max**3 + 12*ell_max**2 + 11*ell_max + 3)//3,), dtype=float)
 #
 # i=0
 # for n in range(2*ell_max+1):
@@ -58,8 +58,11 @@ error_on_bad_indices = True
 # for ell in range(ell_max+1):
 #     for mp in range(-ell,ell+1):
 #         for m in range(-ell,ell+1):
+#             rho_min = max(0,mp-m)
 #             _Wigner_coefficients[i] = float( mpmath.sqrt( mpmath.fac(ell+m)*mpmath.fac(ell-m)
-#                                                          / (mpmath.fac(ell+mp)*mpmath.fac(ell-mp)) ) )
+#                                                          / (mpmath.fac(ell+mp)*mpmath.fac(ell-mp)) )
+#                                              * mpmath.binomial(ell+mp,rho_min)
+#                                              * mpmath.binomial(ell-mp, ell-m-rho_min) )
 #             i += 1
 # print(i, _Wigner_coefficients.shape)
 # np.save('Wigner_coefficients',_Wigner_coefficients)

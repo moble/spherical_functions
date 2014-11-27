@@ -191,5 +191,12 @@ def test_Wigner_D_matrix(Rs, ell_max):
                 elements = sf.Wigner_D_element(R, LMpM)
                 matrix = np.empty(LMpM.shape[0], dtype=complex)
                 sf._Wigner_D_matrices(R.a, R.b, l_min, l_max, matrix)
+                # print("")
+                # print(LMpM)
+                # print("")
+                # print(elements)
+                # print("")
+                # print(matrix)
+                # print("")
                 assert np.allclose( elements, matrix,
                                     atol=1e3*l_max*ell_max*precision_Wigner_D_element, rtol=1e3*l_max*ell_max*precision_Wigner_D_element )
