@@ -202,7 +202,7 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
                 # positive, which protects from overflow.  Meanwhile,
                 # underflow just goes to zero, which is fine since
                 # nothing else should be very large.
-                Prefactor = cmath.rect( coeff(ell, mp, m) * rb**(2*ell-m-mp-2*rhoMin) * ra**(m+mp+2*rhoMin),
+                Prefactor = cmath.rect( coeff(ell, -mp, m) * rb**(2*ell-m-mp-2*rhoMin) * ra**(m+mp+2*rhoMin),
                                         phib*(m-mp) + phia*(m+mp) )
                 if(Prefactor==0.0j):
                     elements[i] = 0.0j
@@ -210,10 +210,14 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
                     if((ell+m+rhoMin)%2!=0):
                         Prefactor *= -1
                     rhoMax = min(ell-mp,ell-m)
-                    Sum = 0.0
-                    for rho in xrange(rhoMax, rhoMin-1, -1):
-                        Sum = (  binomial_coefficient(ell-mp,rho) * binomial_coefficient(ell+mp, ell-rho-m)
-                                 + Sum * absRRatioSquared )
+                    N1 = ell-mp+1
+                    N2 = ell-m+1
+                    M = m+mp
+                    Sum = 1.0
+                    for rho in xrange(rhoMax, rhoMin, -1):
+                        Sum *= absRRatioSquared * ((N1-rho) * (N2-rho)) / (rho * (M+rho))
+                        Sum += 1
+                    #Sum *= absRRatioSquared**rhoMin
                     elements[i] = Prefactor * Sum
 
     else: # ra >= rb
@@ -243,10 +247,14 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
                     if(rhoMin%2!=0):
                         Prefactor *= -1
                     rhoMax = min(ell+mp,ell-m)
-                    Sum = 0.0
-                    for rho in xrange(rhoMax, rhoMin-1, -1):
-                        Sum = (  binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m)
-                                 + Sum * absRRatioSquared )
+                    N1 = ell+mp+1
+                    N2 = ell-m+1
+                    M = m-mp
+                    Sum = 1.0
+                    for rho in xrange(rhoMax, rhoMin, -1):
+                        Sum *= absRRatioSquared * ((N1-rho) * (N2-rho)) / (rho * (M+rho))
+                        Sum += 1
+                    #Sum *= absRRatioSquared**rhoMin
                     elements[i] = Prefactor * Sum
 
 
@@ -422,7 +430,7 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                     # positive, which protects from overflow.  Meanwhile,
                     # underflow just goes to zero, which is fine since
                     # nothing else should be very large.
-                    d = coeff(ell, mp, m) * rb**(2*ell-m-mp-2*rhoMin) * ra**(m+mp+2*rhoMin)
+                    d = coeff(ell, -mp, m) * rb**(2*ell-m-mp-2*rhoMin) * ra**(m+mp+2*rhoMin)
                     if(d==0.0j):
                         matrices[i_ell+i_mpm] = 0.0j
                         if(abs(m)!=abs(mp)):
@@ -441,10 +449,14 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                         Prefactor1 = cmath.rect( d, phib*(m-mp) + phia*(m+mp) )
                         Prefactor2 = cmath.rect( d, (phib+np.pi)*(m-mp) - phia*(m+mp) )
                         rhoMax = min(ell-mp,ell-m)
-                        Sum = 0.0
-                        for rho in xrange(rhoMax, rhoMin-1, -1):
-                            Sum = (  binomial_coefficient(ell-mp,rho) * binomial_coefficient(ell+mp, ell-rho-m)
-                                     + Sum * absRRatioSquared )
+                        N1 = ell-mp+1
+                        N2 = ell-m+1
+                        M = m+mp
+                        Sum = 1.0
+                        for rho in xrange(rhoMax, rhoMin, -1):
+                            Sum *= absRRatioSquared * ((N1-rho) * (N2-rho)) / (rho * (M+rho))
+                            Sum += 1
+                        #Sum *= absRRatioSquared**rhoMin
                         matrices[i_ell+i_mpm] = Prefactor1 * Sum
                         if(abs(m)!=abs(mp)):
                             if((m+mp)%2==0):
@@ -505,10 +517,14 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                         Prefactor1 = cmath.rect( d, phia*(m+mp) + phib*(m-mp) )
                         Prefactor2 = cmath.rect( d, -phia*(m+mp) + (phib+np.pi)*(m-mp) )
                         rhoMax = min(ell+mp,ell-m)
-                        Sum = 0.0
-                        for rho in xrange(rhoMax, rhoMin-1, -1):
-                            Sum = (  binomial_coefficient(ell+mp,rho) * binomial_coefficient(ell-mp, ell-rho-m)
-                                     + Sum * absRRatioSquared )
+                        N1 = ell+mp+1
+                        N2 = ell-m+1
+                        M = m-mp
+                        Sum = 1.0
+                        for rho in xrange(rhoMax, rhoMin, -1):
+                            Sum *= absRRatioSquared * ((N1-rho) * (N2-rho)) / (rho * (M+rho))
+                            Sum += 1
+                        #Sum *= absRRatioSquared**rhoMin
                         matrices[i_ell+i_mpm] = Prefactor1 * Sum
                         if(abs(m)!=abs(mp)):
                             if (m+mp)%2==0:

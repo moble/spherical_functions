@@ -99,7 +99,7 @@ def _SWSH(Ra, Rb, s, indices, values):
                 # positive, which protects from overflow.  Meanwhile,
                 # underflow just goes to zero, which is fine since
                 # nothing else should be very large.
-                Prefactor = cmath.rect( coeff(ell, m, -s) * rb**(2*ell+s-m-2*rhoMin) * ra**(-s+m+2*rhoMin),
+                Prefactor = cmath.rect( coeff(ell, -m, -s) * rb**(2*ell+s-m-2*rhoMin) * ra**(-s+m+2*rhoMin),
                                         phib*(-s-m) + phia*(-s+m) )
                 if(Prefactor==0.0j):
                     values[i] = 0.0j
@@ -107,10 +107,17 @@ def _SWSH(Ra, Rb, s, indices, values):
                     if((ell+rhoMin)%2!=0):
                         Prefactor *= -1
                     rhoMax = min(ell-m,ell+s)
-                    Sum = 0.0
-                    for rho in xrange(rhoMax, rhoMin-1, -1):
-                        Sum = (  binomial_coefficient(ell-m,rho) * binomial_coefficient(ell+m, ell-rho+s)
-                                 + Sum * absRRatioSquared )
+                    N1 = ell-m+1
+                    N2 = ell+s+1
+                    M = -s+m
+                    Sum = 1.0
+                    for rho in xrange(rhoMax, rhoMin, -1):
+                        Sum *= absRRatioSquared * ((N1-rho) * (N2-rho)) / (rho * (M+rho))
+                        Sum += 1
+                    # Sum = 0.0
+                    # for rho in xrange(rhoMax, rhoMin-1, -1):
+                    #     Sum = (  binomial_coefficient(ell-m,rho) * binomial_coefficient(ell+m, ell-rho+s)
+                    #              + Sum * absRRatioSquared )
                     values[i] = math.sqrt((2*ell+1)/(4*np.pi)) * Prefactor * Sum
 
     else: # ra >= rb
@@ -140,8 +147,15 @@ def _SWSH(Ra, Rb, s, indices, values):
                     if((rhoMin+s)%2!=0):
                         Prefactor *= -1
                     rhoMax = min(ell+m,ell+s)
-                    Sum = 0.0
-                    for rho in xrange(rhoMax, rhoMin-1, -1):
-                        Sum = (  binomial_coefficient(ell+m,rho) * binomial_coefficient(ell-m, ell-rho+s)
-                                 + Sum * absRRatioSquared )
+                    N1 = ell+m+1
+                    N2 = ell+s+1
+                    M = -s-m
+                    Sum = 1.0
+                    for rho in xrange(rhoMax, rhoMin, -1):
+                        Sum *= absRRatioSquared * ((N1-rho) * (N2-rho)) / (rho * (M+rho))
+                        Sum += 1
+                    # Sum = 0.0
+                    # for rho in xrange(rhoMax, rhoMin-1, -1):
+                    #     Sum = (  binomial_coefficient(ell+m,rho) * binomial_coefficient(ell-m, ell-rho+s)
+                    #              + Sum * absRRatioSquared )
                     values[i] = math.sqrt((2*ell+1)/(4*np.pi)) * Prefactor * Sum
