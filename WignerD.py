@@ -185,7 +185,7 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
                 elements[i] = Ra**(2*m)
     else:
         r__2 = complex(ra,-rb)**2
-        phiab = cmath.phase(r__2)
+        phi = cmath.phase(r__2)
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
             if(abs(mp)>ell or abs(m)>ell):
@@ -199,7 +199,7 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
                     # because it minimizes the jumping around when indexing the
                     # array.
                     Sum = (Delta(ell,mp,mpp)*Delta(ell,m,mpp)) + r__2*Sum
-                elements[i] = cmath.exp(1j*(phia*(mp+m) - phib*(mp-m) - phiab*(ell) + (m-mp)*np.pi/2)) * Sum
+                elements[i] = cmath.exp(1j*(phia*(mp+m) + phib*(m-mp) - phi*(ell) + (m-mp)*np.pi/2)) * Sum
 
 
 
@@ -304,7 +304,7 @@ def Wigner_D_matrices(R, ell_min, ell_max):
     return matrices
 
 @njit('void(complex128, complex128, int64, int64, complex128[:])',
-      locals={'Prefactor1': complex128, 'Prefactor2': complex128})
+      locals={'Result1': complex128, 'Prefactor2': complex128, 'Sum': complex128})
 def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
     """Main work function for computing Wigner D matrix elements
 
@@ -357,13 +357,13 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
 
     else:
         r__2 = complex(ra,-rb)**2
-        phiab = cmath.phase(r__2)
+        phi = cmath.phase(r__2)
         for ell in xrange(ell_min, ell_max+1):
             i_ell = _linear_matrix_offset(ell,ell_min)
             for mp in xrange(-ell,1):
                 for m in xrange(mp,-mp+1):
                     i_mpm = _linear_matrix_index(ell,mp,m)
-                    Sum = 0.0
+                    Sum = 0.0+0.0j
                     for mpp in xrange(ell,-ell-1,-1):
                         # Note that the second Delta takes pi/2 as its argument, so
                         # we just take the conjugate transpose.  And since Delta is
@@ -371,29 +371,26 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                         # because it minimizes the jumping around when indexing the
                         # array.
                         Sum = (Delta(ell,mp,mpp)*Delta(ell,m,mpp)) + r__2*Sum
-                    Prefactor1 = cmath.exp(1j*(phia*(mp+m) - phib*(mp-m) - phiab*(ell) + (m-mp)*np.pi/2))
-                    matrices[i_ell+i_mpm] = Prefactor1 * Sum
-                    #     Prefactor1 = cmath.rect( d, phia*(m+mp) + phib*(m-mp) )
-                    #     Prefactor2 = cmath.rect( d, -phia*(m+mp) + (phib+np.pi)*(m-mp) )
-                    #     matrices[i_ell+i_mpm] = Prefactor1 * Sum
+                    Result1 = cmath.exp(1j*(phia*(mp+m) + phib*(m-mp) - phi*(ell) + (m-mp)*np.pi/2)) * Sum
+                    matrices[i_ell+i_mpm] = Result1
                     if(abs(m)!=abs(mp)):
-                        Prefactor2 = cmath.exp(1j*(-phia*(mp+m) - phib*(mp-m) - phiab*(ell) - (m-mp)*np.pi/2))
+                        Prefactor2 = cmath.exp(1j*(-phia*(mp+m) + phib*(m-mp) - phi*(ell) - (m-mp)*np.pi/2))
                         if (m+mp)%2==0:
                             # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = matrices[i_ell+i_mpm].conjugate()
+                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = Result1.conjugate()
                             # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
                             matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = Prefactor2 * Sum
                         else:
                             # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = -matrices[i_ell+i_mpm].conjugate()
+                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = -Result1.conjugate()
                             # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
                             matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = -Prefactor2 * Sum
                         # D_{m,mp}(R) = \bar{D}_{mp,m}(\bar{R})
-                        matrices[i_ell+_linear_matrix_index(ell,m,mp)] = Prefactor2.conjugate() * Sum
+                        matrices[i_ell+_linear_matrix_index(ell,m,mp)] = Prefactor2.conjugate() * Sum.conjugate()
                     elif(m!=0):
                         if (m+mp)%2==0:
                             # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = matrices[i_ell+i_mpm].conjugate()
+                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = Result1.conjugate()
                         else:
                             # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = -matrices[i_ell+i_mpm].conjugate()
+                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = -Result1.conjugate()
