@@ -15,7 +15,7 @@ from __future__ import print_function, division, absolute_import
 import cmath
 import numpy as np
 import quaternion
-from . import (_Wigner_coefficient as coeff, binomial_coefficient,
+from . import (binomial_coefficient, Delta,
                epsilon, error_on_bad_indices, LMpM_total_size,
                ell_max as sf_ell_max)
 from quaternion.numba_wrapper import njit, jit, int64, complex128, xrange
@@ -136,6 +136,8 @@ def Wigner_D_element(*args):
         return elements[0]
     return elements
 
+
+
 @njit('void(complex128, complex128, int64[:,:], complex128[:])')
 def _Wigner_D_element(Ra, Rb, indices, elements):
     """Main work function for computing Wigner D matrix elements
@@ -174,7 +176,6 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
                     elements[i] = Rb**(2*m)
                 else:
                     elements[i] = -Rb**(2*m)
-
     elif(rb<=epsilon):
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
@@ -182,80 +183,23 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
                 elements[i] = 0.0j
             else:
                 elements[i] = Ra**(2*m)
-
-    elif(ra<rb):
-        # We have to have these two versions (both this ra<rb branch,
-        # and ra>=rb below) to avoid overflows and underflows
-        absRRatioSquared = -ra*ra/(rb*rb)
+    else:
+        r__2 = complex(ra,-rb)**2
+        phiab = cmath.phase(r__2)
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
             if(abs(mp)>ell or abs(m)>ell):
                 elements[i] = 0.0j
             else:
-                rhoMin = max(0,-mp-m)
-                # Protect against overflow by decomposing Ra,Rb as
-                # abs,angle components and pulling out the factor of
-                # absRRatioSquared**rhoMin.  Here, ra might be quite
-                # small, in which case ra**(m+mp) could be enormous
-                # when the exponent (m+mp) is very negative; adding
-                # 2*rhoMin to the exponent ensures that it is always
-                # positive, which protects from overflow.  Meanwhile,
-                # underflow just goes to zero, which is fine since
-                # nothing else should be very large.
-                Prefactor = cmath.rect( coeff(ell, -mp, m) * rb**(2*ell-m-mp-2*rhoMin) * ra**(m+mp+2*rhoMin),
-                                        phib*(m-mp) + phia*(m+mp) )
-                if(Prefactor==0.0j):
-                    elements[i] = 0.0j
-                else:
-                    if((ell+m+rhoMin)%2!=0):
-                        Prefactor *= -1
-                    rhoMax = min(ell-mp,ell-m)
-                    N1 = ell-mp+1
-                    N2 = ell-m+1
-                    M = m+mp
-                    Sum = 1.0
-                    for rho in xrange(rhoMax, rhoMin, -1):
-                        Sum *= absRRatioSquared * ((N1-rho) * (N2-rho)) / (rho * (M+rho))
-                        Sum += 1
-                    #Sum *= absRRatioSquared**rhoMin
-                    elements[i] = Prefactor * Sum
-
-    else: # ra >= rb
-        # We have to have these two versions (both this ra>=rb branch,
-        # and ra<rb above) to avoid overflows and underflows
-        absRRatioSquared = -rb*rb/(ra*ra)
-        for i in xrange(N):
-            ell,mp,m = indices[i,0:3]
-            if(abs(mp)>ell or abs(m)>ell):
-                elements[i] = 0.0j
-            else:
-                rhoMin = max(0,mp-m)
-                # Protect against overflow by decomposing Ra,Rb as
-                # abs,angle components and pulling out the factor of
-                # absRRatioSquared**rhoMin.  Here, rb might be quite
-                # small, in which case rb**(m-mp) could be enormous
-                # when the exponent (m-mp) is very negative; adding
-                # 2*rhoMin to the exponent ensures that it is always
-                # positive, which protects from overflow.  Meanwhile,
-                # underflow just goes to zero, which is fine since
-                # nothing else should be very large.
-                Prefactor = cmath.rect( coeff(ell, mp, m) * ra**(2*ell-m+mp-2*rhoMin) * rb**(m-mp+2*rhoMin),
-                                        phia*(m+mp) + phib*(m-mp) )
-                if(Prefactor==0.0j):
-                    elements[i] = 0.0j
-                else:
-                    if(rhoMin%2!=0):
-                        Prefactor *= -1
-                    rhoMax = min(ell+mp,ell-m)
-                    N1 = ell+mp+1
-                    N2 = ell-m+1
-                    M = m-mp
-                    Sum = 1.0
-                    for rho in xrange(rhoMax, rhoMin, -1):
-                        Sum *= absRRatioSquared * ((N1-rho) * (N2-rho)) / (rho * (M+rho))
-                        Sum += 1
-                    #Sum *= absRRatioSquared**rhoMin
-                    elements[i] = Prefactor * Sum
+                Sum = 0.0
+                for mpp in xrange(ell,-ell-1,-1):
+                    # Note that the second Delta takes pi/2 as its argument, so
+                    # we just take the conjugate transpose.  And since Delta is
+                    # alsways real, it's just the transpose.  This is also good
+                    # because it minimizes the jumping around when indexing the
+                    # array.
+                    Sum = (Delta(ell,mp,mpp)*Delta(ell,m,mpp)) + r__2*Sum
+                elements[i] = cmath.exp(1j*(phia*(mp+m) - phib*(mp-m) - phiab*(ell) + (m-mp)*np.pi/2)) * Sum
 
 
 
@@ -411,138 +355,45 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                 i_mpm = _linear_matrix_diagonal_index(ell,mpm)
                 matrices[i_ell+i_mpm] = Ra**(2*mpm)
 
-    elif(ra<rb):
-        # We have to have these two versions (both this ra<rb branch,
-        # and ra>=rb below) to avoid overflows and underflows
-        absRRatioSquared = -ra*ra/(rb*rb)
+    else:
+        r__2 = complex(ra,-rb)**2
+        phiab = cmath.phase(r__2)
         for ell in xrange(ell_min, ell_max+1):
             i_ell = _linear_matrix_offset(ell,ell_min)
             for mp in xrange(-ell,1):
                 for m in xrange(mp,-mp+1):
                     i_mpm = _linear_matrix_index(ell,mp,m)
-                    rhoMin = max(0,-mp-m)
-                    # Protect against overflow by decomposing Ra,Rb as
-                    # abs,angle components and pulling out the factor of
-                    # absRRatioSquared**rhoMin.  Here, ra might be quite
-                    # small, in which case ra**(m+mp) could be enormous
-                    # when the exponent (m+mp) is very negative; adding
-                    # 2*rhoMin to the exponent ensures that it is always
-                    # positive, which protects from overflow.  Meanwhile,
-                    # underflow just goes to zero, which is fine since
-                    # nothing else should be very large.
-                    d = coeff(ell, -mp, m) * rb**(2*ell-m-mp-2*rhoMin) * ra**(m+mp+2*rhoMin)
-                    if(d==0.0j):
-                        matrices[i_ell+i_mpm] = 0.0j
-                        if(abs(m)!=abs(mp)):
+                    Sum = 0.0
+                    for mpp in xrange(ell,-ell-1,-1):
+                        # Note that the second Delta takes pi/2 as its argument, so
+                        # we just take the conjugate transpose.  And since Delta is
+                        # alsways real, it's just the transpose.  This is also good
+                        # because it minimizes the jumping around when indexing the
+                        # array.
+                        Sum = (Delta(ell,mp,mpp)*Delta(ell,m,mpp)) + r__2*Sum
+                    Prefactor1 = cmath.exp(1j*(phia*(mp+m) - phib*(mp-m) - phiab*(ell) + (m-mp)*np.pi/2))
+                    matrices[i_ell+i_mpm] = Prefactor1 * Sum
+                    #     Prefactor1 = cmath.rect( d, phia*(m+mp) + phib*(m-mp) )
+                    #     Prefactor2 = cmath.rect( d, -phia*(m+mp) + (phib+np.pi)*(m-mp) )
+                    #     matrices[i_ell+i_mpm] = Prefactor1 * Sum
+                    if(abs(m)!=abs(mp)):
+                        Prefactor2 = cmath.exp(1j*(-phia*(mp+m) - phib*(mp-m) - phiab*(ell) - (m-mp)*np.pi/2))
+                        if (m+mp)%2==0:
                             # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = 0.0j
-                            # D_{m,mp}(R) = \bar{D}_{mp,m}(\bar{R})
-                            matrices[i_ell+_linear_matrix_index(ell,m,mp)] = 0.0j
+                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = matrices[i_ell+i_mpm].conjugate()
                             # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
-                            matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = 0.0j
-                        elif(m!=0):
+                            matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = Prefactor2 * Sum
+                        else:
                             # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = 0.0j
-                    else:
-                        if((ell+m+rhoMin)%2!=0):
-                            d *= -1
-                        Prefactor1 = cmath.rect( d, phib*(m-mp) + phia*(m+mp) )
-                        Prefactor2 = cmath.rect( d, (phib+np.pi)*(m-mp) - phia*(m+mp) )
-                        rhoMax = min(ell-mp,ell-m)
-                        N1 = ell-mp+1
-                        N2 = ell-m+1
-                        M = m+mp
-                        Sum = 1.0
-                        for rho in xrange(rhoMax, rhoMin, -1):
-                            Sum *= absRRatioSquared * ((N1-rho) * (N2-rho)) / (rho * (M+rho))
-                            Sum += 1
-                        #Sum *= absRRatioSquared**rhoMin
-                        matrices[i_ell+i_mpm] = Prefactor1 * Sum
-                        if(abs(m)!=abs(mp)):
-                            if((m+mp)%2==0):
-                                # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                                matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = Prefactor1.conjugate() * Sum
-                                # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
-                                matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = Prefactor2 * Sum
-                            else:
-                                # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                                matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = -Prefactor1.conjugate() * Sum
-                                # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
-                                matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = -Prefactor2 * Sum
-                            # D_{m,mp}(R) = \bar{D}_{mp,m}(\bar{R})
-                            matrices[i_ell+_linear_matrix_index(ell,m,mp)] = Prefactor2.conjugate() * Sum
-                        elif(m!=0):
-                            if((m+mp)%2==0):
-                                # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                                matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = Prefactor1.conjugate() * Sum
-                            else:
-                                # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                                matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = -Prefactor1.conjugate() * Sum
-
-    else: # ra >= rb
-        # We have to have these two versions (both this ra>=rb branch,
-        # and ra<rb above) to avoid overflows and underflows
-        absRRatioSquared = -rb*rb/(ra*ra)
-        for ell in xrange(ell_min, ell_max+1):
-            i_ell = _linear_matrix_offset(ell,ell_min)
-            for mp in xrange(-ell,1):
-                for m in xrange(mp,-mp+1):
-                    i_mpm = _linear_matrix_index(ell,mp,m)
-                    rhoMin = max(0,mp-m)
-                    # Protect against overflow by decomposing Ra,Rb as
-                    # abs,angle components and pulling out the factor of
-                    # absRRatioSquared**rhoMin.  Here, rb might be quite
-                    # small, in which case rb**(m-mp) could be enormous
-                    # when the exponent (m-mp) is very negative; adding
-                    # 2*rhoMin to the exponent ensures that it is always
-                    # positive, which protects from overflow.  Meanwhile,
-                    # underflow just goes to zero, which is fine since
-                    # nothing else should be very large.
-                    d = coeff(ell, mp, m) * ra**(2*ell-m+mp-2*rhoMin) * rb**(m-mp+2*rhoMin)
-                    if(d==0.0j):
-                        matrices[i_ell+i_mpm] = 0.0j
-                        if(abs(m)!=abs(mp)):
-                            # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = 0.0j
-                            # D_{m,mp}(R) = \bar{D}_{mp,m}(\bar{R})
-                            matrices[i_ell+_linear_matrix_index(ell,m,mp)] = 0.0j
+                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = -matrices[i_ell+i_mpm].conjugate()
                             # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
-                            matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = 0.0j
-                        elif(m!=0):
+                            matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = -Prefactor2 * Sum
+                        # D_{m,mp}(R) = \bar{D}_{mp,m}(\bar{R})
+                        matrices[i_ell+_linear_matrix_index(ell,m,mp)] = Prefactor2.conjugate() * Sum
+                    elif(m!=0):
+                        if (m+mp)%2==0:
                             # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = 0.0j
-                    else:
-                        if(rhoMin%2!=0):
-                            d *= -1
-                        Prefactor1 = cmath.rect( d, phia*(m+mp) + phib*(m-mp) )
-                        Prefactor2 = cmath.rect( d, -phia*(m+mp) + (phib+np.pi)*(m-mp) )
-                        rhoMax = min(ell+mp,ell-m)
-                        N1 = ell+mp+1
-                        N2 = ell-m+1
-                        M = m-mp
-                        Sum = 1.0
-                        for rho in xrange(rhoMax, rhoMin, -1):
-                            Sum *= absRRatioSquared * ((N1-rho) * (N2-rho)) / (rho * (M+rho))
-                            Sum += 1
-                        #Sum *= absRRatioSquared**rhoMin
-                        matrices[i_ell+i_mpm] = Prefactor1 * Sum
-                        if(abs(m)!=abs(mp)):
-                            if (m+mp)%2==0:
-                                # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                                matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = Prefactor1.conjugate() * Sum
-                                # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
-                                matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = Prefactor2 * Sum
-                            else:
-                                # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                                matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = -Prefactor1.conjugate() * Sum
-                                # D_{-m,-mp}(R) = (-1)^{mp+m} D_{mp,m}(\bar{R})
-                                matrices[i_ell+_linear_matrix_index(ell,-m,-mp)] = -Prefactor2 * Sum
-                            # D_{m,mp}(R) = \bar{D}_{mp,m}(\bar{R})
-                            matrices[i_ell+_linear_matrix_index(ell,m,mp)] = Prefactor2.conjugate() * Sum
-                        elif(m!=0):
-                            if (m+mp)%2==0:
-                                # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                                matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = Prefactor1.conjugate() * Sum
-                            else:
-                                # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
-                                matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = -Prefactor1.conjugate() * Sum
+                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = matrices[i_ell+i_mpm].conjugate()
+                        else:
+                            # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
+                            matrices[i_ell+_linear_matrix_index(ell,-mp,-m)] = -matrices[i_ell+i_mpm].conjugate()

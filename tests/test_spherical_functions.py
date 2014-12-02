@@ -13,6 +13,7 @@ import numpy as np
 import spherical_functions as sf
 import pytest
 
+slow = pytest.mark.slow
 
 import numba # This is to check to make sure we're actually using numba
 
@@ -96,3 +97,27 @@ def test_LMpM_total_size(ell_max):
         for l_max in range(l_min,ell_max+1):
             assert sf.LMpM_index(l_max+1, -(l_max+1), -(l_max+1), l_min) == sf.LMpM_total_size(l_min, l_max)
 
+def test_Wigner_coefficient(ell_max):
+    import mpmath
+    mpmath.mp.dps=128
+    for ell in range(ell_max+1):
+        for mp in range(-ell,ell+1):
+            for m in range(-ell,ell+1):
+                rho_min = max(0,mp-m)
+                exact = float( mpmath.sqrt( mpmath.fac(ell+m)*mpmath.fac(ell-m)
+                                    / (mpmath.fac(ell+mp)*mpmath.fac(ell-mp)) )
+                       * mpmath.binomial(ell+mp,rho_min)
+                       * mpmath.binomial(ell-mp, ell-m-rho_min) )
+                assert abs(sf._Wigner_coefficient(ell,mp,m) - exact) < 1.e-15
+
+@slow
+def test_Delta(ell_max):
+    from sympy import pi
+    from sympy.physics.quantum.spin import Rotation
+    print("")
+    for i,ell in enumerate(range(ell_max+1)):
+        print("\t{0} of {1}: ell = {2}".format(i, ell_max+1, ell))
+        for mp in range(-ell,ell+1):
+            for m in range(-ell,ell+1):
+                exact = complex(Rotation.D(ell, mp, m, 0, pi/2, 0).doit().evalf(n=32))
+                assert abs(sf.Delta(ell,mp,m) - exact) < 1.e-15
