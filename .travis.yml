@@ -23,8 +23,9 @@ install:
   - conda info -a
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy numba pip pytest sympy mpmath
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy numba pip pytest sympy
   - source activate test-environment
+  - pip install mpmath
   # - pip install pytest-cov python-coveralls
   - pip install git+git://github.com/moble/numpy_quaternion
   - python setup.py install
