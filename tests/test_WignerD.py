@@ -17,7 +17,7 @@ import pytest
 
 slow = pytest.mark.slow
 
-precision_Wigner_D = 4.e-14
+precision_Wigner_D = 4.e-15
 
 def test_Wigner_D_linear_indices(ell_max):
     for l_min in range(ell_max):
@@ -48,7 +48,7 @@ def test_Wigner_D_matrix(Rs, ell_max):
                 sf._Wigner_D_matrices(R.a, R.b, l_min, l_max, matrix)
                 # print("="*80, "\n", R, "\n\n", LMpM, "\n\n", elements, "\n\n", matrix, "\n\n", elements-matrix, "\n")
                 assert np.allclose( elements, matrix,
-                                    atol=1e3*l_max*ell_max*precision_Wigner_D, rtol=1e3*l_max*ell_max*precision_Wigner_D )
+                                    atol=precision_Wigner_D, rtol=precision_Wigner_D )
 
 def test_Wigner_D_matrices_negative_argument(Rs, ell_max):
     # For integer ell, D(R)=D(-R)
@@ -93,7 +93,7 @@ def test_Wigner_D_matrices_inverse(Rs, ell_max):
             D1 = D1.reshape((2*ell+1,2*ell+1))
             D2 = D2.reshape((2*ell+1,2*ell+1))
             assert np.allclose(D1.dot(D2), np.identity(2*ell+1),
-                               atol=ell_max**4*precision_Wigner_D, rtol=ell_max**4*precision_Wigner_D)
+                               atol=ell_max*precision_Wigner_D, rtol=ell_max*precision_Wigner_D)
 
 def test_Wigner_D_element_symmetries(Rs, ell_max):
     LMpM = sf.LMpM_range(0, ell_max)
@@ -109,7 +109,7 @@ def test_Wigner_D_element_symmetries(Rs, ell_max):
     LMMp = np.array([[ell,m,mp] for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
     for R in Rs:
         assert np.allclose( sf.Wigner_D_element(R, LMpM), np.conjugate(sf.Wigner_D_element(R.inverse(), LMMp)),
-                            atol=ell_max**4*precision_Wigner_D, rtol=ell_max**4*precision_Wigner_D)
+                            atol=ell_max*precision_Wigner_D, rtol=ell_max*precision_Wigner_D)
 
 def test_Wigner_D_element_roundoff(Rs,ell_max):
     LMpM = sf.LMpM_range(0, ell_max)
