@@ -117,7 +117,12 @@ def _Wigner_coefficient(ell,mp,m):
 def _Wigner_index(ell,mp,m):
     return ell*(ell*(4*ell + 6) + 5)//3 + mp*(2*ell + 1) + m
 
-## Coefficients used in constructing the Wigner D matrices
+## Coefficients used in constructing the Wigner D matrices.  Note that
+##   Delta(ell,mp,m) = (-1)**mp * Delta(ell,mp,-m)
+## and
+##   Delta(ell,mp,m) = (-1)**m  * Delta(ell,-mp,m)
+## This could lead to a factor ~4 space savings, but would slow down this
+## access function, so we don't bother with it.
 _Delta = np.load(os.path.join(os.path.dirname(__file__),'Delta.npy'))
 @njit('f8(i8,i8,i8)')
 def Delta(ell,mp,m):
