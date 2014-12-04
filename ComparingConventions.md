@@ -32,6 +32,44 @@ I know of nowhere that Goldstein uses either
 "Quantum theory of angular momentum"
 
 
+
+
+## Edmonds (1974)
+
+### Euler angles
+
+In Sec. 1.3, Edmonds gives rotations "to be performed successively in the
+order:"
+
+  1. A rotation $\alpha$ about the $z$ axis
+  2. A rotation $\beta$ about the $y'$ axis
+  3. A rotation $\gamma$ about the $z''$ axis
+
+He notes that these are positive, right-handed rotations about the relevant
+axes, and the coordinate system is right-handed.  Moreover, this rotation
+describes the rotation of a rigid body about a fixed point, where $z$, $y'$,
+and $z''$ move with the body.  He points out that the net rotation is
+equivalent to
+
+  1. A rotation $\gamma$ about the $z$ axis
+  2. A rotation $\beta$ about the $y$ axis
+  3. A rotation $\alpha$ about the $z$ axis
+
+where the axes are fixed with respect to the inertial frame.
+
+
+### Wigner $\mathfrak{D}$; harmonics
+
+This is where things get ugly with Edmonds.  He seems to switch from an active
+transformation to a passive one, but he still seems to have made an error in
+writing down the transformation matrix.  Basically, all the angles should have
+their signs reversed.  In this version of the book, Edmonds mentions the paper
+by
+[Wolf (1969)](http://scitation.aip.org/content/aapt/journal/ajp/37/5/10.1119/1.1975665),
+which sorted through various conventions and pointed out an error in older
+versions of Edmonds.  But I think there's still an error.
+
+
 ## Devanathan
 
 "Angular Momentum Techniques in Quantum Mechanics"
