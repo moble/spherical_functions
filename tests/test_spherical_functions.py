@@ -21,7 +21,6 @@ def test_finite_constant_arrays():
     assert np.all(np.isfinite(sf.factorials))
     assert np.all(np.isfinite(sf._binomial_coefficients))
     assert np.all(np.isfinite(sf._ladder_operator_coefficients))
-    assert np.all(np.isfinite(sf._Wigner_coefficients))
 
 def nCk(n,k):
     """Simple binomial function, so we don't have to import anything"""
@@ -96,19 +95,6 @@ def test_LMpM_total_size(ell_max):
     for l_min in range(ell_max+1):
         for l_max in range(l_min,ell_max+1):
             assert sf.LMpM_index(l_max+1, -(l_max+1), -(l_max+1), l_min) == sf.LMpM_total_size(l_min, l_max)
-
-def test_Wigner_coefficient(ell_max):
-    import mpmath
-    mpmath.mp.dps=128
-    for ell in range(ell_max+1):
-        for mp in range(-ell,ell+1):
-            for m in range(-ell,ell+1):
-                rho_min = max(0,mp-m)
-                exact = float( mpmath.sqrt( mpmath.fac(ell+m)*mpmath.fac(ell-m)
-                                    / (mpmath.fac(ell+mp)*mpmath.fac(ell-mp)) )
-                       * mpmath.binomial(ell+mp,rho_min)
-                       * mpmath.binomial(ell-mp, ell-m-rho_min) )
-                assert abs(sf._Wigner_coefficient(ell,mp,m) - exact) < 1.e-15
 
 @slow
 def test_Delta(ell_max):

@@ -76,7 +76,7 @@ def test_Wigner_D_matrices_representation_property(Rs,ell_max):
             sf._Wigner_D_matrices(R1.a, R1.b, 0, ell_max, D1)
             sf._Wigner_D_matrices(R2.a, R2.b, 0, ell_max, D2)
             sf._Wigner_D_matrices(R12.a, R12.b, 0, ell_max, D12)
-            M12 = np.array([np.sum([D1[sf._Wigner_index(ell,mp,mpp)]*D2[sf._Wigner_index(ell,mpp,m)] for mpp in range(-ell,ell+1)])
+            M12 = np.array([np.sum([D1[sf.LMpM_index(ell,mp,mpp,0)]*D2[sf.LMpM_index(ell,mpp,m,0)] for mpp in range(-ell,ell+1)])
                             for ell in range(ell_max+1) for mp in range(-ell,ell+1) for m in range(-ell,ell+1)])
             assert np.allclose( M12, D12, atol=ell_max*precision_Wigner_D)
 
