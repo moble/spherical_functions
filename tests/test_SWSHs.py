@@ -60,7 +60,7 @@ def test_SWSH_values(special_angles, ell_max):
                     for m in range(-ell,ell+1):
                         R = quaternion.from_euler_angles(phi,iota,0)
                         assert abs( sf.SWSH(R, s, np.array([[ell,m]]))
-                                    - slow_sYlm(s,ell,m,iota,phi) ) < ell_max**6 * precision_SWSH
+                                    - slow_sYlm(s,ell,m,iota,phi) ) < ell_max * precision_SWSH
 
 def test_SWSH_WignerD_expression(special_angles, ell_max):
     for iota in special_angles:
@@ -74,7 +74,7 @@ def test_SWSH_WignerD_expression(special_angles, ell_max):
                     D = np.empty(Y.shape[0], dtype=complex)
                     sf._Wigner_D_element(R.a, R.b, LMS, D)
                     D = (-1)**(s)*math.sqrt((2*ell+1)/(4*np.pi))*D
-                    assert np.allclose(Y, D, atol=ell**6*precision_SWSH, rtol=ell**6*precision_SWSH)
+                    assert np.allclose(Y, D, atol=ell*precision_SWSH, rtol=ell*precision_SWSH)
 
 @slow
 def test_SWSH_spin_behavior(Rs, special_angles, ell_max):
@@ -93,5 +93,5 @@ def test_SWSH_spin_behavior(Rs, special_angles, ell_max):
                     sYlm1 = sf.SWSH(Rgamma, s, LM)
                     sYlm2 = sf.SWSH(R, s, LM) * cmath.exp(-1j*s*gamma)
                     # print(R, gamma, ell, s, np.max(np.abs(sYlm1-sYlm2)))
-                    assert np.allclose( sYlm1, sYlm2, atol=ell**6*precision_SWSH, rtol=ell**6*precision_SWSH)
+                    assert np.allclose( sYlm1, sYlm2, atol=ell*precision_SWSH, rtol=ell*precision_SWSH)
 
