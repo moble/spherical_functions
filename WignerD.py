@@ -185,21 +185,36 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
                 elements[i] = Ra**(2*m)
     else:
         r__2 = complex(ra,-rb)**2
-        phi = cmath.phase(r__2)
+        r__m2 = complex(ra,rb)**2
         for i in xrange(N):
             ell,mp,m = indices[i,0:3]
             if(abs(mp)>ell or abs(m)>ell):
                 elements[i] = 0.0j
             else:
-                Sum = 0.0
-                for mpp in xrange(ell,-ell-1,-1):
-                    # Note that the second Delta takes pi/2 as its argument, so
-                    # we just take the conjugate transpose.  And since Delta is
-                    # alsways real, it's just the transpose.  This is also good
-                    # because it minimizes the jumping around when indexing the
-                    # array.
-                    Sum = (Delta(ell,mp,mpp)*Delta(ell,m,mpp)) + r__2*Sum
-                elements[i] = cmath.exp(1j*(phia*(mp+m) + phib*(m-mp) - phi*(ell) + (m-mp)*np.pi/2)) * Sum
+                Pos = 0.0+0.0j
+                Neg = 0.0+0.0j
+                if ((mp+m)%2)==0:
+                    for mpp in xrange(ell,0,-1):
+                        # Note that the second Delta takes pi/2 as its argument, so
+                        # we just take the conjugate transpose.  And since Delta is
+                        # alsways real, it's just the transpose.  This is also good
+                        # because it minimizes the jumping around when indexing the
+                        # array.
+                        Constant = Delta(ell,mp,mpp)*Delta(ell,m,mpp)
+                        Pos = r__2*Pos + Constant
+                        Neg = r__m2*Neg + Constant
+                else:
+                    for mpp in xrange(ell,0,-1):
+                        # Note that the second Delta takes pi/2 as its argument, so
+                        # we just take the conjugate transpose.  And since Delta is
+                        # alsways real, it's just the transpose.  This is also good
+                        # because it minimizes the jumping around when indexing the
+                        # array.
+                        Constant = Delta(ell,mp,mpp)*Delta(ell,m,mpp)
+                        Pos = r__2*Pos + Constant
+                        Neg = r__m2*Neg - Constant
+                Sum = Pos*r__2 + Delta(ell,mp,0)*Delta(ell,m,0) + Neg*r__m2
+                elements[i] = cmath.exp(1j*(phia*(mp+m) + phib*(m-mp) + (m-mp)*np.pi/2)) * Sum
 
 
 
@@ -358,31 +373,34 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
     else:
         r__2 = complex(ra,-rb)**2
         r__m2 = complex(ra,rb)**2
-        phi = cmath.phase(r__2)
         for ell in xrange(ell_min, ell_max+1):
             i_ell = _linear_matrix_offset(ell,ell_min)
             for mp in xrange(-ell,1):
                 for m in xrange(mp,-mp+1):
                     i_mpm = _linear_matrix_index(ell,mp,m)
-                    Sum = 0.0+0.0j
-                    for mpp in xrange(ell,-ell-1,-1):
-                        # Note that the second Delta takes pi/2 as its argument, so
-                        # we just take the conjugate transpose.  And since Delta is
-                        # alsways real, it's just the transpose.  This is also good
-                        # because it minimizes the jumping around when indexing the
-                        # array.
-                        Sum = (Delta(ell,mp,mpp)*Delta(ell,m,mpp)) + r__2*Sum
                     Pos = 0.0+0.0j
                     Neg = 0.0+0.0j
-                    for mpp in xrange(ell,0,-1):
-                        # Note that the second Delta takes pi/2 as its argument, so
-                        # we just take the conjugate transpose.  And since Delta is
-                        # alsways real, it's just the transpose.  This is also good
-                        # because it minimizes the jumping around when indexing the
-                        # array.
-                        Pos = (Delta(ell,mp,mpp)*Delta(ell,m,mpp)) + r__2*Pos
-                        Neg = (Delta(ell,mp,-mpp)*Delta(ell,m,-mpp)) + r__m2*Neg
-                    Sum = Pos*r__2 + Neg*r__m2 + Delta(ell,mp,0)*Delta(ell,m,0)
+                    if ((mp+m)%2)==0:
+                        for mpp in xrange(ell,0,-1):
+                            # Note that the second Delta takes pi/2 as its argument, so
+                            # we just take the conjugate transpose.  And since Delta is
+                            # alsways real, it's just the transpose.  This is also good
+                            # because it minimizes the jumping around when indexing the
+                            # array.
+                            Constant = Delta(ell,mp,mpp)*Delta(ell,m,mpp)
+                            Pos = r__2*Pos + Constant
+                            Neg = r__m2*Neg + Constant
+                    else:
+                        for mpp in xrange(ell,0,-1):
+                            # Note that the second Delta takes pi/2 as its argument, so
+                            # we just take the conjugate transpose.  And since Delta is
+                            # alsways real, it's just the transpose.  This is also good
+                            # because it minimizes the jumping around when indexing the
+                            # array.
+                            Constant = Delta(ell,mp,mpp)*Delta(ell,m,mpp)
+                            Pos = r__2*Pos + Constant
+                            Neg = r__m2*Neg - Constant
+                    Sum = Pos*r__2 + Delta(ell,mp,0)*Delta(ell,m,0) + Neg*r__m2
                     Result1 = cmath.exp(1j*(phia*(mp+m) + phib*(m-mp) + (m-mp)*np.pi/2)) * Sum
                     matrices[i_ell+i_mpm] = Result1
                     if(abs(m)!=abs(mp)):
