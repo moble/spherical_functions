@@ -31,13 +31,15 @@ error_on_bad_indices = True
 # # The coefficients were originally produced with the following code,
 # # though obviously this doesn't need to be run each time.
 #
+# from sympy import pi
+# from sympy.physics.quantum.spin import Rotation
 # import mpmath
 # mpmath.mp.dps=128
 # ell_max=32
 #
 # _binomial_coefficients = np.empty((((2*ell_max+1)*(2*ell_max+2))//2,), dtype=float)
 # _ladder_operator_coefficients = np.empty((((ell_max+2)*ell_max+1),), dtype=float)
-# _Wigner_coefficients = np.empty(((4*ell_max**3 + 12*ell_max**2 + 11*ell_max + 3)//3,), dtype=float)
+# _Delta = np.empty(((4*ell_max**3 + 12*ell_max**2 + 11*ell_max + 3)//3,), dtype=float)
 #
 # i=0
 # for n in range(2*ell_max+1):
@@ -55,18 +57,20 @@ error_on_bad_indices = True
 # print(i, _ladder_operator_coefficients.shape)
 # np.save('ladder_operator_coefficients',_ladder_operator_coefficients)
 #
+# def real(x):
+#     try:
+#         return x.real
+#     except AttributeError:
+#         return x
 # i=0
 # for ell in range(ell_max+1):
 #     for mp in range(-ell,ell+1):
 #         for m in range(-ell,ell+1):
-#             rho_min = max(0,mp-m)
-#             _Wigner_coefficients[i] = float( mpmath.sqrt( mpmath.fac(ell+m)*mpmath.fac(ell-m)
-#                                                          / (mpmath.fac(ell+mp)*mpmath.fac(ell-mp)) )
-#                                              * mpmath.binomial(ell+mp,rho_min)
-#                                              * mpmath.binomial(ell-mp, ell-m-rho_min) )
+#             _Delta[i] = real(complex(Rotation.D(ell, mp, m, 0,pi/2,0).doit().evalf(n=32)))
 #             i += 1
-# print(i, _Wigner_coefficients.shape)
-# np.save('Wigner_coefficients',_Wigner_coefficients)
+# print(i, _Delta.shape)
+# np.save('Delta',_Delta)
+
 
 
 ## Factorial
@@ -90,14 +94,16 @@ def ladder_operator_coefficient(ell,m):
     return _ladder_operator_coefficients[ell*(ell+1)+m]
 
 
-## Coefficients used in constructing the Wigner D matrices
-_Wigner_coefficients = np.load(os.path.join(os.path.dirname(__file__),'Wigner_coefficients.npy'))
+## Coefficients used in constructing the Wigner D matrices.  Note that
+##   Delta(ell,mp,m) = (-1)**mp * Delta(ell,mp,-m)
+## and
+##   Delta(ell,mp,m) = (-1)**m  * Delta(ell,-mp,m)
+## This could lead to a factor ~4 space savings, but would slow down this
+## access function, so we don't bother with it.
+_Delta = np.load(os.path.join(os.path.dirname(__file__),'Delta.npy'))
 @njit('f8(i8,i8,i8)')
-def _Wigner_coefficient(ell,mp,m):
-    return _Wigner_coefficients[ell*(ell*(4*ell + 6) + 5)//3 + mp*(2*ell + 1) + m]
-@njit('i8(i8,i8,i8)')
-def _Wigner_index(ell,mp,m):
-    return ell*(ell*(4*ell + 6) + 5)//3 + mp*(2*ell + 1) + m
+def Delta(ell,mp,m):
+    return _Delta[ell*(ell*(4*ell + 6) + 5)//3 + mp*(2*ell + 1) + m]
 
 
 def LM_range(ell_min, ell_max):

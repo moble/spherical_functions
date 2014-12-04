@@ -7,7 +7,7 @@ import math
 import cmath
 import numpy as np
 import quaternion
-from . import (_Wigner_coefficient as coeff, binomial_coefficient,
+from . import (binomial_coefficient, Delta,
                epsilon, error_on_bad_indices)
 from quaternion.numba_wrapper import njit, jit, int64, xrange
 
@@ -80,82 +80,35 @@ def _SWSH(Ra, Rb, s, indices, values):
                 else:
                     values[i] = -math.sqrt((2*ell+1)/(4*np.pi))*Ra**(-2*s)
 
-    elif(ra<rb):
-        # We have to have these two versions (both this ra<rb branch,
-        # and ra>=rb below) to avoid overflows and underflows
-        absRRatioSquared = -ra*ra/(rb*rb)
+    else:
+        r__2 = complex(ra,-rb)**2
+        r__m2 = complex(ra,rb)**2
         for i in xrange(N):
             ell,m = indices[i,0:2]
             if(abs(m)>ell or abs(s)>ell):
                 values[i] = 0.0j
             else:
-                rhoMin = max(0,-m+s)
-                # Protect against overflow by decomposing Ra,Rb as
-                # abs,angle components and pulling out the factor of
-                # absRRatioSquared**rhoMin.  Here, ra might be quite
-                # small, in which case ra**(-s+m) could be enormous
-                # when the exponent (-s+m) is very negative; adding
-                # 2*rhoMin to the exponent ensures that it is always
-                # positive, which protects from overflow.  Meanwhile,
-                # underflow just goes to zero, which is fine since
-                # nothing else should be very large.
-                Prefactor = cmath.rect( coeff(ell, -m, -s) * rb**(2*ell+s-m-2*rhoMin) * ra**(-s+m+2*rhoMin),
-                                        phib*(-s-m) + phia*(-s+m) )
-                if(Prefactor==0.0j):
-                    values[i] = 0.0j
+                Pos = 0.0+0.0j
+                Neg = 0.0+0.0j
+                if ((m-s)%2)==0:
+                    for mpp in xrange(ell,0,-1):
+                        # Note that the second Delta takes pi/2 as its argument, so
+                        # we just take the conjugate transpose.  And since Delta is
+                        # alsways real, it's just the transpose.  This is also good
+                        # because it minimizes the jumping around when indexing the
+                        # array.
+                        Constant = Delta(ell,m,mpp)*Delta(ell,-s,mpp)
+                        Pos = r__2*Pos + Constant
+                        Neg = r__m2*Neg + Constant
                 else:
-                    if((ell+rhoMin)%2!=0):
-                        Prefactor *= -1
-                    rhoMax = min(ell-m,ell+s)
-                    N1 = ell-m+1
-                    N2 = ell+s+1
-                    M = -s+m
-                    Sum = 1.0
-                    for rho in xrange(rhoMax, rhoMin, -1):
-                        Sum *= absRRatioSquared * ((N1-rho) * (N2-rho)) / (rho * (M+rho))
-                        Sum += 1
-                    # Sum = 0.0
-                    # for rho in xrange(rhoMax, rhoMin-1, -1):
-                    #     Sum = (  binomial_coefficient(ell-m,rho) * binomial_coefficient(ell+m, ell-rho+s)
-                    #              + Sum * absRRatioSquared )
-                    values[i] = math.sqrt((2*ell+1)/(4*np.pi)) * Prefactor * Sum
-
-    else: # ra >= rb
-        # We have to have these two versions (both this ra>=rb branch,
-        # and ra<rb above) to avoid overflows and underflows
-        absRRatioSquared = -rb*rb/(ra*ra)
-        for i in xrange(N):
-            ell,m = indices[i,0:2]
-            if(abs(m)>ell or abs(s)>ell):
-                values[i] = 0.0j
-            else:
-                rhoMin = max(0,m+s)
-                # Protect against overflow by decomposing Ra,Rb as
-                # abs,angle components and pulling out the factor of
-                # absRRatioSquared**rhoMin.  Here, rb might be quite
-                # small, in which case rb**(-s-m) could be enormous
-                # when the exponent (-s-m) is very negative; adding
-                # 2*rhoMin to the exponent ensures that it is always
-                # positive, which protects from overflow.  Meanwhile,
-                # underflow just goes to zero, which is fine since
-                # nothing else should be very large.
-                Prefactor = cmath.rect( coeff(ell, m, -s) * ra**(2*ell+s+m-2*rhoMin) * rb**(-s-m+2*rhoMin),
-                                        phia*(-s+m) + phib*(-s-m) )
-                if(Prefactor==0.0j):
-                    values[i] = 0.0j
-                else:
-                    if((rhoMin+s)%2!=0):
-                        Prefactor *= -1
-                    rhoMax = min(ell+m,ell+s)
-                    N1 = ell+m+1
-                    N2 = ell+s+1
-                    M = -s-m
-                    Sum = 1.0
-                    for rho in xrange(rhoMax, rhoMin, -1):
-                        Sum *= absRRatioSquared * ((N1-rho) * (N2-rho)) / (rho * (M+rho))
-                        Sum += 1
-                    # Sum = 0.0
-                    # for rho in xrange(rhoMax, rhoMin-1, -1):
-                    #     Sum = (  binomial_coefficient(ell+m,rho) * binomial_coefficient(ell-m, ell-rho+s)
-                    #              + Sum * absRRatioSquared )
-                    values[i] = math.sqrt((2*ell+1)/(4*np.pi)) * Prefactor * Sum
+                    for mpp in xrange(ell,0,-1):
+                        # Note that the second Delta takes pi/2 as its argument, so
+                        # we just take the conjugate transpose.  And since Delta is
+                        # alsways real, it's just the transpose.  This is also good
+                        # because it minimizes the jumping around when indexing the
+                        # array.
+                        Constant = Delta(ell,m,mpp)*Delta(ell,-s,mpp)
+                        Pos = r__2*Pos + Constant
+                        Neg = r__m2*Neg - Constant
+                Sum = Pos*r__2 + Delta(ell,m,0)*Delta(ell,-s,0) + Neg*r__m2
+                values[i] = math.sqrt((2*ell+1)/(4*np.pi)) * cmath.exp(1j*(phia*(m-s) + phib*(-s-m) + (s-m)*np.pi/2)) * Sum
