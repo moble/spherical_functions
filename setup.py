@@ -13,7 +13,5 @@ setup(name='spherical_functions',
       url='https://github.com/moble/spherical_functions',
       packages=['spherical_functions',],
       package_dir={'spherical_functions': ''},
-      package_data={'spherical_functions': ['Wigner_coefficients.npy',
-                                            'binomial_coefficients.npy',
-                                            'ladder_operator_coefficients.npy']},
+      package_data={'spherical_functions': ['*.npy']},
      )
