@@ -12,6 +12,6 @@ setup(name='spherical_functions',
       # author_email='',
       url='https://github.com/moble/spherical_functions',
       packages=['spherical_functions',],
-      package_dir={'spherical_functions': ''},
+      package_dir={'spherical_functions': '.'},
       package_data={'spherical_functions': ['*.npy']},
      )
