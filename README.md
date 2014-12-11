@@ -13,7 +13,7 @@ The conventions for this package are described in detail on
 
 The only true requirements for this code are `python` and the python
 package `numpy`, as well as my accompanying
-[`quaternion`](https://github.com/moble/numpy_quaternion) package
+[`quaternion`](https://github.com/moble/quaternion) package
 (installation of which is shown below).
 
 However, this package can automatically use
@@ -42,7 +42,7 @@ conda install pip numpy numba
 Installation of this package and the `quaternion` package is simple:
 
 ```sh
-pip install git+git://github.com/moble/numpy_quaternion
+pip install git+git://github.com/moble/quaternion
 pip install git+git://github.com/moble/spherical_functions
 ```
 
