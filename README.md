@@ -143,7 +143,7 @@ AST-1333129.
 ###### <sup>1</sup> Euler angles are awful
 
 Euler angles are pretty much
-[the worst things ever](http://moble.github.io/spherical_functions/#1-euler-angles)
+[the worst things ever](http://moble.github.io/spherical_functions/#euler-angles)
 and it makes me feel bad even supporting them.  Quaternions are
 faster, more accurate, basically free of singularities, more
 intuitive, and generally easier to understand.  You can work entirely
