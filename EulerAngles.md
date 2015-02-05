@@ -43,15 +43,11 @@ It is worth noting that the standard right-handed basis vectors $(\basis{x},
 \basis{y}, \basis{z})$ can be identified with generators of rotations usually
 seen in quantum mechanics (or generally just special-function theory) according
 to the rule
-\begin{equation\*}
-  \frac{\basis{x}}{2} &\mapsto -i\, J\_x,
-\end{equation\*}
-\begin{equation\*}
-  \frac{\basis{y}}{2} &\mapsto -i\, J\_y,
-\end{equation\*}
-\begin{equation\*}
+\begin{align\*}
+  \frac{\basis{x}}{2} &\mapsto -i\, J\_x, \\\\
+  \frac{\basis{y}}{2} &\mapsto -i\, J\_y, \\\\
   \frac{\basis{z}}{2} &\mapsto -i\, J\_z.
-\end{equation\*}
+\end{align\*}
 This is important when relating quaternion expressions to expressions more
 commonly seen in the literature.  In particular, with this identification, we
 have the usual commutation relations
