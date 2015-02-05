@@ -14,7 +14,7 @@ rotations.
 We can work entirely without Euler angles.  (My own work simply never uses
 them; the $\mathfrak{D}$ matrices are written directly in terms of rotors.)
 Nonetheless, they are ubiquitous throughout the literature.  And while we can
-work entirely without Euler angles, and can sometimes be useful to compare to
+work entirely without Euler angles, it can sometimes be useful to compare to
 other results.  So, to make contact with that literature, we will need to
 choose a convention for constructing a rotation from a triple of angles
 $(\alpha, \beta, \gamma)$.  We therefore define the rotor
