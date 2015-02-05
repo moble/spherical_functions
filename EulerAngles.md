@@ -44,9 +44,9 @@ It is worth noting that the standard right-handed basis vectors $(\basis{x},
 seen in quantum mechanics (or generally just special-function theory) according
 to the rule
 \begin{align\*}
-  \frac{\basis{x}}{2} \&\mapsto -i\, J\_x, \\\\
-  \frac{\basis{y}}{2} \&\mapsto -i\, J\_y, \\\\
-  \frac{\basis{z}}{2} \&\mapsto -i\, J\_z.
+  \frac{\basis{x}}{2} &\mapsto -i\, J\_x, \\\\
+  \frac{\basis{y}}{2} &\mapsto -i\, J\_y, \\\\
+  \frac{\basis{z}}{2} &\mapsto -i\, J\_z.
 \end{align\*}
 This is important when relating quaternion expressions to expressions more
 commonly seen in the literature.  In particular, with this identification, we
