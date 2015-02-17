@@ -8,7 +8,6 @@ from auto_version import calculate_version, build_py_copy_version
 
 
 setup(name='spherical_functions',
-      version='1.0',
       description='Python/numba implementation of Wigner D Matrices, spin-weighted spherical harmonics, and associated functions',
       author='Michael Boyle',
       # author_email='',
