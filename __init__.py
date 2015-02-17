@@ -11,6 +11,7 @@ delivered at speeds approaching or exceeding speeds attained by pure C code.
 """
 
 from __future__ import print_function, division, absolute_import
+from ._version import __version__
 
 __all__ = ['Wigner3j', 'Wigner_D_element', 'Wigner_D_matrices', 'SWSH',
            'factorial', 'binomial_coefficient', 'ladder_operator_coefficient']
