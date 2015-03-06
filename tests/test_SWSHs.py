@@ -83,7 +83,7 @@ def test_SWSH_spin_behavior(Rs, special_angles, ell_max):
     # See http://moble.github.io/spherical_functions/SWSHs.html#fn:2
     # for a more detailed explanation
     # print("")
-    for i,R in enumerate(Rs):
+    for i, R in enumerate(Rs):
         # print("\t{0} of {1}: R = {2}".format(i, len(Rs), R))
         for gamma in special_angles:
             for ell in range(ell_max+1):
@@ -95,3 +95,26 @@ def test_SWSH_spin_behavior(Rs, special_angles, ell_max):
                     # print(R, gamma, ell, s, np.max(np.abs(sYlm1-sYlm2)))
                     assert np.allclose( sYlm1, sYlm2, atol=ell**6*precision_SWSH, rtol=ell**6*precision_SWSH)
 
+
+def test_SWSH_grid(special_angles, ell_max):
+    LM = sf.LM_range(0, ell_max)
+
+    # Test flat array arrangement
+    R_grid = np.array([quaternion.from_euler_angles(alpha, beta, gamma).normalized()
+                       for alpha in special_angles
+                       for beta in special_angles
+                       for gamma in special_angles])
+    for s in range(-ell_max+1, ell_max):
+        values_explicit = np.array([sf.SWSH(R, s, LM) for R in R_grid])
+        values_grid = sf.SWSH_grid(R_grid, s, ell_max)
+        assert np.array_equal(values_explicit, values_grid)
+
+    # Test nested array arrangement
+    R_grid = np.array([[[quaternion.from_euler_angles(alpha, beta, gamma)
+                         for alpha in special_angles]
+                        for beta in special_angles]
+                       for gamma in special_angles])
+    for s in range(-ell_max+1, ell_max):
+        values_explicit = np.array([[[sf.SWSH(R, s, LM) for R in R1] for R1 in R2] for R2 in R_grid])
+        values_grid = sf.SWSH_grid(R_grid, s, ell_max)
+        assert np.array_equal(values_explicit, values_grid)

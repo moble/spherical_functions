@@ -13,7 +13,7 @@ delivered at speeds approaching or exceeding speeds attained by pure C code.
 from __future__ import print_function, division, absolute_import
 from ._version import __version__
 
-__all__ = ['Wigner3j', 'Wigner_D_element', 'Wigner_D_matrices', 'SWSH',
+__all__ = ['Wigner3j', 'Wigner_D_element', 'Wigner_D_matrices', 'SWSH', 'SWSH_grid',
            'factorial', 'binomial_coefficient', 'ladder_operator_coefficient']
 
 import numpy as np
@@ -252,4 +252,4 @@ from .WignerD import (Wigner_D_element, _Wigner_D_element,
                       Wigner_D_matrices, _Wigner_D_matrices,
                       _linear_matrix_index, _linear_matrix_diagonal_index,
                       _linear_matrix_offset, _total_size_D_matrices)
-from .SWSH import SWSH, _SWSH # sYlm, Ylm
+from .SWSH import SWSH, SWSH_grid, _SWSH # sYlm, Ylm
