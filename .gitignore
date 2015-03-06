@@ -58,3 +58,4 @@ target/
 gh-pages
 .idea
 Notes
+tests/playground.ipynb
