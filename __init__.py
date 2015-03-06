@@ -17,7 +17,7 @@ __all__ = ['Wigner3j', 'Wigner_D_element', 'Wigner_D_matrices', 'SWSH', 'SWSH_gr
            'factorial', 'binomial_coefficient', 'ladder_operator_coefficient']
 
 import numpy as np
-from math import factorial, sqrt
+from math import factorial, sqrt, pi
 from sys import float_info
 import os.path
 
@@ -27,6 +27,35 @@ from quaternion.numba_wrapper import njit, xrange
 ell_max = 32 # More than 29, and you get roundoff building quickly
 epsilon = 1.e-15
 error_on_bad_indices = True
+
+
+# A couple useful little functions
+def constant_as_ell_0_mode(constant):
+    """Express constant as Y_{0,0} mode weight"""
+    return constant * sqrt(4*pi)
+def vector_as_ell_1_modes(vector):
+    """Express vector as Y_{1,m} mode weights
+
+    A vector can be represented as a linear combination of weights of the ell=1 scalar spherical harmonics.
+    Explicitly, if nhat is the usual unit vector in the (theta, phi) direction, then we can define a function
+      v(theta, phi) = vector . nhat
+    where the `.` represents the dot product, and v(theta, phi) is a pure ell=1 function.  This function simply
+    returns the weights of that representation.
+
+    Parameter
+    ---------
+    vector : float array of length 3
+        The input should be an iterable containing the [v_x, v_y, v_z] components of the vector in that order
+
+    Returns
+    -------
+    float array
+       The returned object contains the (1,-1), (1,0), and (1,1) modes in that order
+
+    """
+    return np.array([(vector[0] + 1j * vector[1]) * sqrt(2*pi/3.),
+                     vector[2] * sqrt(4*pi/3.),
+                     (-vector[0] + 1j * vector[1]) * sqrt(2*pi/3.)])
 
 
 # # The coefficients were originally produced with the following code,

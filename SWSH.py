@@ -16,9 +16,8 @@ from . import (_Wigner_coefficient as coeff, epsilon, LM_range)
 def SWSH(R, s, indices):
     """Spin-weighted spherical harmonic calculation from rotor
 
-    Note that the functions `Ylm` and `sYlm` give the more usual functions of spherical coordinates (theta,
-    phi).  This function is more general because it uses quaternion rotors instead of angle, and is slightly faster
-    as a result.
+    Note that his function is more general than standard Ylm and sYlm functions of angles because it uses quaternion
+    rotors instead of angle, and is slightly faster as a result.
 
     Parameters
     ----------
@@ -51,8 +50,8 @@ def SWSH_grid(R_grid, s, ell_max):
     Note that this function takes `ell_max` as its argument, rather than a set of indices.  The output of this
     function is simply the entire range of indices.
 
-    Also note that the functions `Ylm` and `sYlm` give the more usual functions of spherical coordinates (theta,
-    phi).  This function is more general and slightly faster.
+    Also note that his function is more general than standard Ylm and sYlm functions of angles because it uses
+    quaternion rotors instead of angle, and is slightly faster as a result.
 
     Parameters
     ----------
