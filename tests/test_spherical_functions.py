@@ -12,7 +12,7 @@ import math
 import numpy as np
 import quaternion
 import spherical_functions as sf
-import pytest
+
 
 import numba  # This is to check to make sure we're actually using numba
 
@@ -24,6 +24,7 @@ def test_constant_as_ell_0_mode(special_angles):
         for rep in range(1000):
             constant = np.random.uniform(-1, 1) + imaginary_part * np.random.uniform(-1, 1)
             const_ell_m = sf.constant_as_ell_0_mode(constant)
+            assert abs(constant - sf.constant_from_ell_0_mode(const_ell_m)) < 1e-15
             for theta in special_angles:
                 for phi in special_angles:
                     dot = np.dot(const_ell_m, sf.SWSH(quaternion.from_spherical_coords(theta, phi), 0, indices))
@@ -42,6 +43,7 @@ def test_vector_as_ell_1_modes(special_angles):
     for rep in range(1000):
         vector = np.random.uniform(-1, 1, size=(3,))
         vec_ell_m = sf.vector_as_ell_1_modes(vector)
+        assert np.allclose(vector, sf.vector_from_ell_1_modes(vec_ell_m), atol=1.0e-16, rtol=1.0e-15)
         for theta in special_angles:
             for phi in special_angles:
                 dot1 = np.dot(vector, nhat(theta, phi))

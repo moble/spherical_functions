@@ -33,6 +33,13 @@ error_on_bad_indices = True
 def constant_as_ell_0_mode(constant):
     """Express constant as Y_{0,0} mode weight"""
     return constant * sqrt(4*pi)
+def constant_from_ell_0_mode(modes):
+    """Express Y_{0,0} mode as constant
+
+    This is just the inverse of the `constant_as_ell_0_mode` function.
+
+    """
+    return modes / sqrt(4*pi)
 def vector_as_ell_1_modes(vector):
     """Express vector as Y_{1,m} mode weights
 
@@ -56,7 +63,15 @@ def vector_as_ell_1_modes(vector):
     return np.array([(vector[0] + 1j * vector[1]) * sqrt(2*pi/3.),
                      vector[2] * sqrt(4*pi/3.),
                      (-vector[0] + 1j * vector[1]) * sqrt(2*pi/3.)])
+def vector_from_ell_1_modes(modes):
+    """Express Y_{1,m} modes as vector
 
+    This is just the inverse of the `vector_as_ell_1_modes` function.
+
+    """
+    return np.array([(modes[0] - modes[2]) / (2 * sqrt(2*pi/3.)),
+                     (modes[0] + modes[2]) / (2j * sqrt(2*pi/3.)),
+                     modes[1] / sqrt(4*pi/3.)])
 
 # # The coefficients were originally produced with the following code,
 # # though obviously this doesn't need to be run each time.
