@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2014, Michael Boyle
+# Copyright (c) 2015, Michael Boyle
 # See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
 
 from distutils.core import setup

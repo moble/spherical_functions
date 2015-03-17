@@ -1,4 +1,4 @@
-# Copyright (c) 2014, Michael Boyle
+# Copyright (c) 2015, Michael Boyle
 # See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
 
 """Module for computing Wigner's 3-j symbols

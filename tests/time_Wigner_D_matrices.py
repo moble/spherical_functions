@@ -1,6 +1,6 @@
 #! /usr/bin/env ipython
 
-# Copyright (c) 2014, Michael Boyle
+# Copyright (c) 2015, Michael Boyle
 # See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
 
 from __future__ import print_function, division, absolute_import

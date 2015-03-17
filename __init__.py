@@ -1,4 +1,4 @@
-# Copyright (c) 2014, Michael Boyle
+# Copyright (c) 2015, Michael Boyle
 # See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
 
 """Evaluating Wigner D matrices, spin-weighted spherical harmonics, and related.
@@ -17,61 +17,16 @@ __all__ = ['Wigner3j', 'Wigner_D_element', 'Wigner_D_matrices', 'SWSH', 'SWSH_gr
            'factorial', 'binomial_coefficient', 'ladder_operator_coefficient']
 
 import numpy as np
-from math import factorial, sqrt, pi
-from sys import float_info
+from math import factorial
 import os.path
 
 from quaternion.numba_wrapper import njit, xrange
 
-## Module constants
+# Module constants
 ell_max = 32 # More than 29, and you get roundoff building quickly
 epsilon = 1.e-15
 error_on_bad_indices = True
 
-
-# A couple useful little functions
-def constant_as_ell_0_mode(constant):
-    """Express constant as Y_{0,0} mode weight"""
-    return constant * sqrt(4*pi)
-def constant_from_ell_0_mode(modes):
-    """Express Y_{0,0} mode as constant
-
-    This is just the inverse of the `constant_as_ell_0_mode` function.
-
-    """
-    return modes / sqrt(4*pi)
-def vector_as_ell_1_modes(vector):
-    """Express vector as Y_{1,m} mode weights
-
-    A vector can be represented as a linear combination of weights of the ell=1 scalar spherical harmonics.
-    Explicitly, if nhat is the usual unit vector in the (theta, phi) direction, then we can define a function
-      v(theta, phi) = vector . nhat
-    where the `.` represents the dot product, and v(theta, phi) is a pure ell=1 function.  This function simply
-    returns the weights of that representation.
-
-    Parameter
-    ---------
-    vector : float array of length 3
-        The input should be an iterable containing the [v_x, v_y, v_z] components of the vector in that order
-
-    Returns
-    -------
-    float array
-       The returned object contains the (1,-1), (1,0), and (1,1) modes in that order
-
-    """
-    return np.array([(vector[0] + 1j * vector[1]) * sqrt(2*pi/3.),
-                     vector[2] * sqrt(4*pi/3.),
-                     (-vector[0] + 1j * vector[1]) * sqrt(2*pi/3.)])
-def vector_from_ell_1_modes(modes):
-    """Express Y_{1,m} modes as vector
-
-    This is just the inverse of the `vector_as_ell_1_modes` function.
-
-    """
-    return np.array([(modes[0] - modes[2]) / (2 * sqrt(2*pi/3.)),
-                     (modes[0] + modes[2]) / (2j * sqrt(2*pi/3.)),
-                     modes[1] / sqrt(4*pi/3.)])
 
 # # The coefficients were originally produced with the following code,
 # # though obviously this doesn't need to be run each time.
@@ -114,28 +69,28 @@ def vector_from_ell_1_modes(modes):
 # np.save('Wigner_coefficients',_Wigner_coefficients)
 
 
-## Factorial
+# Factorial
 factorials = np.array([float(factorial(i)) for i in range(171)])
 @njit('f8(i8)')
 def factorial(i):
     return factorials[i]
 
 
-## Binomial coefficients
+# Binomial coefficients
 _binomial_coefficients = np.load(os.path.join(os.path.dirname(__file__),'binomial_coefficients.npy'))
 @njit('f8(i8,i8)')
 def binomial_coefficient(n,k):
     return _binomial_coefficients[(n*(n+1))//2+k]
 
 
-## Ladder-operator coefficients
+# Ladder-operator coefficients
 _ladder_operator_coefficients = np.load(os.path.join(os.path.dirname(__file__),'ladder_operator_coefficients.npy'))
 @njit('f8(i8,i8)')
 def ladder_operator_coefficient(ell,m):
     return _ladder_operator_coefficients[ell*(ell+1)+m]
 
 
-## Coefficients used in constructing the Wigner D matrices
+# Coefficients used in constructing the Wigner D matrices
 _Wigner_coefficients = np.load(os.path.join(os.path.dirname(__file__),'Wigner_coefficients.npy'))
 @njit('f8(i8,i8,i8)')
 def _Wigner_coefficient(ell,mp,m):
@@ -212,6 +167,7 @@ def LM_total_size(ell_min, ell_max):
 
     """
     return ell_max*(ell_max+2) - ell_min**2 + 1
+
 
 def LMpM_range(ell_min, ell_max):
     """Array of (ell,mp,m) indices in standard order
@@ -297,3 +253,5 @@ from .WignerD import (Wigner_D_element, _Wigner_D_element,
                       _linear_matrix_index, _linear_matrix_diagonal_index,
                       _linear_matrix_offset, _total_size_D_matrices)
 from .SWSH import SWSH, SWSH_grid, _SWSH # sYlm, Ylm
+from .mode_conversions import (constant_as_ell_0_mode, constant_from_ell_0_mode, vector_as_ell_1_modes,
+                               vector_from_ell_1_modes, eth_GHP, ethbar_GHP, eth_NP, ethbar_NP)
