@@ -13,6 +13,7 @@ from math import sqrt
 from . import factorials
 from quaternion.numba_wrapper import njit, xrange
 
+
 @njit('f8(i8,i8,i8,i8,i8,i8)')
 def Wigner3j(j_1, j_2, j_3, m_1, m_2, m_3):
     """Calculate the Wigner 3j symbol `Wigner3j(j_1,j_2,j_3,m_1,m_2,m_3)`
@@ -35,20 +36,20 @@ def Wigner3j(j_1, j_2, j_3, m_1, m_2, m_3):
     0
 
     """
-    if(m_1 + m_2 + m_3 != 0):
+    if (m_1 + m_2 + m_3 != 0):
         return 0
-    if( (abs(m_1) > j_1) or (abs(m_2) > j_2) or (abs(m_3) > j_3) ):
+    if ( (abs(m_1) > j_1) or (abs(m_2) > j_2) or (abs(m_3) > j_3) ):
         return 0
-    prefid = (1 if (j_1 - j_2 - m_3)%2==0 else -1)
+    prefid = (1 if (j_1 - j_2 - m_3) % 2 == 0 else -1)
     m_3 = -m_3
     a1 = j_1 + j_2 - j_3
-    if(a1 < 0):
+    if (a1 < 0):
         return 0
     a2 = j_1 - j_2 + j_3;
-    if(a2 < 0):
+    if (a2 < 0):
         return 0
     a3 = -j_1 + j_2 + j_3;
-    if(a3 < 0):
+    if (a3 < 0):
         return 0
 
     argsqrt = ( factorials[j_1 + j_2 - j_3] *
@@ -66,14 +67,14 @@ def Wigner3j(j_1, j_2, j_3, m_1, m_2, m_3):
     imin = max(-j_3 + j_1 + m_2, max(-j_3 + j_2 - m_1, 0))
     imax = min(j_2 + m_2, min(j_1 - m_1, j_1 + j_2 - j_3))
     sumres = 0.0;
-    for ii in xrange(imin,imax+1):
+    for ii in xrange(imin, imax + 1):
         den = ( factorials[ii] *
                 factorials[ii + j_3 - j_1 - m_2] *
                 factorials[j_2 + m_2 - ii] *
                 factorials[j_1 - ii - m_1] *
                 factorials[ii + j_3 - j_2 + m_1] *
                 factorials[j_1 + j_2 - j_3 - ii] )
-        if(ii%2==0):
+        if (ii % 2 == 0):
             sumres = sumres + 1.0 / den
         else:
             sumres = sumres - 1.0 / den

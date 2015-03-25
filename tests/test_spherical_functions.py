@@ -13,7 +13,6 @@ import numpy as np
 import quaternion
 import spherical_functions as sf
 
-
 import numba  # This is to check to make sure we're actually using numba
 
 

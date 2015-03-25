@@ -8,10 +8,9 @@ import numpy as np
 from . import LM_total_size
 
 
-
 def constant_as_ell_0_mode(constant):
     """Express constant as Y_{0,0} mode weight"""
-    return constant * sqrt(4*pi)
+    return constant * sqrt(4 * pi)
 
 
 def constant_from_ell_0_mode(modes):
@@ -21,7 +20,7 @@ def constant_from_ell_0_mode(modes):
     output constant should be real.  If you want it to be, you must take the real part manually.
 
     """
-    return modes / sqrt(4*pi)
+    return modes / sqrt(4 * pi)
 
 
 def vector_as_ell_1_modes(vector):
@@ -44,9 +43,9 @@ def vector_as_ell_1_modes(vector):
        The returned object contains the (1,-1), (1,0), and (1,1) modes in that order
 
     """
-    return np.array([(vector[0] + 1j * vector[1]) * sqrt(2*pi/3.),
-                     vector[2] * sqrt(4*pi/3.),
-                     (-vector[0] + 1j * vector[1]) * sqrt(2*pi/3.)])
+    return np.array([(vector[0] + 1j * vector[1]) * sqrt(2 * pi / 3.),
+                     vector[2] * sqrt(4 * pi / 3.),
+                     (-vector[0] + 1j * vector[1]) * sqrt(2 * pi / 3.)])
 
 
 def vector_from_ell_1_modes(modes):
@@ -56,9 +55,9 @@ def vector_from_ell_1_modes(modes):
     should be real-valued.  If you want it to be, you must call the `.real` method of the output array manually.
 
     """
-    return np.array([(modes[0] - modes[2]) / (2 * sqrt(2*pi/3.)),
-                     (modes[0] + modes[2]) / (2j * sqrt(2*pi/3.)),
-                     modes[1] / sqrt(4*pi/3.)])
+    return np.array([(modes[0] - modes[2]) / (2 * sqrt(2 * pi / 3.)),
+                     (modes[0] + modes[2]) / (2j * sqrt(2 * pi / 3.)),
+                     modes[1] / sqrt(4 * pi / 3.)])
 
 
 def eth_GHP(modes, spin_weight, ell_min=0):
@@ -91,15 +90,16 @@ def eth_GHP(modes, spin_weight, ell_min=0):
         that these modes have spin weight greater than the input by 1.
 
     """
-    ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min-1))) - 1
+    ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min - 1))) - 1
     eth_modes = np.array(modes)
     i_mode = 0
-    for ell in range(ell_min, ell_max+1):
-        factor = (0.0 if ell < abs(spin_weight + 1) else sqrt((ell-spin_weight)*(ell+spin_weight+1.)/2.))
-        for m in range(-ell, ell+1):
+    for ell in range(ell_min, ell_max + 1):
+        factor = (0.0 if ell < abs(spin_weight + 1) else sqrt((ell - spin_weight) * (ell + spin_weight + 1.) / 2.))
+        for m in range(-ell, ell + 1):
             eth_modes[i_mode] *= factor
             i_mode += 1
     return eth_modes
+
 
 def ethbar_GHP(modes, spin_weight, ell_min=0):
     """Spin-lowering \bar{eth} operator as defined by Geroch-Held-Penrose
@@ -124,15 +124,16 @@ def ethbar_GHP(modes, spin_weight, ell_min=0):
         that these modes have spin weight less than the input by 1.
 
     """
-    ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min-1))) - 1
+    ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min - 1))) - 1
     ethbar_modes = np.array(modes)
     i_mode = 0
-    for ell in range(ell_min, ell_max+1):
-        factor = (0.0 if ell < abs(spin_weight - 1) else -sqrt((ell+spin_weight)*(ell-spin_weight+1.)/2.))
-        for m in range(-ell, ell+1):
+    for ell in range(ell_min, ell_max + 1):
+        factor = (0.0 if ell < abs(spin_weight - 1) else -sqrt((ell + spin_weight) * (ell - spin_weight + 1.) / 2.))
+        for m in range(-ell, ell + 1):
             ethbar_modes[i_mode] *= factor
             i_mode += 1
     return ethbar_modes
+
 
 def eth_NP(modes, spin_weight, ell_min=0):
     """Spin-raising eth operator as defined by Newman and Penrose
@@ -157,15 +158,16 @@ def eth_NP(modes, spin_weight, ell_min=0):
         that these modes have spin weight greater than the input by 1.
 
     """
-    ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min-1))) - 1
+    ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min - 1))) - 1
     eth_modes = np.array(modes)
     i_mode = 0
-    for ell in range(ell_min, ell_max+1):
-        factor = (0.0 if ell < abs(spin_weight + 1) else sqrt((ell-spin_weight)*(ell+spin_weight+1.)))
-        for m in range(-ell, ell+1):
+    for ell in range(ell_min, ell_max + 1):
+        factor = (0.0 if ell < abs(spin_weight + 1) else sqrt((ell - spin_weight) * (ell + spin_weight + 1.)))
+        for m in range(-ell, ell + 1):
             eth_modes[i_mode] *= factor
             i_mode += 1
     return eth_modes
+
 
 def ethbar_NP(modes, spin_weight, ell_min=0):
     """Spin-lowering \bar{eth} operator as defined by Newman and Penrose
@@ -190,12 +192,12 @@ def ethbar_NP(modes, spin_weight, ell_min=0):
         that these modes have spin weight less than the input by 1.
 
     """
-    ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min-1))) - 1
+    ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min - 1))) - 1
     ethbar_modes = np.array(modes)
     i_mode = 0
-    for ell in range(ell_min, ell_max+1):
-        factor = (0.0 if ell < abs(spin_weight - 1) else -sqrt((ell+spin_weight)*(ell-spin_weight+1.)))
-        for m in range(-ell, ell+1):
+    for ell in range(ell_min, ell_max + 1):
+        factor = (0.0 if ell < abs(spin_weight - 1) else -sqrt((ell + spin_weight) * (ell - spin_weight + 1.)))
+        for m in range(-ell, ell + 1):
             ethbar_modes[i_mode] *= factor
             i_mode += 1
     return ethbar_modes

@@ -68,7 +68,8 @@ def SWSH_grid(R_grid, s, ell_max):
     -------
     array of complex
         The shape of this array is `R_grid.shape`, with an extra dimension of length N_lm appended.  That extra
-        dimension corresponds to the various (ell,m) values in standard order (e.g., as given by LM_range).
+        dimension corresponds to the various (ell,m) values in standard order (e.g., as given by LM_range),
+        starting from ell=0 for compatibility with spinsfast.
 
     """
     indices = LM_range(0, ell_max)
@@ -179,7 +180,7 @@ def _SWSH(Ra, Rb, s, indices, values):
                     # Sum = 0.0
                     # for rho in xrange(rhoMax, rhoMin-1, -1):
                     # Sum = (  binomial_coefficient(ell-m,rho) * binomial_coefficient(ell+m, ell-rho+s)
-                    #              + Sum * absRRatioSquared )
+                    # + Sum * absRRatioSquared )
                     values[i] = math.sqrt((2 * ell + 1) / (4 * np.pi)) * Prefactor * Sum
 
     else:  # ra >= rb
@@ -220,5 +221,5 @@ def _SWSH(Ra, Rb, s, indices, values):
                     # Sum = 0.0
                     # for rho in xrange(rhoMax, rhoMin-1, -1):
                     # Sum = (  binomial_coefficient(ell+m,rho) * binomial_coefficient(ell-m, ell-rho+s)
-                    #              + Sum * absRRatioSquared )
+                    # + Sum * absRRatioSquared )
                     values[i] = math.sqrt((2 * ell + 1) / (4 * np.pi)) * Prefactor * Sum
