@@ -8,24 +8,29 @@ from __future__ import print_function, division, absolute_import
 # Try to keep imports to a minimum; from the standard library as much
 # as possible.  We have to conda install all dependencies, and it's
 # not right to make Travis do too much work.
-import math
-import cmath
-import numpy as np
-import quaternion
 import spherical_functions as sf
 import pytest
 
 precision_Wigner3j = 1.e-15
 
+try:
+    import imp
+    imp.find_module('sympy')
+    sympy_not_present = False
+except ImportError:
+    sympy_not_present = True
 
-def test_Wigner3j():
+requires_sympy = pytest.mark.skipif(sympy_not_present, reason="Requires SymPy to be importable")
+
+
+def test_Wigner3j_properties():
     assert abs(sf.Wigner3j(2, 6, 4, 0, 0, 0) - 0.1869893980016914) < precision_Wigner3j
     ## The following test various symmetries and other properties fo
     ## the Wigner 3-j symbols
     j_max = 8
-    for j1 in range(j_max):
-        for j2 in range(j_max):
-            for j3 in range(j_max):
+    for j1 in range(j_max+1):
+        for j2 in range(j_max+1):
+            for j3 in range(j_max+1):
                 # Selection rule
                 if ((j1 + j2 + j3) % 2 != 0):
                     assert abs(sf.Wigner3j(j1, j2, j3, 0, 0, 0)) < precision_Wigner3j
@@ -72,3 +77,21 @@ def test_Wigner3j():
                                                                                j2 - (j1 + j3 - m2) // 2,
                                                                                j3 - (j1 + j2 + m1 + m2) // 2))
                                     < precision_Wigner3j)
+
+
+@requires_sympy
+def test_Wigner3j_values():
+    from sympy import N
+    from sympy.physics.wigner import wigner_3j
+    from spherical_functions import Wigner3j
+    j_max = 8
+    for j1 in range(j_max+1):
+        for j2 in range(j1, j_max+1):
+            for j3 in range(j2, j_max+1):
+                for m1 in range(-j1, j1 + 1):
+                    for m2 in range(-j2, j2 + 1):
+                        m3 = -m1-m2
+                        if j3 >= abs(m3):
+                            sf_3j = Wigner3j(j1, j2, j3, m1, m2, m3)
+                            sy_3j = N(wigner_3j(j1, j2, j3, m1, m2, m3))
+                            assert abs(sf_3j - sy_3j) < precision_Wigner3j
