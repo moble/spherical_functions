@@ -23,7 +23,7 @@ install:
   - conda info -a
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy numba pip pytest
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy numba pip pytest sympy
   - source activate test-environment
   # - pip install pytest-cov python-coveralls
   - pip install git+git://github.com/moble/quaternion
