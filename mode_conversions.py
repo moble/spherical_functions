@@ -5,14 +5,17 @@ from __future__ import print_function, division, absolute_import
 
 from math import sqrt, pi
 import numpy as np
+from quaternion.numba_wrapper import jit, xrange
 from . import LM_total_size
 
 
+@jit
 def constant_as_ell_0_mode(constant):
     """Express constant as Y_{0,0} mode weight"""
     return constant * sqrt(4 * pi)
 
 
+@jit
 def constant_from_ell_0_mode(modes):
     """Express Y_{0,0} mode as constant
 
@@ -23,6 +26,7 @@ def constant_from_ell_0_mode(modes):
     return modes / sqrt(4 * pi)
 
 
+@jit
 def vector_as_ell_1_modes(vector):
     """Express vector as Y_{1,m} mode weights
 
@@ -48,6 +52,7 @@ def vector_as_ell_1_modes(vector):
                      (-vector[0] + 1j * vector[1]) * sqrt(2 * pi / 3.)])
 
 
+@jit
 def vector_from_ell_1_modes(modes):
     """Express Y_{1,m} modes as vector
 
@@ -60,6 +65,7 @@ def vector_from_ell_1_modes(modes):
                      modes[1] / sqrt(4 * pi / 3.)])
 
 
+@jit
 def eth_GHP(modes, spin_weight, ell_min=0):
     """Spin-raising eth operator as defined by Geroch-Held-Penrose
 
@@ -93,14 +99,15 @@ def eth_GHP(modes, spin_weight, ell_min=0):
     ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min - 1))) - 1
     eth_modes = np.array(modes)
     i_mode = 0
-    for ell in range(ell_min, ell_max + 1):
+    for ell in xrange(ell_min, ell_max + 1):
         factor = (0.0 if ell < abs(spin_weight + 1) else sqrt((ell - spin_weight) * (ell + spin_weight + 1.) / 2.))
-        for m in range(-ell, ell + 1):
+        for m in xrange(-ell, ell + 1):
             eth_modes[i_mode] *= factor
             i_mode += 1
     return eth_modes
 
 
+@jit
 def ethbar_GHP(modes, spin_weight, ell_min=0):
     """Spin-lowering \bar{eth} operator as defined by Geroch-Held-Penrose
 
@@ -127,14 +134,15 @@ def ethbar_GHP(modes, spin_weight, ell_min=0):
     ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min - 1))) - 1
     ethbar_modes = np.array(modes)
     i_mode = 0
-    for ell in range(ell_min, ell_max + 1):
+    for ell in xrange(ell_min, ell_max + 1):
         factor = (0.0 if ell < abs(spin_weight - 1) else -sqrt((ell + spin_weight) * (ell - spin_weight + 1.) / 2.))
-        for m in range(-ell, ell + 1):
+        for m in xrange(-ell, ell + 1):
             ethbar_modes[i_mode] *= factor
             i_mode += 1
     return ethbar_modes
 
 
+@jit
 def eth_NP(modes, spin_weight, ell_min=0):
     """Spin-raising eth operator as defined by Newman and Penrose
 
@@ -161,14 +169,15 @@ def eth_NP(modes, spin_weight, ell_min=0):
     ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min - 1))) - 1
     eth_modes = np.array(modes)
     i_mode = 0
-    for ell in range(ell_min, ell_max + 1):
+    for ell in xrange(ell_min, ell_max + 1):
         factor = (0.0 if ell < abs(spin_weight + 1) else sqrt((ell - spin_weight) * (ell + spin_weight + 1.)))
-        for m in range(-ell, ell + 1):
+        for m in xrange(-ell, ell + 1):
             eth_modes[i_mode] *= factor
             i_mode += 1
     return eth_modes
 
 
+@jit
 def ethbar_NP(modes, spin_weight, ell_min=0):
     """Spin-lowering \bar{eth} operator as defined by Newman and Penrose
 
@@ -195,9 +204,35 @@ def ethbar_NP(modes, spin_weight, ell_min=0):
     ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min - 1))) - 1
     ethbar_modes = np.array(modes)
     i_mode = 0
-    for ell in range(ell_min, ell_max + 1):
+    for ell in xrange(ell_min, ell_max + 1):
         factor = (0.0 if ell < abs(spin_weight - 1) else -sqrt((ell + spin_weight) * (ell - spin_weight + 1.)))
-        for m in range(-ell, ell + 1):
+        for m in xrange(-ell, ell + 1):
             ethbar_modes[i_mode] *= factor
             i_mode += 1
     return ethbar_modes
+
+
+@jit
+def ethbar_inverse_NP(modes, spin_weight, ell_min=0):
+    """Inverse of the spin-lowering \bar{eth} operator as defined by Newman and Penrose
+
+    This function acts as a (partial) inverse or integral of the `ethbar_NP` operator.  (See that function's
+    docstring for more information, including the calling signature.)  In particular, composing the two functions in
+    either order should give (almost) the identity function.  Essentially, this is an integral of the ethbar
+    function; so this is only a partial inverse because constants of integration could be added in some cases.  The
+    difference between this function and `eth_NP` is mostly in the normalization.
+
+    """
+    ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min - 1))) - 1
+    ethbar_inverse_modes = np.array(modes)
+    i_mode = 0
+    for ell in xrange(ell_min, ell_max + 1):
+        term = (ell + spin_weight + 1.) * (ell - spin_weight)
+        if term > 0.0:
+            factor = -sqrt(term)
+            for m in xrange(-ell, ell + 1):
+                ethbar_inverse_modes[i_mode] /= factor
+                i_mode += 1
+        else:
+            i_mode += 2*ell+1
+    return ethbar_inverse_modes

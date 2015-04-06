@@ -277,4 +277,5 @@ from .WignerD import (Wigner_D_element, _Wigner_D_element,
                       _linear_matrix_offset, _total_size_D_matrices)
 from .SWSH import SWSH, SWSH_grid, _SWSH  # sYlm, Ylm
 from .mode_conversions import (constant_as_ell_0_mode, constant_from_ell_0_mode, vector_as_ell_1_modes,
-                               vector_from_ell_1_modes, eth_GHP, ethbar_GHP, eth_NP, ethbar_NP)
+                               vector_from_ell_1_modes, eth_GHP, ethbar_GHP, eth_NP, ethbar_NP,
+                               ethbar_inverse_NP)

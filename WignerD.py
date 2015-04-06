@@ -67,6 +67,7 @@ def Wigner_D_element(*args):
     input (ell, mp, m) values are not valid.  (For example, |m|>ell.)
     If instead, you would simply like a return value of 0.0, after
     importing this module as sf, simply evaluate
+
     >>> sf.error_on_bad_indices = False
 
 
