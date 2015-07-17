@@ -244,3 +244,27 @@ def test_Wigner_D_matrix(Rs, ell_max):
                 assert np.allclose(elements, matrix,
                                    atol=1e3 * l_max * ell_max * precision_Wigner_D_element,
                                    rtol=1e3 * l_max * ell_max * precision_Wigner_D_element)
+
+
+@slow
+def test_Wigner_D_input_types(Rs, special_angles, ell_max):
+    LMpM = sf.LMpM_range(0, ell_max)
+    # Compare with more explicit forms given in Euler angles
+    print("")
+    for alpha in special_angles:
+        print("\talpha={0}".format(alpha))  # Need to show some progress to Travis
+        for beta in special_angles:
+            for gamma in special_angles:
+                assert np.allclose(
+                    sf.Wigner_D_element(alpha, beta, gamma, LMpM),
+                    sf.Wigner_D_element(quaternion.from_euler_angles(alpha, beta, gamma), LMpM),
+                    atol=ell_max ** 6 * precision_Wigner_D_element,
+                    rtol=ell_max ** 6 * precision_Wigner_D_element)
+    for R in Rs:
+        assert np.allclose(
+            sf.Wigner_D_element(R, LMpM),
+            sf.Wigner_D_element(R.a, R.b, LMpM),
+            atol=ell_max ** 6 * precision_Wigner_D_element,
+            rtol=ell_max ** 6 * precision_Wigner_D_element)
+
+

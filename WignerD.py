@@ -94,7 +94,7 @@ def Wigner_D_element(*args):
         mode_offset = 2
     elif isinstance(args[0], (int, float)) and isinstance(args[1], (int, float)) and isinstance(args[2], (int, float)):
         # UUUUGGGGLLLLYYYY.  The rotation is input as Euler angles
-        R = quaternion.from_Euler_angles(args[0], args[1], args[2])
+        R = quaternion.from_euler_angles(args[0], args[1], args[2])
         Ra = R.a
         Rb = R.b
         mode_offset = 3
