@@ -1,36 +1,36 @@
 # Spherical Functions <a href="https://travis-ci.org/moble/spherical_functions"><img align="right" hspace="3" alt="Status of automatic build and test suite" src="https://travis-ci.org/moble/spherical_functions.svg?branch=master"></a> <a href="https://github.com/moble/spherical_functions/blob/master/LICENSE"><img align="right" hspace="3" alt="Code distributed under the open-source MIT license" src="http://moble.github.io/spherical_functions/images/MITLicenseBadge.svg"></a>
 
-Python/numba package for evaluating and transforming Wigner's 𝔇
-matrices, Wigner's 3-j symbols, and spin-weighted (and scalar)
-spherical harmonics.  These functions are evaluated directly in terms
-of quaternions, as well as in the more standard forms of spherical
-coordinates and Euler angles.<sup>[1](#1-euler-angles-are-awful)</sup>
+Python/numba package for evaluating and transforming Wigner's 𝔇 matrices,
+Wigner's 3-j symbols, and spin-weighted (and scalar) spherical harmonics.
+These functions are evaluated directly in terms of quaternions, as well as in
+the more standard forms of spherical coordinates and Euler
+angles.<sup>[1](#1-euler-angles-are-awful)</sup>
 
 The conventions for this package are described in detail on
 [this page](http://moble.github.io/spherical_functions/).
 
 ## Dependencies
 
-The only true requirements for this code are `python` and the python
-package `numpy`, as well as my accompanying
-[`quaternion`](https://github.com/moble/quaternion) package
-(installation of which is shown below).
+The only true requirements for this code are `python` and the python package
+`numpy`, as well as my accompanying
+[`quaternion`](https://github.com/moble/quaternion) package (installation of
+which is shown below).
 
 However, this package can automatically use
-[`numba`](http://numba.pydata.org/), which uses
-[LLVM](http://llvm.org/) to compile python code to machine code,
-accelerating most numerical functions by factors of anywhere from 2
-to 2000.  It is *possible* to run the code without `numba`, but the
-most important functions are roughly 10 times slower without it.
+[`numba`](http://numba.pydata.org/), which uses [LLVM](http://llvm.org/) to
+compile python code to machine code, accelerating most numerical functions by
+factors of anywhere from 2 to 2000.  It is *possible* to run the code without
+`numba`, but the most important functions are roughly 10 times slower without
+it.
 
-The only drawback of `numba` is that it is nontrivial to install on
-its own.  Fortunately, the best python installer,
-[`anaconda`](http://continuum.io/downloads), makes it trivial.  Just
-install the main `anaconda` package.
+The only drawback of `numba` is that it is nontrivial to install on its own.
+Fortunately, the best python installer,
+[`anaconda`](http://continuum.io/downloads), makes it trivial.  Just install
+the main `anaconda` package.
 
 If you prefer the smaller download size of
-[`miniconda`](http://conda.pydata.org/miniconda.html) (which comes
-with no extras beyond python), you'll also have to run this command:
+[`miniconda`](http://conda.pydata.org/miniconda.html) (which comes with no
+extras beyond python), you'll also have to run this command:
 
 ```sh
 conda install pip numpy numba
@@ -39,23 +39,49 @@ conda install pip numpy numba
 
 ## Installation
 
-Installation of this package and the `quaternion` package is simple:
+Assuming you use `conda` to manage your python installation (like any sane
+python user), you can install this package simply as
+
+```sh
+conda install -c moble spherical_functions
+```
+
+This should automatically download and install the package
+[`quaternion`](https://github.com/moble/quaternion), on which this package
+depends.
+
+Alternatively, if you prefer to use `pip` (whether or not you use `conda`), you
+can also do
 
 ```sh
 pip install git+git://github.com/moble/quaternion
 pip install git+git://github.com/moble/spherical_functions
 ```
 
-If you refuse to use anaconda, you might want to use `pip install
---user ...` in each case, to install inside your home directory
-without root privileges.  (Anaconda does this by default anyway.)
+Or, if you refuse to use `conda`, you might want to install inside your home
+directory without root privileges.  (Anaconda does this by default anyway.)
+This is done by adding `--user` to the above commands:
+
+```sh
+pip install --user git+git://github.com/moble/quaternion
+pip install --user git+git://github.com/moble/spherical_functions
+```
+
+Finally, there's also the fully manual option of just downloading both code
+repositories, changing to the code directory, and issuing
+
+```sh
+python setup.py install
+```
+
+This should work regardless of the installation method, as long as you have a
+compiler hanging around.
 
 
 ## Usage
 
-First, we show a very simple example of usage with Euler angles,
-though it breaks my heart to do
-so:<sup>[1](#euler-angles-are-awful)</sup>
+First, we show a very simple example of usage with Euler angles, though it
+breaks my heart to do so:<sup>[1](#euler-angles-are-awful)</sup>
 
 ```python
 >>> import spherical_functions as sf
@@ -65,8 +91,7 @@ so:<sup>[1](#euler-angles-are-awful)</sup>
 
 ```
 
-Of course, it's always better to use unit quaternions to describe
-rotations:
+Of course, it's always better to use unit quaternions to describe rotations:
 
 ```python
 >>> import numpy as np
@@ -77,10 +102,9 @@ rotations:
 
 ```
 
-If you need to calculate values of the 𝔇<sup>(ℓ)</sup> matrix elements
-for many values of (ℓ, m', m), it is more efficient to do so all at
-once.  The following calculates all modes for ℓ from 2 to 8
-(inclusive):
+If you need to calculate values of the 𝔇<sup>(ℓ)</sup> matrix elements for many
+values of (ℓ, m', m), it is more efficient to do so all at once.  The following
+calculates all modes for ℓ from 2 to 8 (inclusive):
 
 ```python
 >>> indices = np.array([[ell,mp,m] for ell in range(2,9)
@@ -89,53 +113,54 @@ once.  The following calculates all modes for ℓ from 2 to 8
 
 ```
 
-Finally, if you really need to put the pedal to the metal, and are
-willing to guarantee that the input arguments are correct, you can use
-a special hidden form of the function:
+Finally, if you really need to put the pedal to the metal, and are willing to
+guarantee that the input arguments are correct, you can use a special hidden
+form of the function:
 
 ```python
 >>> sf._Wigner_D_element(R.a, R.b, indices, elements)
 
 ```
 
-Here, `R.a` and `R.b` are the two complex parts of the quaternion
-defined on [this page](http://moble.github.io/spherical_functions/)
-(though the user need not care about that).  The `indices` variable is
-assumed to be a two-dimensional array of integers, where the second
-dimension has size three, representing the (ℓ, m', m) indices.  This
-avoids certain somewhat slower pure-python operations involving
-argument checking, reshaping, etc.  The `elements` variable must be a
-one-dimensional array of complex numbers (can be uninitialized), which
-will be replaced with the corresponding values on return.  Again,
-however, there is no input dimension checking here, so if you give bad
-inputs, behavior could range from silently wrong to exceptions to
-segmentation faults.  Caveat emptor.
+Here, `R.a` and `R.b` are the two complex parts of the quaternion defined on
+[this page](http://moble.github.io/spherical_functions/) (though the user need
+not care about that).  The `indices` variable is assumed to be a
+two-dimensional array of integers, where the second dimension has size three,
+representing the (ℓ, m', m) indices.  This avoids certain somewhat slower
+pure-python operations involving argument checking, reshaping, etc.  The
+`elements` variable must be a one-dimensional array of complex numbers (can be
+uninitialized), which will be replaced with the corresponding values on return.
+Again, however, there is no input dimension checking here, so if you give bad
+inputs, behavior could range from silently wrong to exceptions to segmentation
+faults.  Caveat emptor.
 
 
 ## Acknowledgments
 
-I very much appreciate Barry Wardell's help in sorting out the
-relationships between my conventions and those of other people and
-software packages (especially Mathematica's crazy conventions).
+I very much appreciate Barry Wardell's help in sorting out the relationships
+between my conventions and those of other people and software packages
+(especially Mathematica's crazy conventions).
 
-This code is, of course, hosted on github.  Because it is an
-open-source project, the hosting is free, and all the wonderful
-features of github are available, including free wiki space and web
-page hosting, pull requests, a nice interface to the git logs, etc.
+This code is, of course, hosted on github.  Because it is an open-source
+project, the hosting is free, and all the wonderful features of github are
+available, including free wiki space and web page hosting, pull requests, a
+nice interface to the git logs, etc.
 
 Every change in this code is
-[auomatically tested](https://travis-ci.org/moble/spherical_functions)
-on [Travis-CI](https://travis-ci.org/).  This is a free service (for
-open-source projects like this one), which integrates beautifully with
-github, detecting each commit and automatically re-running the tests.
-The code is downloaded and installed fresh each time, and then tested,
-on both python 2.7 and 3.4.  This ensures that no change I make to the
-code breaks either installation or any of the features that I have
-written tests for.
+[auomatically tested](https://travis-ci.org/moble/spherical_functions) on
+[Travis-CI](https://travis-ci.org/).  This is a free service (for open-source
+projects like this one), which integrates beautifully with github, detecting
+each commit and automatically re-running the tests.  The code is downloaded and
+installed fresh each time, and then tested, on both python 2.7 and 3.4.  This
+ensures that no change I make to the code breaks either installation or any of
+the features that I have written tests for.
 
-The work of creating this code was supported in part by the Sherman
-Fairchild Foundation and by NSF Grants No. PHY-1306125 and
-AST-1333129.
+Finally, the code is automatically compiled, and the binaries hosted for
+download by `conda` on [anaconda.org](https://anaconda.org/moble/quaternion).
+This is also a free service for open-source projects like this one.
+
+The work of creating this code was supported in part by the Sherman Fairchild
+Foundation and by NSF Grants No. PHY-1306125 and AST-1333129.
 
 
 <br/>
