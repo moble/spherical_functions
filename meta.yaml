@@ -17,6 +17,7 @@ requirements:
   run:
     - python
     - numpy >=1.7
+    - quaternion
 
 about:
   home: 'https://github.com/moble/spherical_functions'
