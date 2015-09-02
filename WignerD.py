@@ -20,8 +20,6 @@ from . import (_Wigner_coefficient as coeff, binomial_coefficient,
                ell_max as sf_ell_max)
 from quaternion.numba_wrapper import njit, jit, int64, complex128, xrange
 
-_log2 = np.log(2)
-
 
 @njit('b1(i8,i8,i8)')
 def _check_valid_indices(ell, mp, m):
