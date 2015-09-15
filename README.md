@@ -151,7 +151,7 @@ Every change in this code is
 [Travis-CI](https://travis-ci.org/).  This is a free service (for open-source
 projects like this one), which integrates beautifully with github, detecting
 each commit and automatically re-running the tests.  The code is downloaded and
-installed fresh each time, and then tested, on both python 2.7 and 3.4.  This
+installed fresh each time, and then tested, on python 2.7, 3.4, and 3.5.  This
 ensures that no change I make to the code breaks either installation or any of
 the features that I have written tests for.
 
