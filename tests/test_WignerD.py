@@ -268,3 +268,17 @@ def test_Wigner_D_input_types(Rs, special_angles, ell_max):
             rtol=ell_max ** 6 * precision_Wigner_D_element)
 
 
+def test_Wigner_D_signatures(Rs):
+    """There are two ways to call the WignerD function: with an array of Rs, or with an array of (ell,mp,m) values.
+    This test ensures that the results are the same in both cases."""
+    # from spherical_functions.WignerD import _Wigner_D_elements
+    ell_max = 6
+    ell_mp_m = sf.LMpM_range(0, ell_max)
+    Ds1 = np.zeros((Rs.size, ell_mp_m.shape[0]), dtype=np.complex)
+    Ds2 = np.zeros_like(Ds1)
+    for i, R in enumerate(Rs):
+        Ds1[i, :] = sf.Wigner_D_element(R, ell_mp_m)
+    for i, (ell, mp, m) in enumerate(ell_mp_m):
+        Ds2[:, i] = sf.Wigner_D_element(Rs, ell, mp, m)
+        # _Wigner_D_elements(quaternion.as_float_array(Rs), ell, mp, m, Ds2[:, i])
+    assert np.array_equal(Ds1, Ds2)

@@ -16,16 +16,20 @@ from . import (_Wigner_coefficient as coeff, epsilon, LM_range)
 def SWSH(R, s, indices):
     """Spin-weighted spherical harmonic calculation from rotor
 
-    Note that his function is more general than standard Ylm and sYlm functions of angles because it uses quaternion
+    Note that this function is more general than standard Ylm and sYlm functions of angles because it uses quaternion
     rotors instead of angle, and is slightly faster as a result.
+
+    This function can be called in either of two ways:
+      1) With an array of quaternions, and a single (ell,m) pair, or
+      2) with a single quaternion, and an array of (ell,m) values
 
     Parameters
     ----------
-    R : unit quaternion
+    R : unit quaternion or array of unit quaternions
         Rotor on which to evaluate the SWSH function.
     s : int
         Spin weight of the field to evaluate
-    indices : 2-d array of int
+    indices : 2-d array of int or pair of ints
         Array of (ell,m) values to evaluate
 
     Returns
@@ -35,8 +39,14 @@ def SWSH(R, s, indices):
         specified in `indices`.
 
     """
-    values = np.empty((indices.shape[0],), dtype=complex)
-    _SWSH(R.a, R.b, s, indices, values)
+    indices = np.array(indices)
+    if indices.size > 2 or not isinstance(R, np.ndarray):
+        values = np.empty((indices.shape[0],), dtype=complex)
+        _SWSH(R.a, R.b, s, indices, values)
+    else:
+        values = np.empty((R.size,), dtype=complex)
+        _SWSHs(quaternion.as_float_array(R.flatten()), s, indices[0], indices[1], values)
+        values = values.reshape(R.shape)
     return values
 
 
@@ -223,3 +233,112 @@ def _SWSH(Ra, Rb, s, indices, values):
                     # Sum = (  binomial_coefficient(ell+m,rho) * binomial_coefficient(ell-m, ell-rho+s)
                     # + Sum * absRRatioSquared )
                     values[i] = math.sqrt((2 * ell + 1) / (4 * np.pi)) * Prefactor * Sum
+
+
+@njit('void(float64[:,:], int64, int64, int64, complex128[:])')
+def _SWSHs(Rs, s, ell, m, values):
+    """Compute spin-weighted spherical harmonics from rotor components
+
+    This is the core function that does all the work in the
+    computation, but it is strict about its inputs, and does not check
+    them for validity -- though numba provides some degree of safety.
+
+    _SWSHs(Rs, s, ell, m, values)
+
+    Parameters
+    ----------
+    Rs : 2-d array of float
+        Components of the rotors, with the 0 index iterating over rotor, and the 1 index iterating over component.
+    s : int
+        Spin weight of the field to evaluate
+    ell : int
+    m : int
+        Values of (ell,m) to output
+    values : 1-d array of complex
+        Output array to contain values.  Length must equal 0 dimension of `Rs`.  Needed because numba cannot create
+        arrays at the moment.
+
+    Returns
+    -------
+    void
+        The input/output array `values` is modified in place.
+
+    """
+    N = Rs.shape[0]
+
+    if (abs(m) > ell or abs(s) > ell):
+        for i in xrange(N):
+            values[i] = 0.0j
+
+    else:
+
+        constant = math.sqrt((2 * ell + 1) / (4 * np.pi))
+        ell_even = (ell % 2 == 0)
+        s_even = (s % 2 == 0)
+        rhoMin_a = max(0, m + s)
+        rhoMax_a = min(ell + m, ell + s)
+        coefficient_a = coeff(ell, m, -s)
+        if ((rhoMin_a + s) % 2 != 0):
+            coefficient_a *= -1
+        N1_a = ell + m + 1
+        N2_a = ell + s + 1
+        M_a = -s - m
+        rhoMin_b = max(0, -m + s)
+        rhoMax_b = min(ell - m, ell + s)
+        coefficient_b = coeff(ell, -m, -s)
+        if ((ell + rhoMin_b) % 2 != 0):
+            coefficient_b *= -1
+        N1_b = ell - m + 1
+        N2_b = ell + s + 1
+        M_b = -s + m
+
+        for i in xrange(N):
+            Ra = complex(Rs[i, 0], Rs[i, 3])
+            ra, phia = cmath.polar(Ra)
+
+            Rb = complex(Rs[i, 2], Rs[i, 1])
+            rb, phib = cmath.polar(Rb)
+
+            if ra <= epsilon:
+                if m != s:
+                    values[i] = 0.0j
+                elif ell_even:
+                    values[i] = constant * Rb ** (-2 * s)
+                else:
+                    values[i] = -constant * Rb ** (-2 * s)
+
+            elif rb <= epsilon:
+                if m != -s:
+                    values[i] = 0.0j
+                elif s_even:
+                    values[i] = constant * Ra ** (-2 * s)
+                else:
+                    values[i] = -constant * Ra ** (-2 * s)
+
+            elif ra < rb:
+                if (coefficient_b == 0.0j):
+                    values[i] = 0.0j
+                else:
+                    absRRatioSquared = -ra * ra / (rb * rb)
+                    Prefactor = cmath.rect(
+                        coefficient_b * rb ** (2 * ell + s - m - 2 * rhoMin_b) * ra ** (-s + m + 2 * rhoMin_b),
+                        phib * (-s - m) + phia * (-s + m))
+                    Sum = 1.0
+                    for rho in xrange(rhoMax_b, rhoMin_b, -1):
+                        Sum *= absRRatioSquared * ((N1_b - rho) * (N2_b - rho)) / (rho * (M_b + rho))
+                        Sum += 1
+                    values[i] = constant * Prefactor * Sum
+
+            else:  # ra >= rb
+                if (coefficient_a == 0.0j):
+                    values[i] = 0.0j
+                else:
+                    absRRatioSquared = -rb * rb / (ra * ra)
+                    Prefactor = cmath.rect(
+                        coefficient_a * ra ** (2 * ell + s + m - 2 * rhoMin_a) * rb ** (-s - m + 2 * rhoMin_a),
+                        phia * (-s + m) + phib * (-s - m))
+                    Sum = 1.0
+                    for rho in xrange(rhoMax_a, rhoMin_a, -1):
+                        Sum *= absRRatioSquared * ((N1_a - rho) * (N2_a - rho)) / (rho * (M_a + rho))
+                        Sum += 1
+                    values[i] = constant * Prefactor * Sum

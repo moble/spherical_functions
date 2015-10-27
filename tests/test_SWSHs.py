@@ -149,3 +149,21 @@ def test_SWSH_grid(special_angles, ell_max):
         values_explicit = np.array([[[sf.SWSH(R, s, LM) for R in R1] for R1 in R2] for R2 in R_grid])
         values_grid = sf.SWSH_grid(R_grid, s, ell_max)
         assert np.array_equal(values_explicit, values_grid)
+
+
+def test_SWSH_signatures(Rs):
+    """There are two ways to call the SWSH function: with an array of Rs, or with an array of (ell,m) values.  This
+    test ensures that the results are the same in both cases."""
+    s_max = 5
+    ss = np.arange(-s_max, s_max+1)
+    ell_max = 5
+    ell_ms = sf.LM_range(0, ell_max)
+    SWSHs1 = np.empty((Rs.size, ss.size, ell_ms.size/2), dtype=np.complex)
+    SWSHs2 = np.empty_like(SWSHs1)
+    for i_s, s in enumerate(ss):
+        for i_ellm, (ell, m) in enumerate(ell_ms):
+            SWSHs1[:, i_s, i_ellm] = sf.SWSH(Rs, s, [ell, m])
+    for i_s, s in enumerate(ss):
+        for i_R, R in enumerate(Rs):
+            SWSHs2[i_R, i_s, :] = sf.SWSH(R, s, ell_ms)
+    assert np.array_equal(SWSHs1, SWSHs2)

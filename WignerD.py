@@ -39,6 +39,7 @@ def Wigner_D_element(*args):
     The input can be in any of the following forms:
 
     Wigner_D_element(R, ell, mp, m)
+    Wigner_D_element(Rs, ell, mp, m)
     Wigner_D_element(R, indices)
     Wigner_D_element(Ra, Rb, ell, mp, m)
     Wigner_D_element(Ra, Rb, indices)
@@ -47,6 +48,7 @@ def Wigner_D_element(*args):
 
     Where
       * R is a unit quaternion (no checking of norm is done)
+      * Rs is an array of unit quaternions (no checking of norm is done)
       * Ra and Rb are the complex parts of a unit quaternion
       * alpha, beta, gamma are the Euler angles [shudder...]
       * ell, mp, m are the integral indices of the D matrix element
@@ -72,15 +74,17 @@ def Wigner_D_element(*args):
     Return value
     ============
 
-    One complex number is returned for each component requested.  If
-    the (ell,mp,m) arguments were given explicitly, this means that a
-    single complex scalar is returned.  If more than one component was
-    requested, a one-dimensional numpy array of complex scalars is
-    returned, in the same order as the input.
+    One complex number is returned for each component requested.  If a single quaternion and the (ell,mp,m) arguments
+    were given explicitly, this means that a single complex scalar is returned.  If more than one component was
+    requested, a one-dimensional numpy array of complex scalars is returned, in the same order as the input.
 
     """
     # Find the rotation from the args
-    if isinstance(args[0], np.quaternion):
+    if isinstance(args[0], np.ndarray):
+        elements = np.empty_like(args[0], dtype=complex)
+        _Wigner_D_elements(quaternion.as_float_array(args[0]), args[1], args[2], args[3], elements)
+        return elements
+    elif isinstance(args[0], np.quaternion):
         # The rotation is input as a single quaternion
         Ra = args[0].a
         Rb = args[0].b
@@ -127,9 +131,8 @@ def Wigner_D_element(*args):
                 for ell, mp, m in indices:
                     if not _check_valid_indices(ell, mp, m):
                         raise ValueError(
-                            "(ell,mp,m)=({0},{1},{2}) is not a valid set of indices for Wigner's D matrix".format(ell,
-                                                                                                                  mp,
-                                                                                                                  m))
+                            "(ell,mp,m)=({0},{1},{2}) is not a valid set".format(ell, mp, m)
+                            + " of indices for Wigner's D matrix")
         else:
             raise ValueError("Can't understand input indices")
     else:
@@ -413,9 +416,9 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                 if (ell + mpmm) % 2 == 0:
                     matrices[i_ell + i_mpmm] = Rb ** (-2 * mpmm)
                 else:
-                    matrices[i_ell + i_mpmm] = -Rb ** (-2 * mpmm)
+                    matrices[i_ell + i_mpmm] = -(Rb ** (-2 * mpmm))
 
-    if (rb <= epsilon):
+    elif (rb <= epsilon):
         for ell in xrange(ell_min, ell_max + 1):
             i_ell = _linear_matrix_offset(ell, ell_min)
             for i in xrange((2 * ell + 1) ** 2):
@@ -559,3 +562,98 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                             else:
                                 # D_{-mp,-m}(R) = (-1)^{mp+m} \bar{D}_{mp,m}(R)
                                 matrices[i_ell + _linear_matrix_index(ell, -mp, -m)] = -Prefactor1.conjugate() * Sum
+
+
+@njit('void(float64[:,:], int64, int64, int64, complex128[:])',
+      locals={'Prefactor1': complex128, 'Prefactor2': complex128})
+def _Wigner_D_elements(Rs, ell, mp, m, values):
+    """Main work function for computing Wigner D matrix elements
+
+    This is the core function that does all the work in the
+    computation, but it is strict about its input, and does not check
+    them for validity.
+
+    Input arguments
+    ===============
+    _Wigner_D_matrices(Rs, ell, m, mp, elements)
+
+    The `matrices` variable is needed because numba cannot create
+    arrays at the moment, but this is modified in place, so after
+    calling this function, the input array will contain the correct
+    values.
+
+    """
+    N = Rs.shape[0]
+
+    if (abs(m) > ell or abs(mp) > ell):
+        for i in xrange(N):
+            values[i] = 0.0j
+
+    else:
+
+        rhoMin_a = max(0, mp - m)
+        rhoMax_a = min(ell + mp, ell - m)
+        coefficient_a = coeff(ell, mp, m)
+        if (rhoMin_a % 2 != 0):
+            coefficient_a *= -1
+        N1_a = ell + mp + 1
+        N2_a = ell - m + 1
+        M_a = m - mp
+        rhoMin_b = max(0, -m - mp)
+        rhoMax_b = min(ell - mp, ell - m)
+        coefficient_b = coeff(ell, -mp, m)
+        if ((ell + m + rhoMin_b) % 2 != 0):
+            coefficient_b *= -1
+        N1_b = ell - mp + 1
+        N2_b = ell - m + 1
+        M_b = m + mp
+
+        for i in xrange(N):
+
+            Ra = complex(Rs[i, 0], Rs[i, 3])
+            ra, phia = cmath.polar(Ra)
+
+            Rb = complex(Rs[i, 2], Rs[i, 1])
+            rb, phib = cmath.polar(Rb)
+
+            if ra <= epsilon:
+                if mp != -m:
+                    values[i] = 0.0j
+                elif (ell + mp) % 2 == 0:
+                    values[i] = Rb ** (-2 * mp)
+                else:
+                    values[i] = -(Rb ** (-2 * mp))
+
+            elif rb <= epsilon:
+                if mp != m:
+                    values[i] = 0.0j
+                else:
+                    values[i] = Ra ** (2 * mp)
+
+            elif ra < rb:
+                absRRatioSquared = -ra * ra / (rb * rb)
+                d = coefficient_b * rb ** (2 * ell - m - mp - 2 * rhoMin_b) * ra ** (m + mp + 2 * rhoMin_b)
+                if d == 0.0j:
+                    values[i] = 0.0j
+                else:
+                    Prefactor1 = cmath.rect(d, phib * (m - mp) + phia * (m + mp))
+                    Prefactor2 = cmath.rect(d, (phib + np.pi) * (m - mp) - phia * (m + mp))
+                    Sum = 1.0
+                    for rho in xrange(rhoMax_b, rhoMin_b, -1):
+                        Sum *= absRRatioSquared * ((N1_b - rho) * (N2_b - rho)) / (rho * (M_b + rho))
+                        Sum += 1
+                    values[i] = Prefactor1 * Sum
+
+            else:  # ra >= rb
+                absRRatioSquared = -rb * rb / (ra * ra)
+                d = coefficient_a * ra ** (2 * ell - m + mp - 2 * rhoMin_a) * rb ** (m - mp + 2 * rhoMin_a)
+                if d == 0.0j:
+                    values[i] = 0.0j
+                else:
+                    Prefactor1 = cmath.rect(d, phia * (m + mp) + phib * (m - mp))
+                    Prefactor2 = cmath.rect(d, -phia * (m + mp) + (phib + np.pi) * (m - mp))
+                    Sum = 1.0
+                    for rho in xrange(rhoMax_a, rhoMin_a, -1):
+                        Sum *= absRRatioSquared * ((N1_a - rho) * (N2_a - rho)) / (rho * (M_a + rho))
+                        Sum += 1
+                    values[i] = Prefactor1 * Sum
