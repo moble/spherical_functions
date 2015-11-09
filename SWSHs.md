@@ -65,8 +65,8 @@ ${}\_{s}f(\boldsymbol{n}, \boldsymbol{\vartheta},
 three vectors are a little redundant; all the information provided by
 them is actually carried in a single rotation operator:
 \begin{align\*}
-  \boldsymbol{\vartheta} &= \mathcal{R} \\{\basis{x}\\}, \\\\
-  \boldsymbol{\varphi} &= \mathcal{R} \\{\basis{y}\\}, \\\\
+  \boldsymbol{\vartheta} &= \mathcal{R} \\{\basis{x}\\}, \\\\\\\\
+  \boldsymbol{\varphi} &= \mathcal{R} \\{\basis{y}\\}, \\\\\\\\
   \boldsymbol{n} &= \mathcal{R} \\{\basis{z}\\}.
 \end{align\*}
 And so we can consider the spin-weighted functions not to be functions
@@ -205,7 +205,7 @@ functions we obtain
   \mathfrak{D}^{(\ell)}\_{m,m'} (\quat{R}\_{\text{phys}})\,
   {}\_{s}Y\_{\ell,m'}(\quat{R}\_{(\vartheta, \varphi)}\, e^{\gamma\,
   \basis{z}/2})
-  \nonumber \\\\ \label{eq:SWSHRotation}
+  \nonumber \\\\\\\\ \label{eq:SWSHRotation}
   &= \sum\_{m'}
   \mathfrak{D}^{(\ell)}\_{m,m'} (\quat{R}\_{\text{phys}})\,
   {}\_{s}Y\_{\ell,m'}(\quat{R}\_{(\vartheta, \varphi)})\, e^{-i\, s\, \gamma}.
@@ -241,17 +241,17 @@ can combine the last three equations.
   {}\_{s}f'(\quat{R}\_{(\vartheta', \varphi')})
   &=
   \sum\_m f'^{\ell,m} {}\_{s}Y\_{\ell,m}(\quat{R}\_{(\vartheta', \varphi')})
-  \\\\ &=
+  \\\\\\\\ &=
   \sum\_m f'^{\ell,m} \sum\_{m'}
   \mathfrak{D}^{(\ell)}\_{m,m'} (\quat{R}\_{\text{phys}})\,
   {}\_{s}Y\_{\ell,m'}(\quat{R}\_{(\vartheta, \varphi)})\, e^{-i\, s\, \gamma}
-  \\\\ &=
+  \\\\\\\\ &=
   \sum\_{m',m} f'^{\ell,m'}
   \mathfrak{D}^{(\ell)}\_{m',m} (\quat{R}\_{\text{phys}})\,
   {}\_{s}Y\_{\ell,m}(\quat{R}\_{(\vartheta, \varphi)})\, e^{-i\, s\, \gamma}
-  \\\\ &=
+  \\\\\\\\ &=
   {}\_{s}f(\quat{R}\_{(\vartheta, \varphi)})\, e^{-i\, s\, \gamma}
-  \\\\ &=
+  \\\\\\\\ &=
   \sum\_m f^{\ell,m} {}\_{s}Y\_{\ell,m}(\quat{R}\_{(\vartheta,
   \varphi)})\, e^{-i\, s\, \gamma}
 \end{align\*}
@@ -319,14 +319,14 @@ system:
   f''^{\ell,m}
   &=
   \sum\_{m''} \left( f'^{\ell,m''} \right)\, \mathfrak{D}^{(\ell)}\_{m'',m}
-  (\quat{R}^{-1}\_{\text{p}2}) \\\\
+  (\quat{R}^{-1}\_{\text{p}2}) \\\\\\\\
   &=
   \sum\_{m'',m'} \left( f^{\ell,m'}\, \mathfrak{D}^{(\ell)}\_{m',m''}
   (\quat{R}^{-1}\_{\text{p}1}) \right)\, \mathfrak{D}^{(\ell)}\_{m'',m}
-  (\quat{R}^{-1}\_{\text{p}2}) \\\\
+  (\quat{R}^{-1}\_{\text{p}2}) \\\\\\\\
   &=
   \sum\_{m'} f^{\ell,m'}\, \mathfrak{D}^{(\ell)}\_{m',m}
-  (\quat{R}^{-1}\_{\text{p}1}\, \quat{R}^{-1}\_{\text{p}2}) \\\\
+  (\quat{R}^{-1}\_{\text{p}1}\, \quat{R}^{-1}\_{\text{p}2}) \\\\\\\\
   &=
   \sum\_{m'} f^{\ell,m'}\, \mathfrak{D}^{(\ell)}\_{m',m}
   \left( (\quat{R}\_{\text{p}2}\, \quat{R}\_{\text{p}1})^{-1} \right)
@@ -337,11 +337,11 @@ measured:
   f''^{\ell,m}
   &=
   \sum\_{m''} \left( f'^{\ell,m''} \right)\, \mathfrak{D}^{(\ell)}\_{m'',m}
-  (\quat{R}\_{\text{b}2}) \\\\
+  (\quat{R}\_{\text{b}2}) \\\\\\\\
   &=
   \sum\_{m'',m'} \left( f^{\ell,m'}\, \mathfrak{D}^{(\ell)}\_{m',m''}
   (\quat{R}\_{\text{b}1}) \right)\, \mathfrak{D}^{(\ell)}\_{m'',m}
-  (\quat{R}\_{\text{b}2}) \\\\
+  (\quat{R}\_{\text{b}2}) \\\\\\\\
   &=
   \sum\_{m'} f^{\ell,m'}\, \mathfrak{D}^{(\ell)}\_{m',m}
   (\quat{R}\_{\text{b}1}\, \quat{R}\_{\text{b}2})
