@@ -16,7 +16,7 @@ $\quat{Q}\_b = \quat{Q}\_y + i\, \quat{Q}\_x$.[^1] This is only
 important because it allows us to verify the multiplication law
 \begin{align}
   \label{eq:QuaternionComponentProducts}
-  (\quat{P}\,\quat{Q})\_a &= \quat{P}\_a\, \quat{Q}\_a - \co{\quat{P}}\_b\, \quat{Q}\_b, \\\\
+  (\quat{P}\,\quat{Q})\_a &= \quat{P}\_a\, \quat{Q}\_a - \co{\quat{P}}\_b\, \quat{Q}\_b, \\\\\\\\
   (\quat{P}\,\quat{Q})\_b &= \quat{P}\_b\, \quat{Q}\_a + \co{\quat{P}}\_a\, \quat{Q}\_b.
 \end{align}
 Given a rotor $\rotor{R}$, these two complex numbers are the
