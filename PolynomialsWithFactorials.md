@@ -99,15 +99,15 @@ Applied to the case of calculating the Wigner $\mathfrak{D}$ matrices,
 for $\lvert R\_{a} \rvert \geq \lvert R\_{b} \rvert$, we have
 $x = - \lvert R\_{b} / R\_{a} \rvert^{2}$ and
 \begin{gather\*}
-  N\_{1} = \ell + m' \\\\
-  N\_{2} = \ell - m \\\\
+  N\_{1} = \ell + m' \\\\\\\\
+  N\_{2} = \ell - m \\\\\\\\
   M = (\ell-m') - (\ell-m) = m - m'
 \end{gather\*}
 For $\lvert R\_{a} \rvert < \lvert R\_{b} \rvert$, we have
 $x = - \lvert R\_{a} / R\_{b} \rvert^{2}$ and
 \begin{gather\*}
-  N\_{1} = \ell - m' \\\\
-  N\_{2} = \ell - m \\\\
+  N\_{1} = \ell - m' \\\\\\\\
+  N\_{2} = \ell - m \\\\\\\\
   M = (\ell+m') - (\ell-m) = m + m'.
 \end{gather\*}
 

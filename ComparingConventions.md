@@ -78,27 +78,27 @@ versions of Edmonds.  But I think there's still an error.
 \begin{align\*}
   R\_{\text{Devanathan}}(\alpha, \beta, \gamma)
   &=
-  e^{\gamma \basis{z}''/2}\, e^{\beta \basis{y}'/2}\, e^{\alpha \basis{z}/2} \\\\
+  e^{\gamma \basis{z}''/2}\, e^{\beta \basis{y}'/2}\, e^{\alpha \basis{z}/2} \\\\\\\\
   &=
   e^{\gamma \basis{z}''/2}\, e^{\beta e^{\alpha \basis{z}/2}\, \basis{y}\,
-  e^{-\alpha \basis{z}/2}/2}\, e^{\alpha \basis{z}/2} \\\\
+  e^{-\alpha \basis{z}/2}/2}\, e^{\alpha \basis{z}/2} \\\\\\\\
   &=
   e^{\gamma \basis{z}''/2}\, e^{\alpha \basis{z}/2}\, e^{\beta
-  \basis{y}/2}\, e^{-\alpha \basis{z}/2}\, e^{\alpha \basis{z}/2} \\\\
+  \basis{y}/2}\, e^{-\alpha \basis{z}/2}\, e^{\alpha \basis{z}/2} \\\\\\\\
   &=
   e^{\gamma \basis{z}''/2}\, e^{\alpha \basis{z}/2}\, e^{\beta
-  \basis{y}/2} \\\\
+  \basis{y}/2} \\\\\\\\
   &=
   e^{\gamma e^{\alpha \basis{z}/2}\, e^{\beta \basis{y}/2} \basis{z}\,
   e^{-\beta \basis{y}/2}\, e^{-\alpha \basis{z}/2}/2}\, e^{\alpha
-  \basis{z}/2}\, e^{\beta \basis{y}/2} \\\\
+  \basis{z}/2}\, e^{\beta \basis{y}/2} \\\\\\\\
   &=
   e^{\alpha \basis{z}/2}\, e^{\beta \basis{y}/2}\, e^{\gamma \basis{z}/2}\,
   e^{-\beta \basis{y}/2}\, e^{-\alpha \basis{z}/2}\, e^{\alpha
-  \basis{z}/2}\, e^{\beta \basis{y}/2} \\\\
+  \basis{z}/2}\, e^{\beta \basis{y}/2} \\\\\\\\
   &=
   e^{\alpha \basis{z}/2}\, e^{\beta \basis{y}/2}\, e^{\gamma \basis{z}/2}
-  \\\\
+  \\\\\\\\
   &= R\_{\text{spherical_functions}}(\gamma, \beta, \alpha)
 \end{align\*}
 

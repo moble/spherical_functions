@@ -71,7 +71,7 @@ numerical precision), we are assured that $\lvert \quat{R}_b \rvert
   \mathbf{e}\_{(m')}(\quat{R}\, \quat{Q})
   &\approx \frac{ (- \co{\quat{R}}\_{b}\, \quat{Q}\_{b})^{\ell+m'}\,
     (\quat{R}\_{b}\, \quat{Q}\_{a})^{\ell-m'} } { \sqrt{
-      (\ell+m')!\, (\ell-m')! } }, \\\\
+      (\ell+m')!\, (\ell-m')! } }, \\\\\\\\
   &\approx (- \co{\quat{R}}\_{b})^{\ell+m'}\,
   (\quat{R}\_{b})^{\ell-m'}\, \mathbf{e}\_{(-m')}(\quat{Q}).
 \end{align\*}
@@ -90,7 +90,7 @@ In the same way, we can calculate this for $\lvert \quat{R}_b \rvert
   \mathbf{e}\_{(m')}(\quat{R}\, \quat{Q})
   &\approx \frac{ (\quat{R}\_{a}\, \quat{Q}\_{a})^{\ell+m'}\,
     (\co{\quat{R}}\_{a}\, \quat{Q}\_{b})^{\ell-m'} } { \sqrt{
-      (\ell+m')!\, (\ell-m')! } }, \\\\
+      (\ell+m')!\, (\ell-m')! } }, \\\\\\\\
   &\approx (\quat{R}\_{a})^{\ell+m'}\,
   (\co{\quat{R}}\_{a})^{\ell-m'}\, \mathbf{e}\_{(m')}(\quat{Q}).
 \end{align\*}
@@ -113,7 +113,7 @@ express the result as
   \label{eq:DAnalytically}
   \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
   = \sum\_{\rho} \binom{\ell+m'} {\rho}\, \binom{\ell-m'}
-  {\ell-\rho-m}\, (-1)^{\rho}\, \\\\ \times \quat{R}\_{a}^{\ell+m'-\rho}\,
+  {\ell-\rho-m}\, (-1)^{\rho}\, \\\\\\\\ \times \quat{R}\_{a}^{\ell+m'-\rho}\,
   \co{\quat{R}}\_{a}^{\ell-\rho-m}\,
   \quat{R}\_{b}^{\rho-m'+m}\, \co{\quat{R}}\_{b}^{\rho}\,
   \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\,
@@ -132,7 +132,7 @@ better form.  For example, we can simplify the above as
   \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\, (\ell-m')! } }\,
   \quat{R}\_{a}^{\ell+m'}\,
   \co{\quat{R}}\_{a}^{\ell-m}\,
-  \quat{R}\_{b}^{-m'+m} \\\\
+  \quat{R}\_{b}^{-m'+m} \\\\\\\\
   \nonumber
   &\qquad
   \times \sum\_{\rho}
@@ -141,13 +141,13 @@ better form.  For example, we can simplify the above as
   \quat{R}\_{a}^{-\rho}\,
   \co{\quat{R}}\_{a}^{-\rho}\,
   \quat{R}\_{b}^{\rho}\,
-  \co{\quat{R}}\_{b}^{\rho}, \\\\
+  \co{\quat{R}}\_{b}^{\rho}, \\\\\\\\
   \nonumber
   &=
   \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\, (\ell-m')! } }\,
   \lvert \quat{R}\_{a} \rvert^{2\ell-2m}\,
   \quat{R}\_{a}^{m'+m}\,
-  \quat{R}\_{b}^{-m'+m} \\\\
+  \quat{R}\_{b}^{-m'+m} \\\\\\\\
   \label{eq:D\_RaGeqRb}
   &\qquad
   \times \sum\_{\rho}
@@ -218,7 +218,7 @@ variable as $\rho \mapsto \ell-m-\rho$, and obtain
 \begin{multline\*}
   \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
   = \sum\_{\rho} \binom{\ell+m'} {\ell-m-\rho}\, \binom{\ell-m'}
-  {\rho}\, (-1)^{\ell-m-\rho}\, \\\\ \times
+  {\rho}\, (-1)^{\ell-m-\rho}\, \\\\\\\\ \times
   \quat{R}\_{a}^{m'+m+\rho}\, \co{\quat{R}}\_{a}^{\rho}\,
   \quat{R}\_{b}^{\ell-m'-\rho}\, \co{\quat{R}}\_{b}^{\ell-m-\rho}\,
   \sqrt{ \frac{ (\ell+m)!\, (\ell-m)! } { (\ell+m')!\,
@@ -240,7 +240,7 @@ as before:
   \quat{R}\_{a}^{m'+m}\,
   \quat{R}\_{b}^{\ell-m'}\,
   \co{\quat{R}}\_{b}^{\ell-m}
-  \\\\
+  \\\\\\\\
   \nonumber
   &\qquad
   \times \sum\_{\rho}
@@ -250,7 +250,7 @@ as before:
   \co{\quat{R}}\_{a}^{\rho}\,
   \quat{R}\_{b}^{-\rho}\,
   \co{\quat{R}}\_{b}^{-\rho}
-  \\\\
+  \\\\\\\\
   \nonumber
   &=
   (-1)^{\ell-m}
@@ -258,7 +258,7 @@ as before:
   \quat{R}\_{a}^{m'+m}\,
   \quat{R}\_{b}^{m-m'}\,
   \lvert \quat{R}\_{b} \rvert^{2\ell-2m}
-  \\\\
+  \\\\\\\\
   \label{eq:D\_RaLeqRb}
   &\qquad
   \times \sum\_{\rho}
@@ -303,19 +303,19 @@ agree with
 on $\mathfrak{D}$ matrices) can be written in quaternion form as
 \begin{align\*}
   \quat{R}\_{(\alpha, \beta, \gamma)} &= e^{\alpha\, \basis{z}/2}\,
-  e^{\beta\, \basis{y}/2}\, e^{\gamma\, \basis{z}/2}, \\\\
+  e^{\beta\, \basis{y}/2}\, e^{\gamma\, \basis{z}/2}, \\\\\\\\
   &= \left(
       \cos \frac{\alpha}{2}\, \cos \frac{\beta}{2}\, \cos \frac{\gamma}{2}
       -\sin \frac{\alpha}{2}\, \cos \frac{\beta}{2}\, \sin \frac{\gamma}{2}
-    \right) \\\\
+    \right) \\\\\\\\
   &\qquad + \basis{x} \left(
       \cos \frac{\alpha}{2}\, \sin \frac{\beta}{2}\, \sin \frac{\gamma}{2}
       -\sin \frac{\alpha}{2}\, \sin \frac{\beta}{2}\, \cos \frac{\gamma}{2}
-    \right) \\\\
+    \right) \\\\\\\\
   &\qquad + \basis{y} \left(
       \cos \frac{\alpha}{2}\, \sin \frac{\beta}{2}\, \cos \frac{\gamma}{2}
       +\sin \frac{\alpha}{2}\, \sin \frac{\beta}{2}\, \sin \frac{\gamma}{2}
-    \right) \\\\
+    \right) \\\\\\\\
   &\qquad + \basis{z} \left(
       \sin \frac{\alpha}{2}\, \cos \frac{\beta}{2}\, \cos \frac{\gamma}{2}
       +\cos \frac{\alpha}{2}\, \cos \frac{\beta}{2}\, \sin \frac{\gamma}{2}

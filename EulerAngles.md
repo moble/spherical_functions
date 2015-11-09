@@ -44,16 +44,16 @@ It is worth noting that the standard right-handed basis vectors $(\basis{x},
 seen in quantum mechanics (or generally just special-function theory) according
 to the rule
 \begin{align\*}
-  \frac{\basis{x}}{2} &\mapsto -i\, J\_x, \\\\
-  \frac{\basis{y}}{2} &\mapsto -i\, J\_y, \\\\
+  \frac{\basis{x}}{2} &\mapsto -i\, J\_x, \\\\\\\\
+  \frac{\basis{y}}{2} &\mapsto -i\, J\_y, \\\\\\\\
   \frac{\basis{z}}{2} &\mapsto -i\, J\_z.
 \end{align\*}
 This is important when relating quaternion expressions to expressions more
 commonly seen in the literature.  In particular, with this identification, we
 have the usual commutation relations
 \begin{align\*}
-  \left[\frac{\basis{x}}{2}, \frac{\basis{y}}{2}\right] = \frac{\basis{z}}{2} &\mapsto [J\_x, J\_y] = i\, J\_z, \\\\
-  \left[\frac{\basis{y}}{2}, \frac{\basis{z}}{2}\right] = \frac{\basis{x}}{2} &\mapsto [J\_y, J\_z] = i\, J\_x, \\\\
+  \left[\frac{\basis{x}}{2}, \frac{\basis{y}}{2}\right] = \frac{\basis{z}}{2} &\mapsto [J\_x, J\_y] = i\, J\_z, \\\\\\\\
+  \left[\frac{\basis{y}}{2}, \frac{\basis{z}}{2}\right] = \frac{\basis{x}}{2} &\mapsto [J\_y, J\_z] = i\, J\_x, \\\\\\\\
   \left[\frac{\basis{z}}{2}, \frac{\basis{x}}{2}\right] = \frac{\basis{y}}{2} &\mapsto [J\_z, J\_x] = i\, J\_y.
 \end{align\*}
 And in any case, this certainly clarifies what to do with expressions like the

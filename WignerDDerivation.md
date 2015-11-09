@@ -9,33 +9,33 @@ $\mathfrak{D}$ matrices, discussed more on
   \mathbf{e}\_{(\emprime)}(\quat{R}\, \quat{Q})
   &=
   \frac{(\quat{R}\, \quat{Q})\_{a}^{\ell+\emprime}\, (\quat{R}\, \quat{Q})\_{b}^{\ell-\emprime}}
-  {\sqrt{ (\ell+\emprime)!\, (\ell-\emprime)! }} \\\\
+  {\sqrt{ (\ell+\emprime)!\, (\ell-\emprime)! }} \\\\\\\\
   &=
   \frac{(\quat{R}\_a\, \quat{Q}\_a - \co{\quat{R}}\_b\, \quat{Q}\_b)^{\ell+\emprime}\,
     (\quat{R}\, \quat{Q})\_{b}^{\ell-\emprime}}
-  {\sqrt{ (\ell+\emprime)!\, (\ell-\emprime)! }} \\\\
+  {\sqrt{ (\ell+\emprime)!\, (\ell-\emprime)! }} \\\\\\\\
   &=
   \sum\_{\rho} \binom{\ell+m'} {\rho}
     \frac{(\quat{R}\_a\, \quat{Q}\_a)^{\ell+\emprime-\rho} (- \co{\quat{R}}\_b\, \quat{Q}\_b)^{\rho}\,
-    (\quat{R}\_b\, \quat{Q}\_a + \co{\quat{R}}\_a\, \quat{Q}\_b)^{\ell-\emprime}} {\sqrt{ (\ell+\emprime)!\, (\ell-\emprime)! }} \\\\
+    (\quat{R}\_b\, \quat{Q}\_a + \co{\quat{R}}\_a\, \quat{Q}\_b)^{\ell-\emprime}} {\sqrt{ (\ell+\emprime)!\, (\ell-\emprime)! }} \\\\\\\\
   &=
   \sum\_{\rho,\rho'} \binom{\ell+m'} {\rho} \binom{\ell-m'} {\rho'}
     \frac{(\quat{R}\_a\, \quat{Q}\_a)^{\ell+\emprime-\rho} (- \co{\quat{R}}\_b\, \quat{Q}\_b)^{\rho}\,
     (\quat{R}\_b\, \quat{Q}\_a)^{\ell-\emprime-\rho'} (\co{\quat{R}}\_a\, \quat{Q}\_b)^{\rho'}}
-    {\sqrt{ (\ell+\emprime)!\, (\ell-\emprime)! }} \\\\
+    {\sqrt{ (\ell+\emprime)!\, (\ell-\emprime)! }} \\\\\\\\
   &=
   \sum\_{\rho,\em} \binom{\ell+m'} {\rho} \binom{\ell-m'} {\ell-\em-\rho}
     \frac{(\quat{R}\_a\, \quat{Q}\_a)^{\ell+\emprime-\rho} (- \co{\quat{R}}\_b\, \quat{Q}\_b)^{\rho}\,
     (\quat{R}\_b\, \quat{Q}\_a)^{\em-\emprime+\rho} (\co{\quat{R}}\_a\, \quat{Q}\_b)^{\ell-\em-\rho}}
-    {\sqrt{ (\ell+\emprime)!\, (\ell-\emprime)! }} \\\\
+    {\sqrt{ (\ell+\emprime)!\, (\ell-\emprime)! }} \\\\\\\\
   &=
   \sum\_{\rho,\em} \binom{\ell+m'} {\rho} \binom{\ell-m'} {\ell-\em-\rho}
     \quat{R}\_a^{\ell+\emprime-\rho} (- \co{\quat{R}}\_b)^{\rho}\, \quat{R}\_b^{\em-\emprime+\rho} \co{\quat{R}}\_a^{\ell-\em-\rho}
-    \frac{\quat{Q}\_a^{\ell+\em} \quat{Q}\_b^{\ell-\em}} {\sqrt{ (\ell+\emprime)!\, (\ell-\emprime)! }} \\\\
+    \frac{\quat{Q}\_a^{\ell+\em} \quat{Q}\_b^{\ell-\em}} {\sqrt{ (\ell+\emprime)!\, (\ell-\emprime)! }} \\\\\\\\
   &=
   \sum\_{\em} \mathbf{e}\_{(\em)}(\quat{Q}) \sum\_{\rho} \binom{\ell+m'} {\rho} \binom{\ell-m'} {\ell-\em-\rho}
     \quat{R}\_a^{\ell+\emprime-\rho} (- \co{\quat{R}}\_b)^{\rho}\, \quat{R}\_b^{\em-\emprime+\rho} \co{\quat{R}}\_a^{\ell-\em-\rho}
-    \frac{\sqrt{ (\ell+\em)!\, (\ell-\em)! }} {\sqrt{ (\ell+\emprime)!\, (\ell-\emprime)! }} \\\\
+    \frac{\sqrt{ (\ell+\em)!\, (\ell-\em)! }} {\sqrt{ (\ell+\emprime)!\, (\ell-\emprime)! }} \\\\\\\\
 \end{align\*}
 
 We have introduced a new summation variable $\em$ and used the

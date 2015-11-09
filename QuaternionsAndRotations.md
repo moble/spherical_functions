@@ -55,8 +55,8 @@ standard tangent vectors at that point are all given by rotations of
 the basis vectors $(\basis{x}, \basis{y}, \basis{z})$.  Specifically,
 we have
 \begin{align\*}
-  \hat{\vartheta} &= \rthetaphi\,\basis{x}\,\rthetaphi^{-1}, \\\\
-  \hat{\varphi} &= \rthetaphi\, \basis{y}\, \rthetaphi^{-1}, \\\\
+  \hat{\vartheta} &= \rthetaphi\,\basis{x}\,\rthetaphi^{-1}, \\\\\\\\
+  \hat{\varphi} &= \rthetaphi\, \basis{y}\, \rthetaphi^{-1}, \\\\\\\\
   \hat{n} &= \rthetaphi\, \basis{z}\, \rthetaphi^{-1}.
 \end{align\*}
 Note that we interpret the rotations in the active sense, where a
