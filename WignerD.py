@@ -87,11 +87,6 @@ def Wigner_D_element(*args):
         Ra = args[0].a
         Rb = args[0].b
         mode_offset = 1
-    elif isinstance(args[0], numbers.Complex) and isinstance(args[1], numbers.Complex):
-        # The rotation is input as the two parts of a single quaternion
-        Ra = args[0]
-        Rb = args[1]
-        mode_offset = 2
     elif isinstance(args[0], numbers.Number) and isinstance(args[1], numbers.Number)\
             and isinstance(args[2], numbers.Number):
         # UUUUGGGGLLLLYYYY.  The rotation is input as Euler angles
@@ -99,6 +94,11 @@ def Wigner_D_element(*args):
         Ra = R.a
         Rb = R.b
         mode_offset = 3
+    elif isinstance(args[0], numbers.Complex) and isinstance(args[1], numbers.Complex):
+        # The rotation is input as the two parts of a single quaternion
+        Ra = args[0]
+        Rb = args[1]
+        mode_offset = 2
     else:
         raise ValueError("Can't understand input rotation")
 

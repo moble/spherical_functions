@@ -298,17 +298,17 @@ def test_Wigner_D_input_types(Rs, special_angles, ell_max):
         print("\talpha={0}".format(alpha))  # Need to show some progress to Travis
         for beta in special_angles:
             for gamma in special_angles:
-                assert np.allclose(
-                    sf.Wigner_D_element(alpha, beta, gamma, LMpM),
-                    sf.Wigner_D_element(quaternion.from_euler_angles(alpha, beta, gamma), LMpM),
-                    atol=ell_max ** 6 * precision_Wigner_D_element,
-                    rtol=ell_max ** 6 * precision_Wigner_D_element)
+                a = sf.Wigner_D_element(alpha, beta, gamma, LMpM)
+                b = sf.Wigner_D_element(quaternion.from_euler_angles(alpha, beta, gamma), LMpM)
+                assert np.allclose(a, b,
+                                   atol=ell_max ** 6 * precision_Wigner_D_element,
+                                   rtol=ell_max ** 6 * precision_Wigner_D_element)
     for R in Rs:
-        assert np.allclose(
-            sf.Wigner_D_element(R, LMpM),
-            sf.Wigner_D_element(R.a, R.b, LMpM),
-            atol=ell_max ** 6 * precision_Wigner_D_element,
-            rtol=ell_max ** 6 * precision_Wigner_D_element)
+        a = sf.Wigner_D_element(R, LMpM)
+        b = sf.Wigner_D_element(R.a, R.b, LMpM)
+        assert np.allclose(a, b,
+                           atol=ell_max ** 6 * precision_Wigner_D_element,
+                           rtol=ell_max ** 6 * precision_Wigner_D_element)
 
 
 def test_Wigner_D_signatures(Rs):

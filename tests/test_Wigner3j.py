@@ -14,8 +14,7 @@ import pytest
 precision_Wigner3j = 1.e-15
 
 try:
-    import imp
-    imp.find_module('sympy')
+    import sympy
     sympy_not_present = False
 except ImportError:
     sympy_not_present = True
