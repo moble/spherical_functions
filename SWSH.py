@@ -10,7 +10,7 @@ import numpy as np
 import quaternion
 from quaternion.numba_wrapper import njit, jit, int64, xrange
 
-from . import (_Wigner_coefficient as coeff, epsilon, LM_range)
+from . import (Wigner_coefficient as coeff, epsilon, LM_range)
 
 
 def SWSH(R, s, indices):

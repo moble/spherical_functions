@@ -27,46 +27,11 @@ ell_max = 32  # More than 29, and you get roundoff building quickly
 epsilon = 1.e-15
 error_on_bad_indices = True
 
-
-# # The coefficients were originally produced with the following code,
-# # though obviously this doesn't need to be run each time.
-#
-# import mpmath
-# mpmath.mp.dps=128
-# ell_max=32
-#
-# _binomial_coefficients = np.empty((((2*ell_max+1)*(2*ell_max+2))//2,), dtype=float)
-# _ladder_operator_coefficients = np.empty((((ell_max+2)*ell_max+1),), dtype=float)
-# _Wigner_coefficients = np.empty(((4*ell_max**3 + 12*ell_max**2 + 11*ell_max + 3)//3,), dtype=float)
-#
-# i=0
-# for n in range(2*ell_max+1):
-# for k in range(n+1):
-#         _binomial_coefficients[i]=float(mpmath.binomial(n,k))
-#         i+=1
-# print(i, _binomial_coefficients.shape)
-# np.save('binomial_coefficients',_binomial_coefficients)
-#
-# i=0
-# for ell in range(ell_max+1):
-#     for m in range(-ell,ell+1):
-#         _ladder_operator_coefficients[i]=mpmath.sqrt(ell*(ell+1)-m*(m+1))
-#         i+=1
-# print(i, _ladder_operator_coefficients.shape)
-# np.save('ladder_operator_coefficients',_ladder_operator_coefficients)
-#
-# i=0
-# for ell in range(ell_max+1):
-#     for mp in range(-ell,ell+1):
-#         for m in range(-ell,ell+1):
-#             rho_min = max(0,mp-m)
-#             _Wigner_coefficients[i] = float( mpmath.sqrt( mpmath.fac(ell+m)*mpmath.fac(ell-m)
-#                                                          / (mpmath.fac(ell+mp)*mpmath.fac(ell-mp)) )
-#                                              * mpmath.binomial(ell+mp,rho_min)
-#                                              * mpmath.binomial(ell-mp, ell-m-rho_min) )
-#             i += 1
-# print(i, _Wigner_coefficients.shape)
-# np.save('Wigner_coefficients',_Wigner_coefficients)
+# The coefficient files
+#   binomial_coefficients.npy
+#   ladder_operator_coefficients.npy
+#   Wigner_coefficients.npy
+# were originally produced with the code in `_generate_coefficients.py`.
 
 
 # Factorial
@@ -81,7 +46,6 @@ def factorial(i):
 # Binomial coefficients
 _binomial_coefficients = np.load(os.path.join(os.path.dirname(__file__), 'binomial_coefficients.npy'))
 
-
 @njit('f8(i8,i8)')
 def binomial_coefficient(n, k):
     return _binomial_coefficients[(n * (n + 1)) // 2 + k]
@@ -90,24 +54,29 @@ def binomial_coefficient(n, k):
 # Ladder-operator coefficients
 _ladder_operator_coefficients = np.load(os.path.join(os.path.dirname(__file__), 'ladder_operator_coefficients.npy'))
 
-
 @njit('f8(i8,i8)')
+def _ladder_operator_coefficient(twoell, twom):
+    return _ladder_operator_coefficients[((twoell + 2) * twoell + twom) // 2]
+
+@njit('f8(f8,f8)')
 def ladder_operator_coefficient(ell, m):
-    return _ladder_operator_coefficients[ell * (ell + 1) + m]
+    return _ladder_operator_coefficient(round(2*ell), round(2*m))
 
 
 # Coefficients used in constructing the Wigner D matrices
 _Wigner_coefficients = np.load(os.path.join(os.path.dirname(__file__), 'Wigner_coefficients.npy'))
 
+@njit('i8(i8,i8,i8)')
+def _Wigner_index(twoell, twomp, twom):
+    return twoell*((2*twoell + 3)*twoell + 1) // 6 + (twoell + twomp)//2 * (twoell + 1) + (twoell + twom)//2
 
 @njit('f8(i8,i8,i8)')
-def _Wigner_coefficient(ell, mp, m):
-    return _Wigner_coefficients[ell * (ell * (4 * ell + 6) + 5) // 3 + mp * (2 * ell + 1) + m]
+def _Wigner_coefficient(twoell, twomp, twom):
+    return _Wigner_coefficients[_Wigner_index(twoell, twomp, twom)]
 
-
-@njit('i8(i8,i8,i8)')
-def _Wigner_index(ell, mp, m):
-    return ell * (ell * (4 * ell + 6) + 5) // 3 + mp * (2 * ell + 1) + m
+@njit('f8(f8,f8,f8)')
+def Wigner_coefficient(ell, mp, m):
+    return _Wigner_coefficient(round(2*ell), round(2*mp), round(2*m))
 
 
 def LM_range(ell_min, ell_max):
@@ -202,11 +171,15 @@ def LMpM_range(ell_min, ell_max):
     # from sympy import symbols, summation
     # ell_min,ell,ell_max = symbols('ell_min,ell,ell_max', integer=True)
     # summation((2*ell + 1)**2, (ell, ell_min, ell_max))
+    if abs(round(ell_max)-ell_max) > 1e-10 or abs(round(ell_min)-ell_min) > 1e-10:
+        error = ("LMpM_range is only intended for integer values of ell.\n"
+                 + "Input values ell_min={0} and ell_max={1} are not valid.\n".format(ell_min, ell_max)
+                 + "Try `LMpM_range_half_integer` instead.")
+        raise ValueError(error)
     LMpM = np.empty(((ell_max * (11 + ell_max * (12 + 4 * ell_max)) + ell_min * (1 - 4 * ell_min ** 2) + 3) // 3, 3),
                     dtype=int)
     _LMpM_range(ell_min, ell_max, LMpM)
     return LMpM
-
 
 @njit('void(i8,i8,i8[:,:])')
 def _LMpM_range(ell_min, ell_max, LMpM):
@@ -217,6 +190,40 @@ def _LMpM_range(ell_min, ell_max, LMpM):
                 LMpM[i, 0] = ell
                 LMpM[i, 1] = mp
                 LMpM[i, 2] = m
+                i += 1
+
+
+def LMpM_range_half_integer(ell_min, ell_max):
+    """Array of (ell,mp,m) indices in standard order, including half-integer values
+
+    This function returns an array of essentially
+
+    [[twoell/2, twomp/2, twom/2]
+     for twoell in range(2*ell_min, 2(ell_max+1)
+     for twomp in range(-twoell, twoell+1, 2)
+     for twom in range(-twoell, twoell+1, 2)]
+
+    See also: LMpM_range
+
+    """
+    # # Sympy commands to calculate the total size:
+    # from sympy import symbols, summation
+    # twoell_min,twoell,twoell_max = symbols('twoell_min,twoell,twoell_max', integer=True)
+    # summation((twoell + 1)**2, (twoell, twoell_min, twoell_max))
+    LMpM = np.empty(((((8 * ell_max + 18)*ell_max + 13)*ell_max + 3 - ((8 * ell_min + 6) * ell_min + 1)*ell_min) // 3,
+                     3), dtype=float)
+    _LMpM_range_half_integer(round(2*ell_min), round(2*ell_max), LMpM)
+    return LMpM
+
+@njit('void(i8,i8,f8[:,:])')
+def _LMpM_range_half_integer(twoell_min, twoell_max, LMpM):
+    i = 0
+    for twoell in xrange(twoell_min, twoell_max + 1):
+        for twomp in xrange(-twoell, twoell + 1, 2):
+            for twom in xrange(-twoell, twoell + 1, 2):
+                LMpM[i, 0] = twoell / 2
+                LMpM[i, 1] = twomp / 2
+                LMpM[i, 2] = twom / 2
                 i += 1
 
 

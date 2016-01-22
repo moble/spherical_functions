@@ -12,18 +12,20 @@ matrices (respectively) of Wigner's D symbols.
 
 from __future__ import print_function, division, absolute_import
 
+import numbers
 import cmath
 import numpy as np
 import quaternion
-from . import (_Wigner_coefficient as coeff, binomial_coefficient,
+from . import (_Wigner_coefficient as _coeff,
+               Wigner_coefficient as coeff,
                epsilon, error_on_bad_indices, LMpM_total_size,
                ell_max as sf_ell_max)
 from quaternion.numba_wrapper import njit, jit, int64, complex128, xrange
 
 
 @njit('b1(i8,i8,i8)')
-def _check_valid_indices(ell, mp, m):
-    if (ell > sf_ell_max or abs(mp) > ell or abs(m) > ell):
+def _check_valid_indices(twoell, twomp, twom):
+    if (twoell > 2*sf_ell_max or abs(twomp) > twoell or abs(twom) > twoell):
         return False
     return True
 
@@ -51,20 +53,14 @@ def Wigner_D_element(*args):
       * Rs is an array of unit quaternions (no checking of norm is done)
       * Ra and Rb are the complex parts of a unit quaternion
       * alpha, beta, gamma are the Euler angles [shudder...]
-      * ell, mp, m are the integral indices of the D matrix element
+      * ell, mp, m are the integer or half-integer indices of the
+        D matrix element
       * indices is an array of [ell,mp,m] indices as above, or simply
         a list of ell modes, in which case all valid [mp,m] values
         will be returned
 
-    Note that there is currently no support for half-integral indices,
-    though this would be very simple to implement.  Basically, the
-    lack of support is simply due to the fact that the compiled code
-    can run faster with integer arguments.  Feel free to open an issue
-    on this project's github page if you want support for half-integer
-    arguments <https://github.com/moble/spherical_functions/issues>.
-
-    Also note that, by default, a ValueError will be raised if the
-    input (ell, mp, m) values are not valid.  (For example, |m|>ell.)
+    Note that, by default, a ValueError will be raised if the input
+    (ell, mp, m) values are not valid.  (For example, |m|>ell.)
     If instead, you would simply like a return value of 0.0, after
     importing this module as sf, simply evaluate
 
@@ -74,9 +70,11 @@ def Wigner_D_element(*args):
     Return value
     ============
 
-    One complex number is returned for each component requested.  If a single quaternion and the (ell,mp,m) arguments
-    were given explicitly, this means that a single complex scalar is returned.  If more than one component was
-    requested, a one-dimensional numpy array of complex scalars is returned, in the same order as the input.
+    One complex number is returned for each component requested.  If a
+    single quaternion and the (ell,mp,m) arguments were given explicitly,
+    this means that a single complex scalar is returned.  If more than
+    one component was requested, a one-dimensional numpy array of complex
+    scalars is returned, in the same order as the input.
 
     """
     # Find the rotation from the args
@@ -89,12 +87,13 @@ def Wigner_D_element(*args):
         Ra = args[0].a
         Rb = args[0].b
         mode_offset = 1
-    elif isinstance(args[0], complex) and isinstance(args[1], complex):
+    elif isinstance(args[0], numbers.Complex) and isinstance(args[1], numbers.Complex):
         # The rotation is input as the two parts of a single quaternion
         Ra = args[0]
         Rb = args[1]
         mode_offset = 2
-    elif isinstance(args[0], (int, float)) and isinstance(args[1], (int, float)) and isinstance(args[2], (int, float)):
+    elif isinstance(args[0], numbers.Number) and isinstance(args[1], numbers.Number)\
+            and isinstance(args[2], numbers.Number):
         # UUUUGGGGLLLLYYYY.  The rotation is input as Euler angles
         R = quaternion.from_euler_angles(args[0], args[1], args[2])
         Ra = R.a
@@ -106,32 +105,37 @@ def Wigner_D_element(*args):
     # Find the indices
     return_scalar = False
     if (len(args) - mode_offset == 3):
-        # Assume these are the (l, mp, m) indices
+        # Assume these are the (ell, mp, m) indices
         ell, mp, m = args[mode_offset:]
-        indices = np.array([[ell, mp, m], ], dtype=int)
+        indices = np.array([[round(2*ell), round(2*mp), round(2*m)], ], dtype=int)
         if (error_on_bad_indices and not _check_valid_indices(*(indices[0]))):
             raise ValueError(
-                "(ell,mp,m)=({0},{1},{2}) is not a valid set of indices for Wigner's D matrix".format(ell, mp, m))
+                "(ell,mp,m)=({0},{1},{2})".format(twoell/2, twomp/2, twom/2)
+                + " is not a valid set of indices for Wigner's D matrix")
         return_scalar = True
     elif (len(args) - mode_offset == 1):
-        indices = np.asarray(args[mode_offset], dtype=int)
+        indices = np.round(2*np.asarray(args[mode_offset])).astype(int)
         if (indices.ndim == 0 and indices.size == 1):
             # This was just a single ell value
-            ell = indices[0]
-            indices = np.array([[ell, mp, m] for mp in xrange(-ell, ell + 1) for m in xrange(-ell, ell + 1)])
-            if (ell == 0):
+            twoell = indices[0]  # already multiplied by 2
+            indices = np.array([[twoell, twomp, twom]
+                                for twomp in xrange(-twoell, twoell + 1, 2)
+                                for twom in xrange(-twoell, twoell + 1, 2)])
+            if (twoell == 0):
                 return_scalar = True
         elif (indices.ndim == 1 and indices.size > 0):
             # This a list of ell values
             indices = np.array(
-                [[ell, mp, m] for ell in indices for mp in xrange(-ell, ell + 1) for m in xrange(-ell, ell + 1)])
+                [[twoell, twomp, twom] for twoell in indices
+                 for twomp in xrange(-twoell, twoell + 1, 2)
+                 for twom in xrange(-twoell, twoell + 1, 2)])
         elif (indices.ndim == 2):
             # This is an array of [ell,mp,m] values
             if (error_on_bad_indices):
-                for ell, mp, m in indices:
-                    if not _check_valid_indices(ell, mp, m):
+                for twoell, twomp, twom in indices:
+                    if not _check_valid_indices(twoell, twomp, twom):
                         raise ValueError(
-                            "(ell,mp,m)=({0},{1},{2}) is not a valid set".format(ell, mp, m)
+                            "(ell,mp,m)=({0},{1},{2}) is not a valid set".format(twoell/2, twomp/2, twom/2)
                             + " of indices for Wigner's D matrix")
         else:
             raise ValueError("Can't understand input indices")
@@ -145,21 +149,22 @@ def Wigner_D_element(*args):
         return elements[0]
     return elements
 
-
-@njit('void(complex128, complex128, int64[:,:], complex128[:])')
+#@njit('void(complex128, complex128, int64[:,:], complex128[:])')
 def _Wigner_D_element(Ra, Rb, indices, elements):
     """Main work function for computing Wigner D matrix elements
 
     This is the core function that does all the work in the
     computation, but it is strict about its input, and does not check
-    them for validity.
+    them for validity.  Note that the indices should be integers,
+    representing the (2*ell, 2*mp, 2*m) values, meaning that
+    (ell, mp, m) can be half-integer.
 
     Input arguments
     ===============
     _Wigner_D_element(Ra, Rb, indices, elements)
 
       * Ra, Rb are the complex components of the rotor
-      * indices is an array of integers [ell,mp,m]
+      * indices is an array of integer sets [2*ell, 2*mp, 2*m]
       * elements is an array of complex with length equal to the first
         dimension of indices
 
@@ -176,33 +181,33 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
 
     if (ra <= epsilon):
         for i in xrange(N):
-            ell, mp, m = indices[i, 0:3]
-            if (mp != -m or abs(mp) > ell or abs(m) > ell):
+            twoell, twomp, twom = indices[i, 0:3]
+            if (twomp != -twom or abs(twomp) > twoell or abs(twom) > twoell):
                 elements[i] = 0.0j
             else:
-                if (ell + m) % 2 == 0:
-                    elements[i] = Rb ** (2 * m)
+                if (twoell - twom) % 4 == 0:
+                    elements[i] = Rb ** twom
                 else:
-                    elements[i] = -Rb ** (2 * m)
+                    elements[i] = -Rb ** twom
 
     elif (rb <= epsilon):
         for i in xrange(N):
-            ell, mp, m = indices[i, 0:3]
-            if (mp != m or abs(mp) > ell or abs(m) > ell):
+            twoell, twomp, twom = indices[i, 0:3]
+            if (twomp != twom or abs(twomp) > twoell or abs(twom) > twoell):
                 elements[i] = 0.0j
             else:
-                elements[i] = Ra ** (2 * m)
+                elements[i] = Ra ** twom
 
     elif (ra < rb):
         # We have to have these two versions (both this ra<rb branch,
         # and ra>=rb below) to avoid overflows and underflows
         absRRatioSquared = -ra * ra / (rb * rb)
         for i in xrange(N):
-            ell, mp, m = indices[i, 0:3]
-            if (abs(mp) > ell or abs(m) > ell):
+            twoell, twomp, twom = indices[i, 0:3]
+            if (abs(twomp) > twoell or abs(twom) > twoell):
                 elements[i] = 0.0j
             else:
-                rhoMin = max(0, -mp - m)
+                tworhoMin = max(0, -twomp - twom)
                 # Protect against overflow by decomposing Ra,Rb as
                 # abs,angle components and pulling out the factor of
                 # absRRatioSquared**rhoMin.  Here, ra might be quite
@@ -213,22 +218,23 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
                 # underflow just goes to zero, which is fine since
                 # nothing else should be very large.
                 Prefactor = cmath.rect(
-                    coeff(ell, -mp, m) * rb ** (2 * ell - m - mp - 2 * rhoMin) * ra ** (m + mp + 2 * rhoMin),
-                    phib * (m - mp) + phia * (m + mp))
+                    _coeff(twoell, -twomp, twom)
+                        * rb ** (twoell - (twom + twomp)/2 - tworhoMin)
+                        * ra ** ((twom + twomp)/2 + tworhoMin),
+                    phib * (twom - twomp)/2 + phia * (twom + twomp)/2)
                 if (Prefactor == 0.0j):
                     elements[i] = 0.0j
                 else:
-                    if ((ell + m + rhoMin) % 2 != 0):
+                    if ((twoell - twom - tworhoMin) % 4 != 0):
                         Prefactor *= -1
-                    rhoMax = min(ell - mp, ell - m)
-                    N1 = ell - mp + 1
-                    N2 = ell - m + 1
-                    M = m + mp
+                    tworhoMax = min(twoell - twomp, twoell - twom)
+                    twoN1 = twoell - twomp + 2
+                    twoN2 = twoell - twom + 2
+                    twoM = twom + twomp
                     Sum = 1.0
-                    for rho in xrange(rhoMax, rhoMin, -1):
-                        Sum *= absRRatioSquared * ((N1 - rho) * (N2 - rho)) / (rho * (M + rho))
+                    for tworho in xrange(tworhoMax, tworhoMin, -2):
+                        Sum *= absRRatioSquared * ((twoN1 - tworho) * (twoN2 - tworho)) / (tworho * (twoM + tworho))
                         Sum += 1
-                    # Sum *= absRRatioSquared**rhoMin
                     elements[i] = Prefactor * Sum
 
     else:  # ra >= rb
@@ -236,11 +242,11 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
         # and ra<rb above) to avoid overflows and underflows
         absRRatioSquared = -rb * rb / (ra * ra)
         for i in xrange(N):
-            ell, mp, m = indices[i, 0:3]
-            if (abs(mp) > ell or abs(m) > ell):
+            twoell, twomp, twom = indices[i, 0:3]
+            if (abs(twomp) > twoell or abs(twom) > twoell):
                 elements[i] = 0.0j
             else:
-                rhoMin = max(0, mp - m)
+                tworhoMin = max(0, twomp - twom)
                 # Protect against overflow by decomposing Ra,Rb as
                 # abs,angle components and pulling out the factor of
                 # absRRatioSquared**rhoMin.  Here, rb might be quite
@@ -251,22 +257,23 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
                 # underflow just goes to zero, which is fine since
                 # nothing else should be very large.
                 Prefactor = cmath.rect(
-                    coeff(ell, mp, m) * ra ** (2 * ell - m + mp - 2 * rhoMin) * rb ** (m - mp + 2 * rhoMin),
-                    phia * (m + mp) + phib * (m - mp))
+                    _coeff(twoell, twomp, twom)
+                        * ra ** (twoell - twom/2 + twomp/2 - tworhoMin)
+                        * rb ** (twom/2 - twomp/2 + tworhoMin),
+                    phia * (twom + twomp)/2 + phib * (twom - twomp)/2)
                 if (Prefactor == 0.0j):
                     elements[i] = 0.0j
                 else:
-                    if (rhoMin % 2 != 0):
+                    if (tworhoMin % 4 != 0):
                         Prefactor *= -1
-                    rhoMax = min(ell + mp, ell - m)
-                    N1 = ell + mp + 1
-                    N2 = ell - m + 1
-                    M = m - mp
+                    tworhoMax = min(twoell + twomp, twoell - twom)
+                    twoN1 = twoell + twomp + 2
+                    twoN2 = twoell - twom + 2
+                    twoM = twom - twomp
                     Sum = 1.0
-                    for rho in xrange(rhoMax, rhoMin, -1):
-                        Sum *= absRRatioSquared * ((N1 - rho) * (N2 - rho)) / (rho * (M + rho))
+                    for tworho in xrange(tworhoMax, tworhoMin, -2):
+                        Sum *= absRRatioSquared * ((twoN1 - tworho) * (twoN2 - tworho)) / (tworho * (twoM + tworho))
                         Sum += 1
-                    # Sum *= absRRatioSquared**rhoMin
                     elements[i] = Prefactor * Sum
 
 
@@ -341,7 +348,10 @@ def conjugate(z):
 
 
 def Wigner_D_matrices(R, ell_min, ell_max):
-    """Return linear array of Wigner D matrix elements for range of ell values
+    """Return linear array of Wigner D matrix elements for range of integer ell values
+
+    Note that this only accepts and outputs integer values of ell; for half-integer values,
+    use `Wigner_D_element` with an explicit array for the `indices` argument.
 
     Parameters
     ----------
@@ -370,6 +380,11 @@ def Wigner_D_matrices(R, ell_min, ell_max):
     LMpM_range: Construct list of corresponding (ell,mp,m) values
 
     """
+    if abs(round(ell_max)-ell_max) > 1e-10 or abs(round(ell_min)-ell_min) > 1e-10:
+        error = ("Wigner_D_matrices is only implemented for integer values of ell.\n"
+                 + "Input values ell_min={0} and ell_max={1} are not valid.\n".format(ell_min, ell_max)
+                 + "Try `Wigner_D_element` with an explicit array of `indices` for half-integers.")
+        raise ValueError(error)
     matrices = np.empty((LMpM_total_size(ell_min, ell_max),), dtype=complex)
     _Wigner_D_matrices(R.a, R.b, ell_min, ell_max, matrices)
     return matrices
@@ -378,7 +393,7 @@ def Wigner_D_matrices(R, ell_min, ell_max):
 @njit('void(complex128, complex128, int64, int64, complex128[:])',
       locals={'Prefactor1': complex128, 'Prefactor2': complex128})
 def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
-    """Main work function for computing Wigner D matrix elements
+    """Main work function for `Wigner_D_matrices`
 
     This is the core function that does all the work in the
     computation, but it is strict about its input, and does not check

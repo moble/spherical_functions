@@ -81,14 +81,40 @@ def test_binomial_coefficients():
 
 
 def test_ladder_operator_coefficient():
-    for ell in range(sf.ell_max + 1):
-        for m in range(-ell, ell + 1):
-            a = math.sqrt(ell * (ell + 1) - m * (m + 1))
-            b = sf.ladder_operator_coefficient(ell, m)
-            if (m == ell):
-                assert b == 0.0
+    # for ell in range(sf.ell_max + 1):
+    #     for m in range(-ell, ell + 1):
+    #         a = math.sqrt(ell * (ell + 1) - m * (m + 1))
+    #         b = sf.ladder_operator_coefficient(ell, m)
+    #         if (m == ell):
+    #             assert b == 0.0
+    #         else:
+    #             assert abs(a - b) / (abs(a) + abs(b)) < 3e-16
+    for twoell in range(2*sf.ell_max + 1):
+        for twom in range(-twoell, twoell + 1, 2):
+            a = math.sqrt(twoell * (twoell + 2) - twom * (twom + 2))/2
+            b = sf._ladder_operator_coefficient(twoell, twom)
+            c = sf.ladder_operator_coefficient(twoell/2, twom/2)
+            if (twom == twoell):
+                assert b == 0.0 and c == 0.0
             else:
-                assert abs(a - b) / (abs(a) + abs(b)) < 3e-16
+                assert abs(a - b) / (abs(a) + abs(b)) < 3e-16 and abs(a - c) / (abs(a) + abs(c)) < 3e-16
+
+def test_Wigner_coefficient():
+    import mpmath
+    mpmath.mp.dps = 4 * sf.ell_max
+    i = 0
+    for twoell in range(2*sf.ell_max + 1):
+        for twomp in range(-twoell, twoell + 1, 2):
+            for twom in range(-twoell, twoell + 1, 2):
+                tworho_min = max(0, twomp - twom)
+                a = sf._Wigner_coefficient(twoell, twomp, twom)
+                b = float(mpmath.sqrt(mpmath.fac((twoell + twom)//2) * mpmath.fac((twoell - twom)//2)
+                                      / (mpmath.fac((twoell + twomp)//2) * mpmath.fac((twoell - twomp)//2)))
+                          * mpmath.binomial((twoell + twomp)//2, tworho_min//2)
+                          * mpmath.binomial((twoell - twomp)//2, (twoell - twom - tworho_min)//2))
+                assert np.allclose(a, b), (twoell, twomp, twom, i, sf._Wigner_index(twoell, twomp, twom))
+                i += 1
+
 
 
 def test_LM_range(ell_max):
@@ -124,6 +150,21 @@ def test_LMpM_range(ell_max):
                                             for ell in range(l_min, l_max + 1)
                                             for mp in range(-ell, ell + 1)
                                             for m in range(-ell, ell + 1)]))
+
+
+def test_LMpM_range_half_integer(ell_max):
+    for twoell_max in range(2*ell_max + 1):
+        assert np.array_equal(sf.LMpM_range_half_integer(twoell_max/2, twoell_max/2),
+                              np.array([[twoell_max/2, twomp/2, twom/2]
+                                        for twomp in range(-twoell_max, twoell_max + 1, 2)
+                                        for twom in range(-twoell_max, twoell_max + 1, 2)]))
+        for twoell_min in range(twoell_max):
+            a = sf.LMpM_range_half_integer(twoell_min/2, twoell_max/2)
+            b = np.array([[twoell/2, twomp/2, twom/2]
+                          for twoell in range(twoell_min, twoell_max + 1)
+                          for twomp in range(-twoell, twoell + 1, 2)
+                          for twom in range(-twoell, twoell + 1, 2)])
+            assert np.array_equal(a, b)
 
 
 def test_LMpM_index(ell_max):

@@ -86,9 +86,7 @@ def test_SWSH_WignerD_expression(special_angles, ell_max):
                     LM = np.array([[ell, m] for m in range(-ell, ell + 1)])
                     Y = sf.SWSH(R, s, LM)
                     LMS = np.array([[ell, m, -s] for m in range(-ell, ell + 1)])
-                    D = np.empty(Y.shape[0], dtype=complex)
-                    sf._Wigner_D_element(R.a, R.b, LMS, D)
-                    D = (-1) ** (s) * math.sqrt((2 * ell + 1) / (4 * np.pi)) * D
+                    D = (-1) ** (s) * math.sqrt((2 * ell + 1) / (4 * np.pi)) * sf.Wigner_D_element(R.a, R.b, LMS)
                     assert np.allclose(Y, D, atol=ell ** 6 * precision_SWSH, rtol=ell ** 6 * precision_SWSH)
 
 
