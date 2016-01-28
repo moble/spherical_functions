@@ -9,6 +9,7 @@ angles.<sup>[1](#1-euler-angles-are-awful)</sup>
 The conventions for this package are described in detail on
 [this page](http://moble.github.io/spherical_functions/).
 
+
 ## Dependencies
 
 The only true requirements for this code are `python` and the python package
