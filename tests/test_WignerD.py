@@ -114,9 +114,6 @@ def test_Wigner_D_matrix_inverse(Rs, ell_max):
     # Ensure that the matrix of the inverse rotation is the inverse of
     # the matrix of the rotation
     print()
-    print("\tBeginning loop")
-    print(ell_max)
-    print(Rs)
     for i, R in enumerate(Rs):
         print("\t{0} of {1}: {2}".format(i+1, len(Rs), R))
         for twoell in range(2*ell_max + 1):

@@ -34,7 +34,7 @@ script:
   # fast anyway.)
   # - py.test test_* --cov=spherical_functions --ell_max 8 --run_slow_tests -s
   - py.test --ell_max 8 --run_slow_tests -s
-  - py.test --ell_max 32
+  - py.test --ell_max 32 -s
 
 # after_success:
 #   coveralls
