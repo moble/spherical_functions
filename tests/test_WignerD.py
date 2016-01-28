@@ -110,6 +110,7 @@ def test_Wigner_D_matrices_representation_property(Rs, ell_max):
             assert np.allclose(M12, D12, atol=ell_max * precision_Wigner_D_element)
 
 
+@slow
 def test_Wigner_D_matrix_inverse(Rs, ell_max):
     # Ensure that the matrix of the inverse rotation is the inverse of
     # the matrix of the rotation
