@@ -9,9 +9,9 @@ from auto_version import calculate_version, build_py_copy_version
 
 setup(name='spherical-functions',
       description='Python/numba implementation of Wigner D Matrices, spin-weighted spherical harmonics, and associated functions',
-      author='Michael Boyle',
-      # author_email='',
       url='https://github.com/moble/spherical_functions',
+      author='Michael Boyle',
+      author_email='',
       packages=['spherical_functions', ],
       package_dir={'spherical_functions': '.'},
       package_data={'spherical_functions': ['*.npy']},
