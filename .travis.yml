@@ -40,11 +40,22 @@ script:
 #   coveralls
 
 after_success:
-# Change permissions for Anaconda deployment script
+  # Change permissions for Anaconda deployment script
   - chmod +x ./.conda_deploy.sh
+  - python ./.meta_yaml_replacer.py
 
 deploy:
  # Deploy to Anaconda.org
   - provider: script
     script: "./.conda_deploy.sh"
     skip_cleanup: true
+  - provider: pypi
+    user: moboyle79
+    password:
+      secure: Dksv2EeU1Kgavi9aTKabbojuAaY3ZWscX4PLSF2HfISpdwfq6uTbyJr/UO584/1NMmPUslIFHY+PU47+klizYSMqsRYSLnBXnRITxWym9RDsW3bhZq4rUCik6P35fQsCeNdJ6idWwAyR2B3PGbEbmuIxJ5zvnFYJnlwinFqgmKc=
+    on:
+      distributions: sdist bdist_wheel
+      repo: moble/spherical_functions
+      python: '3.5'
+      condition: $CONDA = 'false'
+
