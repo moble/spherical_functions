@@ -57,5 +57,5 @@ deploy:
       distributions: sdist bdist_wheel
       repo: moble/spherical_functions
       python: '3.5'
-      condition: $CONDA = 'false'
+      condition: $CONDA = 'true'
 
