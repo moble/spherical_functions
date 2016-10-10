@@ -19,7 +19,7 @@ install:
   - lsb_release -a
   - if [[ "${CONDA}" == "true" ]]; then
       source auto_version/travis_install_conda.sh numpy scipy numba pip pytest mpmath sympy;
-      conda install -c moble spinsfast
+      conda install -c moble spinsfast;
     fi
   - pip install git+git://github.com/moble/quaternion
   - python setup.py install
