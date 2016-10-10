@@ -7,7 +7,6 @@ import numpy as np
 from numpy import *
 import pytest
 import spherical_functions as sf
-import spinsfast
 
 
 @pytest.mark.parametrize("eth, spin_weight_of_eth", [(sf.eth_NP, 1), (sf.eth_GHP, 1),
@@ -32,6 +31,7 @@ def test_eth_derivation(eth, spin_weight_of_eth):
     We test both the Newman-Penrose and Geroch-Held-Penrose versions of eth, as well as their conjugates.
 
     """
+    import spinsfast
     ell_max = 16
     n_modes = sf.LM_total_size(0, ell_max)
     n_theta = n_phi = 4 * ell_max + 1
