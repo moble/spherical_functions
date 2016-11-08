@@ -110,7 +110,7 @@ def Wigner_D_element(*args):
         indices = np.array([[round(2*ell), round(2*mp), round(2*m)], ], dtype=int)
         if (error_on_bad_indices and not _check_valid_indices(*(indices[0]))):
             raise ValueError(
-                "(ell,mp,m)=({0},{1},{2})".format(twoell/2, twomp/2, twom/2)
+                "(ell,mp,m)=({0},{1},{2})".format(ell, mp, m)
                 + " is not a valid set of indices for Wigner's D matrix")
         return_scalar = True
     elif (len(args) - mode_offset == 1):
