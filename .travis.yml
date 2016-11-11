@@ -24,6 +24,9 @@ install:
   - pip install git+git://github.com/moble/quaternion
   - python setup.py install
 
+before_script:
+  - rvm get head # https://github.com/travis-ci/travis-ci/issues/6307
+
 script:
   # I've had to make some tests' accuracy depend on the value of
   # ell_max, so I run the tests for multiple values of ell_max -- in
