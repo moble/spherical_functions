@@ -36,12 +36,12 @@ related rotor
 \begin{equation\*}
   \rthetaphi = e^{\varphi \basis{z}/2}\, e^{\vartheta \basis{y}/2}.
 \end{equation\*}
-This can be obtained as an `np.quaternion` object in python as
+This can be obtained as an `quaternion` module in python as
 
 ```python
 >>> import numpy as np, quaternion
 >>> vartheta, varphi = 0.1, 0.2
->>> R_tp = np.quaternion.from_spherical_coords(vartheta, varphi)
+>>> R_tp = quaternion.from_spherical_coords(vartheta, varphi)
 ```
 
 Here, rotations are given assuming the right-hand screw rule, so that

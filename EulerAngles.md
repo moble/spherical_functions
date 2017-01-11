@@ -22,12 +22,12 @@ $(\alpha, \beta, \gamma)$.  We therefore define the rotor
   R\_{(\alpha, \beta, \gamma)} = e^{\alpha\, \basis{z}/2}\, e^{\beta\,
   \basis{y}/2}\, e^{\gamma\, \basis{z}/2}.
 \end{equation\*}
-This can be obtained as an `np.quaternion` object in python as
+This can be obtained as a `quaternion` object in python as
 
 ```python
 >>> import numpy as np, quaternion
 >>> alpha, beta, gamma = 0.1, 0.2, 0.3
->>> R_euler = np.quaternion.from_euler_angles(alpha, beta, gamma)
+>>> R_euler = quaternion.from_euler_angles(alpha, beta, gamma)
 ```
 
 Note that the rotations are always taken about the *fixed* axes $\basis{z}$ and
