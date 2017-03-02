@@ -13,16 +13,12 @@ branches:
 
 env:
   - CONDA=true
-  #- CONDA=false
 
 install:
   - lsb_release -a
-  - if [[ "${CONDA}" == "true" ]]; then
-      source auto_version/travis_install_conda.sh numpy scipy numba pip pytest mpmath sympy;
-      conda install -c moble spinsfast;
-    fi
-  - pip install git+git://github.com/moble/quaternion
+  - source auto_version/travis_install_conda.sh numpy scipy numba pip pytest mpmath sympy
   - pip install packaging
+  - conda install -c moble quaternion spinsfast
   - python setup.py install
 
 before_script:
