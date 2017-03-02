@@ -2,9 +2,10 @@ sudo: false
 
 language: python
 
-python:
-  - "2.7"
-  - "3.6"
+matrix:
+  include:
+    - python: '2.7'
+    - python: '3.6'
 
 branches:
   except:
@@ -21,18 +22,14 @@ install:
   - conda install -c moble quaternion spinsfast
   - python setup.py install
 
-# before_script:
-#   - rvm get stable # https://github.com/travis-ci/travis-ci/issues/6307
-
 script:
   # I've had to make some tests' accuracy depend on the value of
-  # ell_max, so I run the tests for multiple values of ell_max -- in
-  # particular, for my most important use case, ell=8.  And then I run
-  # again for the largest ell_max, but only the faster tests, so that
-  # Travis isn't overtaxed.  (Those slower tests have already
-  # established their patterns anyway; the interesting tests for large
-  # ell_max are the ones like overflow and underflow, which are pretty
-  # fast anyway.)
+  # ell_max, so I run the tests for multiple values of ell_max.  And
+  # then I run again for the largest ell_max, but only the faster
+  # tests, so that Travis isn't overtaxed.  (Those slower tests have
+  # already established their patterns anyway; the interesting tests
+  # for large ell_max are the ones likely overflow and underflow,
+  # which are pretty fast.)
   # - py.test test_* --cov=spherical_functions --ell_max 8 --run_slow_tests -s
   - py.test --ell_max 4 --run_slow_tests -s
   - py.test --ell_max 32 -s
@@ -52,6 +49,7 @@ deploy:
     skip_cleanup: true
   - provider: pypi
     user: moboyle79
+    skip_upload_docs: true
     password:
       secure: Dksv2EeU1Kgavi9aTKabbojuAaY3ZWscX4PLSF2HfISpdwfq6uTbyJr/UO584/1NMmPUslIFHY+PU47+klizYSMqsRYSLnBXnRITxWym9RDsW3bhZq4rUCik6P35fQsCeNdJ6idWwAyR2B3PGbEbmuIxJ5zvnFYJnlwinFqgmKc=
     on:
