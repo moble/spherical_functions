@@ -21,8 +21,8 @@ install:
   - conda install -c moble quaternion spinsfast
   - python setup.py install
 
-before_script:
-  - rvm get head # https://github.com/travis-ci/travis-ci/issues/6307
+# before_script:
+#   - rvm get stable # https://github.com/travis-ci/travis-ci/issues/6307
 
 script:
   # I've had to make some tests' accuracy depend on the value of
@@ -60,3 +60,6 @@ deploy:
       python: '3.6'
       condition: $CONDA = 'true'
 
+after_script:
+  # if we do not unset this before we terminate the travis teardown will mark the entire job as failed
+  - set +e
