@@ -20,6 +20,10 @@ install:
   - pip install packaging
   - conda install -c moble quaternion spinsfast
   - python setup.py install
+  - git status
+  - git diff-index --cached HEAD --
+  - git diff-files --
+  - exit 1
 
 script:
   # I've had to make some tests' accuracy depend on the value of
