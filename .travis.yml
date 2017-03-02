@@ -4,7 +4,7 @@ language: python
 
 python:
   - "2.7"
-  - "3.5"
+  - "3.6"
 
 branches:
   except:
@@ -60,6 +60,6 @@ deploy:
     on:
       distributions: sdist bdist_wheel
       repo: moble/spherical_functions
-      python: '3.5'
+      python: '3.6'
       condition: $CONDA = 'true'
 
