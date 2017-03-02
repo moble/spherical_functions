@@ -24,7 +24,7 @@ def slow_Wignerd(iota, ell, m, s):
     # Eq. II.8 of Ajith et al. (2007) 'Data formats...'
     k_min = max(0, m - s)
     k_max = min(ell + m, ell - s)
-    return sum([((-1) ** (k) * math.sqrt(
+    return sum([((-1.) ** (k) * math.sqrt(
         math.factorial(ell + m) * math.factorial(ell - m) * math.factorial(ell + s) * math.factorial(ell - s))
                  * math.cos(iota / 2.) ** (2 * ell + m - s - 2 * k) * math.sin(iota / 2.) ** (2 * k + s - m)
                  / float(
@@ -35,7 +35,7 @@ def slow_Wignerd(iota, ell, m, s):
 def slow_sYlm(s, ell, m, iota, phi):
     # Eq. II.7 of Ajith et al. (2007) 'Data formats...'
     # Note the weird definition w.r.t. `-s`
-    return (-1) ** (-s) * math.sqrt((2 * ell + 1) / (4 * np.pi)) * slow_Wignerd(iota, ell, m, -s) * cmath.exp(
+    return (-1.) ** (-s) * math.sqrt((2 * ell + 1) / (4 * np.pi)) * slow_Wignerd(iota, ell, m, -s) * cmath.exp(
         1j * m * phi)
 
 
@@ -86,7 +86,7 @@ def test_SWSH_WignerD_expression(special_angles, ell_max):
                     LM = np.array([[ell, m] for m in range(-ell, ell + 1)])
                     Y = sf.SWSH(R, s, LM)
                     LMS = np.array([[ell, m, -s] for m in range(-ell, ell + 1)])
-                    D = (-1) ** (s) * math.sqrt((2 * ell + 1) / (4 * np.pi)) * sf.Wigner_D_element(R.a, R.b, LMS)
+                    D = (-1.) ** (s) * math.sqrt((2 * ell + 1) / (4 * np.pi)) * sf.Wigner_D_element(R.a, R.b, LMS)
                     assert np.allclose(Y, D, atol=ell ** 6 * precision_SWSH, rtol=ell ** 6 * precision_SWSH)
 
 
@@ -112,16 +112,16 @@ def test_SWSH_spin_behavior(Rs, special_angles, ell_max):
 
 @slow
 def test_SWSH_conjugation(special_angles, ell_max):
-    # {s}Y{l,m}.conjugate() = (-1)**(s+m) {-s}Y{l,-m}
+    # {s}Y{l,m}.conjugate() = (-1.)**(s+m) {-s}Y{l,-m}
     indices1 = sf.LM_range(0, ell_max)
     indices2 = np.array([[ell, -m] for ell, m in indices1])
-    neg1_to_m = np.array([(-1)**m for ell, m in indices1])
+    neg1_to_m = np.array([(-1.)**m for ell, m in indices1])
     for iota in special_angles:
         for phi in special_angles:
             R = quaternion.from_spherical_coords(iota, phi)
             for s in range(1-ell_max, ell_max):
                 assert np.allclose(sf.SWSH(R, s, indices1),
-                                   (-1)**s * neg1_to_m * np.conjugate(sf.SWSH(R, -s, indices2)),
+                                   (-1.)**s * neg1_to_m * np.conjugate(sf.SWSH(R, -s, indices2)),
                                    atol=1e-15, rtol=1e-15)
 
 

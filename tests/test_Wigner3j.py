@@ -48,14 +48,14 @@ def test_Wigner3j_properties():
                         # Test odd permutations
                         assert abs(
                             sf.Wigner3j(j1, j2, j3, m1, m2, -m1 - m2)
-                            - (-1) ** (j1 + j2 + j3) * sf.Wigner3j(j2, j1, j3, m2, m1, -m1 - m2)) < precision_Wigner3j
+                            - (-1.) ** (j1 + j2 + j3) * sf.Wigner3j(j2, j1, j3, m2, m1, -m1 - m2)) < precision_Wigner3j
                         assert abs(
                             sf.Wigner3j(j1, j2, j3, m1, m2, -m1 - m2)
-                            - (-1) ** (j1 + j2 + j3) * sf.Wigner3j(j1, j3, j2, m1, -m1 - m2, m2)) < precision_Wigner3j
+                            - (-1.) ** (j1 + j2 + j3) * sf.Wigner3j(j1, j3, j2, m1, -m1 - m2, m2)) < precision_Wigner3j
                         # Test sign change
                         assert abs(
                             sf.Wigner3j(j1, j2, j3, m1, m2, -m1 - m2)
-                            - (-1) ** (j1 + j2 + j3) * sf.Wigner3j(j1, j2, j3, -m1, -m2, m1 + m2)) < precision_Wigner3j
+                            - (-1.) ** (j1 + j2 + j3) * sf.Wigner3j(j1, j2, j3, -m1, -m2, m1 + m2)) < precision_Wigner3j
                         # Regge symmetries (skip for non-integer values)
                         if ((j2 + j3 - m1) % 2 == 0):
                             assert abs(sf.Wigner3j(j1, j2, j3, m1, m2, -m1 - m2)
@@ -69,7 +69,7 @@ def test_Wigner3j_properties():
                                                      (j2 - j3 + m1) // 2 - m1 - m2)) < precision_Wigner3j
                         if ((j2 + j3 + m1) % 2 == 0 and (j1 + j3 + m2) % 2 == 0 and (j1 + j2 - m1 - m2) % 2 == 0):
                             assert (abs(sf.Wigner3j(j1, j2, j3, m1, m2, -m1 - m2)
-                                        - (-1) ** (j1 + j2 + j3) * sf.Wigner3j((j2 + j3 + m1) // 2,
+                                        - (-1.) ** (j1 + j2 + j3) * sf.Wigner3j((j2 + j3 + m1) // 2,
                                                                                (j1 + j3 + m2) // 2,
                                                                                (j1 + j2 - m1 - m2) // 2,
                                                                                j1 - (j2 + j3 - m1) // 2,

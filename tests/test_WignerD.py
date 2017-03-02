@@ -140,7 +140,7 @@ def test_Wigner_D_element_symmetries(Rs, ell_max):
     print()
     for R in Rs:
         print("\t", R)
-        assert np.allclose(sf.Wigner_D_element(R, LMpM), (-1) ** MpPM * np.conjugate(sf.Wigner_D_element(R, LmMpmM)),
+        assert np.allclose(sf.Wigner_D_element(R, LMpM), (-1.) ** MpPM * np.conjugate(sf.Wigner_D_element(R, LmMpmM)),
                            atol=ell_max ** 2 * precision_Wigner_D_element,
                            rtol=ell_max ** 2 * precision_Wigner_D_element)
     # D is a unitary matrix, so its conjugate transpose is its
@@ -158,16 +158,16 @@ def test_Wigner_D_element_symmetries(Rs, ell_max):
 def test_Wigner_D_element_roundoff(Rs, ell_max):
     LMpM = sf.LMpM_range(0, ell_max)
     # Test rotations with |Ra|<1e-15
-    expected = [((-1) ** ell if mp == -m else 0.0) for ell in range(ell_max + 1) for mp in range(-ell, ell + 1) for m in
+    expected = [((-1.) ** ell if mp == -m else 0.0) for ell in range(ell_max + 1) for mp in range(-ell, ell + 1) for m in
                 range(-ell, ell + 1)]
     assert np.allclose(sf.Wigner_D_element(quaternion.x, LMpM), expected,
                        atol=ell_max * precision_Wigner_D_element, rtol=ell_max * precision_Wigner_D_element)
-    expected = [((-1) ** (ell + m) if mp == -m else 0.0) for ell in range(ell_max + 1) for mp in range(-ell, ell + 1)
+    expected = [((-1.) ** (ell + m) if mp == -m else 0.0) for ell in range(ell_max + 1) for mp in range(-ell, ell + 1)
                 for m in range(-ell, ell + 1)]
     assert np.allclose(sf.Wigner_D_element(quaternion.y, LMpM), expected,
                        atol=ell_max * precision_Wigner_D_element, rtol=ell_max * precision_Wigner_D_element)
     for theta in np.linspace(0, 2 * np.pi):
-        expected = [((-1) ** (ell + m) * (np.cos(theta) + 1j * np.sin(theta)) ** (2 * m) if mp == -m else 0.0)
+        expected = [((-1.) ** (ell + m) * (np.cos(theta) + 1j * np.sin(theta)) ** (2 * m) if mp == -m else 0.0)
                     for ell in range(ell_max + 1) for mp in range(-ell, ell + 1) for m in range(-ell, ell + 1)]
         assert np.allclose(sf.Wigner_D_element(np.cos(theta) * quaternion.y + np.sin(theta) * quaternion.x, LMpM),
                            expected,
@@ -177,7 +177,7 @@ def test_Wigner_D_element_roundoff(Rs, ell_max):
                 range(-ell, ell + 1)]
     assert np.allclose(sf.Wigner_D_element(quaternion.one, LMpM), expected,
                        atol=ell_max * precision_Wigner_D_element, rtol=ell_max * precision_Wigner_D_element)
-    expected = [((-1) ** m if mp == m else 0.0) for ell in range(ell_max + 1) for mp in range(-ell, ell + 1) for m in
+    expected = [((-1.) ** m if mp == m else 0.0) for ell in range(ell_max + 1) for mp in range(-ell, ell + 1) for m in
                 range(-ell, ell + 1)]
     assert np.allclose(sf.Wigner_D_element(quaternion.z, LMpM), expected,
                        atol=ell_max * precision_Wigner_D_element, rtol=ell_max * precision_Wigner_D_element)
@@ -241,7 +241,7 @@ def slow_Wignerd(beta, ell, mp, m):
     s_max = int(round(min(round(ell + m), round(ell - mp))))
     assert isinstance(s_max, int), type(s_max)
     assert isinstance(s_min, int), type(s_min)
-    return Prefactor * sum([((-1) ** (mp - m + s)
+    return Prefactor * sum([((-1.) ** (mp - m + s)
                              * math.cos(beta / 2.) ** (2 * ell + m - mp - 2 * s)
                              * math.sin(beta / 2.) ** (mp - m + 2 * s)
                              / float(math.factorial(ell + m - s) * math.factorial(s) * math.factorial(mp - m + s)

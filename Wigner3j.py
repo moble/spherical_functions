@@ -85,4 +85,4 @@ def Wigner3j(j_1, j_2, j_3, m_1, m_2, m_3):
 @njit('f8(i8,i8,i8,i8,i8,i8)')
 def clebsch_gordan(j_1, m_1, j_2, m_2, j_3, m_3):
     """Calculate the Clebsch-Gordan coefficient <j1 m1 j2 m2 | j3 m3>"""
-    return (-1)**(j_1-j_2+m_3) * sqrt(2*j_3+1) * Wigner3j(j_1, j_2, j_3, m_1, m_2, -m_3)
+    return (-1.)**(j_1-j_2+m_3) * sqrt(2*j_3+1) * Wigner3j(j_1, j_2, j_3, m_1, m_2, -m_3)
