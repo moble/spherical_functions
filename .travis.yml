@@ -22,6 +22,7 @@ install:
       conda install -c moble spinsfast;
     fi
   - pip install git+git://github.com/moble/quaternion
+  - pip install packaging
   - python setup.py install
 
 before_script:

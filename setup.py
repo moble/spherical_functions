@@ -5,7 +5,13 @@
 
 from distutils.core import setup
 from auto_version import calculate_version, build_py_copy_version
+from os import getenv
 
+validate = True
+error_on_invalid = False
+if getenv('CI') is not None:
+    if getenv('CI').lower() == 'true':
+        error_on_invalid = True
 
 setup(name='spherical-functions',
       description='Python/numba implementation of Wigner D Matrices, spin-weighted spherical harmonics, and associated functions',
@@ -15,5 +21,5 @@ setup(name='spherical-functions',
       packages=['spherical_functions', ],
       package_dir={'spherical_functions': '.'},
       package_data={'spherical_functions': ['*.npy']},
-      version=calculate_version(),
+      version=calculate_version(validate, error_on_invalid),
       cmdclass={'build_py': build_py_copy_version}, )
