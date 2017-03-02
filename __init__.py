@@ -210,7 +210,7 @@ def LMpM_range_half_integer(ell_min, ell_max):
     # from sympy import symbols, summation
     # twoell_min,twoell,twoell_max = symbols('twoell_min,twoell,twoell_max', integer=True)
     # summation((twoell + 1)**2, (twoell, twoell_min, twoell_max))
-    LMpM = np.empty(((((8 * ell_max + 18)*ell_max + 13)*ell_max + 3 - ((8 * ell_min + 6) * ell_min + 1)*ell_min) // 3,
+    LMpM = np.empty((int(((8*ell_max + 18)*ell_max + 13)*ell_max + 3 - ((8 * ell_min + 6) * ell_min + 1)*ell_min) // 3,
                      3), dtype=float)
     _LMpM_range_half_integer(round(2*ell_min), round(2*ell_max), LMpM)
     return LMpM
