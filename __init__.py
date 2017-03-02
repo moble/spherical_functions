@@ -277,7 +277,7 @@ def LMpM_total_size(ell_min, ell_max):
     return (((4 * ell_max + 12) * ell_max + 11) * ell_max + (-4 * ell_min ** 2 + 1) * ell_min + 3) // 3
 
 
-from .Wigner3j import Wigner3j
+from .Wigner3j import Wigner3j, clebsch_gordan
 from .WignerD import (Wigner_D_element, _Wigner_D_element,
                       Wigner_D_matrices, _Wigner_D_matrices,
                       _linear_matrix_index, _linear_matrix_diagonal_index,
