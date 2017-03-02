@@ -2,17 +2,17 @@ sudo: false
 
 language: python
 
-matrix:
-  - PYTHON_VERSION=2.7
-  - PYTHON_VERSION=3.6
+env:
+  global:
+    - CONDA=true
+  matrix:
+    - PYTHON_VERSION=2.7
+    - PYTHON_VERSION=3.6
 
 branches:
   except:
     - ConjugateEverything
     - ConjugateEverythingPages
-
-env:
-  - CONDA=true
 
 install:
   - lsb_release -a
