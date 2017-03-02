@@ -96,7 +96,7 @@ def test_Wigner_D_matrices_representation_property(Rs, ell_max):
     D12 = np.empty((LMpM.shape[0],), dtype=complex)
     for i, R1 in enumerate(Rs):
         print("\t{0} of {1}: R1 = {2}".format(i+1, len(Rs), R1))
-        for j, R2 in enumerate(Rs):
+        for j, R2 in enumerate(Rs[i:]):
             # print("\t\t{0} of {1}: R2 = {2}".format(j+1, len(Rs), R2))
             R12 = R1 * R2
             sf._Wigner_D_matrices(R1.a, R1.b, 0, ell_max, D1)
