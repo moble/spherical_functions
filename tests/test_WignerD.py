@@ -57,7 +57,7 @@ def test_Wigner_D_matrices_negative_argument(Rs, ell_max):
 def test_Wigner_D_elements_representation_property(Rs, ell_max):
     # Test the representation property for special and random angles
     # Try half-integers, too
-    ell_max = 8  # ell_max // 2
+    ell_max = min(8, ell_max)
     twoLMpM = np.round(2*sf.LMpM_range_half_integer(0, ell_max)).astype(int)
     print("")
     D1 = np.empty((twoLMpM.shape[0],), dtype=complex)
@@ -88,7 +88,7 @@ def test_Wigner_D_elements_representation_property(Rs, ell_max):
 def test_Wigner_D_matrices_representation_property(Rs, ell_max):
     # Test the representation property for special and random angles
     # Can't try half-integers because Wigner_D_matrices doesn't accept them
-    ell_max = 8  # ell_max // 2
+    ell_max = min(8, ell_max)
     LMpM = sf.LMpM_range(0, ell_max)
     print("")
     D1 = np.empty((LMpM.shape[0],), dtype=complex)
