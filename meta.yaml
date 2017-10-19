@@ -1,6 +1,6 @@
 package:
   name: spherical_functions
-  version: '1.0'
+  version: {{ environ.get('package_version', '1.0') }}
 
 source:
   git_url: https://github.com/moble/spherical_functions.git
@@ -11,7 +11,7 @@ build:
 
 requirements:
   build:
-    - python
+    - python {{ python }}
     - numpy >=1.7
 
   run:
