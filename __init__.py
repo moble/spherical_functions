@@ -286,3 +286,4 @@ from .SWSH import SWSH, SWSH_grid, _SWSH  # sYlm, Ylm
 from .mode_conversions import (constant_as_ell_0_mode, constant_from_ell_0_mode, vector_as_ell_1_modes,
                                vector_from_ell_1_modes, eth_GHP, ethbar_GHP, eth_NP, ethbar_NP,
                                ethbar_inverse_NP)
+from .multiplication import multiply
