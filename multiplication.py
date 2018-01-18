@@ -1,5 +1,6 @@
 import numpy as np
-from . import LM_total_size, Wigner3j
+import math
+from spherical_functions import LM_total_size, LM_index, Wigner3j
 
 
 def multiply(f, ellmin_f, ellmax_f, s_f, g, ellmin_g, ellmax_g, s_g):
@@ -12,6 +13,20 @@ def multiply(f, ellmin_f, ellmax_f, s_f, g, ellmin_g, ellmax_g, s_g):
     ])
 
     Here, s3 = -s1 - s2 and m3 = -m1 - m2.
+
+    For general f and g with random ellmin/max and m:
+    f*g = sum([ sqrt((2*l1+1)/4*pi)*f(l1,m1)
+               sum([ sqrt(2*l2+1)*g(l2,m2)
+                    sum([ s3Yl3m3*sqrt(2*l3+1)*(-1)**(l1+l2+l3+s3+m3)
+                          *Wigner3j(l1, l2, l3, s1, s2, -s3) * Wigner3j(l1, l2, l3, m1, m2, -m3)
+                    for l3 in range(abs(l1-l2), l1+l2+1)
+                    ])
+               for l2,m2 in range(ellmin_g, ellmax_g)
+               ])
+          for l1,m1 in range(ellmin_f, ellmax_f)
+          ])
+    for s3 = s_f+s_g, m3 = m1+m2
+
 
     Parameters
     ----------
@@ -54,8 +69,20 @@ def multiply(f, ellmin_f, ellmax_f, s_f, g, ellmin_g, ellmax_g, s_g):
     ellmin_fg = 0
     fg = np.zeros(LM_total_size(0, ellmax_fg), dtype=np.complex)
 
-    
-    raise NotImplementedError("Do the calculations here!")  # and remove this line
+    #print("__________Incomplete!! Don't use!!_______________")
+
+    for ell1 in range(ellmin_f, ellmax_f+1):  
+        for m1 in range(-ell1, ell1+1):
+            sum1 = math.sqrt((2*ell1+1)/(4*math.pi))*f[LM_index(ell1,m1,ellmin_f)] #Calculate f contribution
+            for ell2 in range(ellmin_g, ellmax_g+1):
+                for m2 in range(-ell2, ell2+1):
+                    sum2 = math.sqrt(2*ell2+1)*g[LM_index(ell2,m2,ellmin_g)]  #Calculate g contribution
+                    m3 = m1+m2
+                    for ell3 in range(abs(ell1-ell2), ell1+ell2+1): 
+                    #Could loop over same ell3,m3 more than once, so add all contributions together
+                        fg[LM_index(ell3,m3,ellmin_fg)] += (pow(-1, ell1+ell2+ell3+s_fg+m3)*math.sqrt(2*ell3+1)*
+                                        Wigner3j(ell1,ell2,ell3,s_f,s_g,-s_fg)*
+                                        Wigner3j(ell1,ell2,ell3,m1,m2,-m3))*sum1*sum2
 
 
     return fg, ellmin_fg, ellmax_fg, s_fg
