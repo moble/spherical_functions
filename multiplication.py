@@ -4,6 +4,10 @@ from spherical_functions import LM_total_size, LM_index, Wigner3j
 from numba import jit
 
 @jit('Tuple((complex128[:], intc, intc, intc))(complex128[:], intc, intc, intc, complex128[:], intc, intc, intc)')
+
+#intc = C-like integer type, complex128 = double-precision complex numbers,
+#complex128[:] = 1D array of complex128
+
 def multiply(f, ellmin_f, ellmax_f, s_f, g, ellmin_g, ellmax_g, s_g):
     """Return modes of the decomposition of f*g
 
