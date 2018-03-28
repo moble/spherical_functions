@@ -180,8 +180,12 @@ def main():
 
     for datadir in datadirs_maxLev: #Each directory in the non-COM corrected pool
         #for extrapolation in Extrapolations:
-          
-        with  open(datadir[:-36]+'metadata.txt') as meta: #get merger time from metadata.txt
+        if args.COM_corrected: #Specify where the metadata file is
+            moveby = 40
+        else:
+            moveby = 36
+   
+        with  open(datadir[:-moveby]+'metadata.txt') as meta: #get merger time from metadata.txt
             for line in meta:
                 if 'common-horizon-time' in line:
                     try:
@@ -190,7 +194,7 @@ def main():
                         pass
         
         h = scri.SpEC.read_from_h5(datadir+'/'+extrapolation)
-        U = h.t[:]
+        U = h.t[:] - t_comhor #set t=0 to be at merger for all simulations
         times.append(U)
         h = start_with_ell_equals_zero(h)
         hdot = np.empty_like(h)
