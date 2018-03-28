@@ -25,7 +25,7 @@ def start_with_ell_equals_zero(data, ell_min=None):
     # print('zeros.shape =', zeros.shape, '\tzeros.dtype =', zeros.dtype, '\tell_min =', ell_min)
     return np.concatenate((zeros, data), axis=1)
 
-@jit('Tuple((complex128, complex128, complex128))(complex128[:], intc, intc)')
+@jit('Tuple((float64, float64, float64))(complex128[:], intc, intc)')
 def p_multiply(f, ellmin_f, ellmax_f):
     """Return modes of the decomposition of f*g
 
@@ -125,7 +125,7 @@ def p_multiply(f, ellmin_f, ellmax_f):
                         f[LM_index(ell2,m1-1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,1-m1,-1))
 
 
-    return px/(16*math.pi),py*complex(0,1)/(16*math.pi),pz/(16*math.pi)
+    return px.real/(16*math.pi),-py.imag/(16*math.pi),pz.real/(16*math.pi)
 
 
 def main():
@@ -147,6 +147,11 @@ def main():
 
     args = parser.parse_args()
 
+    if args.COM_corrected: #Specify where the directory name is                                                                       
+        moveby = 40
+    else:
+        moveby = 36
+
     for directory in args.dir: #Consider all directories given in argument, 
         if args.COM_corrected:
             datadirs = [os.path.join(d,x)
@@ -164,7 +169,7 @@ def main():
     for x in range(len(datadirs)-1):
             name1 = datadirs[x]
             name2 = datadirs[x+1]
-            if name1[:-16]==name2[:-16]:
+            if name1[:-moveby-2]==name2[:-moveby-2]:
                 pass
             else:
                 datadirs_maxLev.append(name1)
@@ -180,10 +185,6 @@ def main():
 
     for datadir in datadirs_maxLev: #Each directory in the non-COM corrected pool
         #for extrapolation in Extrapolations:
-        if args.COM_corrected: #Specify where the metadata file is
-            moveby = 40
-        else:
-            moveby = 36
    
         with  open(datadir[:-moveby]+'metadata.txt') as meta: #get merger time from metadata.txt
             for line in meta:
@@ -208,8 +209,7 @@ def main():
 
         for hdot_pt in hdot:
             p_temp.append(p_multiply(hdot_pt,2,8)) #Always ellmin=2, ellmax=8
-            #Each component of each element of p is complex, so that the modulus of each using abs() to calcualte
-            #the overall magnitude. ie. |p| = sqrt(|px|^2 + |py|^2 + |pz|^2)
+            #Each component of each element of p is returned as complex, so only need to save the real part.
             pmag_temp.append(math.sqrt(pow(abs(p_temp[-1][0]),2)+pow(abs(p_temp[-1][1]),2)+pow(abs(p_temp[-1][2]),2)))
 
 
@@ -226,51 +226,79 @@ def main():
             #else:
              #   col = 'r'
 
-    colr = 'b'
-    coli = 'g'
+    colg = 'b'
+    coll = 'g'
+
     for idx in range(len(datadirs_maxLev)):
-        plt.plot(times[idx],pmag[idx],color = colr, alpha = 0.7, linewidth = 0.5 )
-    plt.title(r'|$\vec{p}$| vs time')
+        plt.semilogy(times[idx],pmag[idx],color = colg, alpha = 0.7, linewidth = 0.5 )
+    plt.title(r'|$\vec{\dot{p}}$| vs time')
     plt.xlabel(r'$t/M$')
-    plt.ylabel(r'$|\vec{p}|$')
+    plt.ylabel(r'$|\vec{\dot{p}}|$')
     plt.savefig(args.filename+'_pmagvstime.pdf', bbox_inches = "tight")
     plt.clf()
 
-    fig1, (ax1,ax2) = plt.subplots(2,1, sharex = True)
 
     for idx in range(len(datadirs_maxLev)):
-        ax1.plot(times[idx],[item[0].real for item in p[idx]],color = colr,alpha = 0.4, linewidth = 0.5)
-        ax2.plot(times[idx],[item[0].imag for item in p[idx]],color = coli, alpha = 0.4, linewidth = 0.5)
-    ax1.set_title(r'$p_x$ vs time')
-    ax2.set_xlabel(r'$t/M$')
-    ax1.set_ylabel(r'Re($p_x$)')
-    ax2.set_ylabel(r'Im($p_x$)')
+        px= [item[0] for item in p[idx]]
+        px_pos = []
+        px_neg = []
+        for x in px:
+            if x>1e-16:
+                px_pos.append(x)
+                px_neg.append(1e-16)
+            else:
+                px_pos.append(1e-16)
+                px_neg.append(-x)
+                  
+        plt.semilogy(times[idx], px_pos, color = colg, alpha = 0.5, linewidth = 0.5)
+        plt.semilogy(times[idx], px_neg, color = coll, alpha = 0.5, linewidth = 0.5)
+    plt.title(r'$\dot{p}_x$ vs time')
+    plt.xlabel(r'$t/M$')
+    plt.ylabel(r'$\dot{p}_x$')
     plt.savefig(args.filename+'_pxvstime.pdf', bbox_inches="tight")
     plt.clf()
 
-    fig2, (ax1,ax2) = plt.subplots(2,1, sharex = True)
-
     for idx in range(len(datadirs_maxLev)):
-        ax1.plot(times[idx],[item[1].real for item in p[idx]],color = colr,alpha = 0.4, linewidth = 0.5)
-        ax2.plot(times[idx],[item[1].imag for item in p[idx]],color = coli, alpha = 0.4, linewidth = 0.5)
-    ax1.set_title(r'$p_y$ vs time')
-    ax2.set_xlabel(r'$t/M$')
-    ax1.set_ylabel(r'Re($p_y$)')
-    ax2.set_ylabel(r'Im($p_y$)')
+        py= [item[1] for item in p[idx]]
+        py_pos = []
+        py_neg = []
+        for x in py:
+            if x>1e-16:
+                py_pos.append(x)
+                py_neg.append(1e-16)
+            else:
+                py_pos.append(1e-16)
+                py_neg.append(-x)
+
+        plt.semilogy(times[idx], py_pos, color = colg, alpha = 0.5, linewidth = 0.5)
+        plt.semilogy(times[idx], py_neg, color = coll, alpha = 0.5, linewidth = 0.5)
+    plt.title(r'$\dot{p}_y$ vs time')
+    plt.xlabel(r'$t/M$')
+    plt.ylabel(r'$\dot{p}_y$')
     plt.savefig(args.filename+'_pyvstime.pdf', bbox_inches="tight")
     plt.clf()
 
-    fig3, (ax1,ax2) = plt.subplots(2,1, sharex = True)
-
     for idx in range(len(datadirs_maxLev)):
-        ax1.plot(times[idx],[item[2].real for item in p[idx]],color = colr,alpha = 0.4,linewidth = 0.5)
-        ax2.plot(times[idx],[item[2].imag for item in p[idx]],color = coli, alpha = 0.4, linewidth = 0.5)
-    ax1.set_title(r'$p_z$ vs time')
-    ax2.set_xlabel(r'$t/M$')
-    ax1.set_ylabel(r'Re($p_z$)')
-    ax2.set_ylabel(r'Im($p_z$)')
+        pz= [item[2] for item in p[idx]]
+        pz_pos = []
+        pz_neg = []
+        for x in pz:
+            if x>1e-16:
+                pz_pos.append(x)
+                pz_neg.append(1e-16)
+            else:
+                pz_pos.append(1e-16)
+                pz_neg.append(-x)
+
+        plt.semilogy(times[idx], px_pos, color = colg, alpha = 0.5, linewidth = 0.5)
+        plt.semilogy(times[idx], px_neg, color = coll, alpha = 0.5, linewidth = 0.5)
+
+    plt.title(r'$\dot{p}_z$ vs time')
+    plt.xlabel(r'$t/M$')
+    plt.ylabel(r'$\dot{p}_z$')
     plt.savefig(args.filename+'_pzvstime.pdf', bbox_inches="tight")
     plt.clf()
+
                  
 if __name__=="__main__":
     main()
