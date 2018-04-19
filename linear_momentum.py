@@ -97,35 +97,35 @@ def p_multiply(f, ellmin_f, ellmax_f):
             
             for ell2 in range(ell2min, ell2max): #ell2 only has values ell1-1, ell1, ell1+1
                 #m2=0 for z component
-                pz += (f[LM_index(ell1,m1,ellmin_f)]*f[LM_index(ell2,m1,ellmin_f)].conjugate()*
+                pz += (-1)**m1 *(f[LM_index(ell1,m1,ellmin_f)]*f[LM_index(ell2,m1,ellmin_f)].conjugate()*
                        math.sqrt((2*ell1+1)*(2*ell2+1))*Wigner3j(ell1,ell2,1,m1,-m1,0)*Wigner3j(ell1,ell2,1,2,-2,0))
                 
                  #m2 only has values m1-1 and m1+1 for x,y components
-                if m1 > -ell1 and m1 <ell1-1:
-                    py += f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
+                if m1 > -ell1 and m1 <ell1:
+                    py += -1j*(-1)**m1 *f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
                         f[LM_index(ell2,m1-1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,1-m1,-1) + 
                         f[LM_index(ell2,m1+1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,-1-m1,1))
 
-                    px += f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
+                    px += -(-1)**m1* f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
                         f[LM_index(ell2,m1-1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,1-m1,-1) - 
                         f[LM_index(ell2,m1+1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,-1-m1,1))
 
                 elif m1 == -ell1:
-                    py += f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
+                    py += -1j*(-1)**m1 *f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
                         f[LM_index(ell2,m1+1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,-1-m1,1))
 
-                    px -= f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
+                    px -= -(-1)**m1 *f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
                         f[LM_index(ell2,m1+1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,-1-m1,1))
 
                 else:
-                    py += f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
+                    py += -1j*(-1)**m1 *f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
                         f[LM_index(ell2,m1-1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,1-m1,-1))
 
-                    px += f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
+                    px += -(-1)**m1 *f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
                         f[LM_index(ell2,m1-1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,1-m1,-1))
 
 
-    return px.real/(16*math.pi),-py.imag/(16*math.pi),pz.real/(16*math.pi)
+    return px.real/(16*math.pi),py.real/(16*math.pi),pz.real/(16*math.pi)
 
 
 def main():
@@ -151,29 +151,32 @@ def main():
         moveby = 40
     else:
         moveby = 36
-
+        
+    datadirs = []    
+    datadirs_maxLev = []
+    
     for directory in args.dir: #Consider all directories given in argument, 
         if args.COM_corrected:
-            datadirs = [os.path.join(d,x)
+            datadirs.append([os.path.join(d,x)
                         for d, dirs, files in os.walk(directory, topdown=True)
-                        for x in files if x.endswith("rhOverM_Asymptotic_GeometricUnits_CoM.h5") and os.path.isfile(d+'/'+x)]
+                        for x in files if x.endswith("rhOverM_Asymptotic_GeometricUnits_CoM.h5") and os.path.isfile(d+'/'+x)])
     
         else:
-            datadirs = [os.path.join(d,x)
+            datadirs.append([os.path.join(d,x)
                         for d, dirs, files in os.walk(directory, topdown=True)
-                        for x in files if x.endswith("rhOverM_Asymptotic_GeometricUnits.h5") and os.path.isfile(d+'/'+x)]
+                        for x in files if x.endswith("rhOverM_Asymptotic_GeometricUnits.h5") and os.path.isfile(d+'/'+x)])
 
-    datadirs = sorted(datadirs)
-    datadirs_maxLev = [] #only use the highest resolution available
+    for idx in range(len(datadirs)):         
+        datadirs[idx] = sorted(datadirs[idx])
 
-    for x in range(len(datadirs)-1):
-            name1 = datadirs[x]
-            name2 = datadirs[x+1]
+        for x in range(len(datadirs[idx])-1):
+            name1 = datadirs[idx][x]
+            name2 = datadirs[idx][x+1]
             if name1[:-moveby-2]==name2[:-moveby-2]:
                 pass
             else:
                 datadirs_maxLev.append(name1)
-    datadirs_maxLev.append(datadirs[-1])
+        datadirs_maxLev.append(datadirs[idx][-1])
 
     #Extrapolations = ['Extrapolated_N2.dir', 'Extrapolated_N3.dir', 'Extrapolated_N4.dir', 
     #                  'OutermostExtraction.dir']
@@ -237,19 +240,17 @@ def main():
     plt.savefig(args.filename+'_pmagvstime.pdf', bbox_inches = "tight")
     plt.clf()
 
-
     for idx in range(len(datadirs_maxLev)):
         px= [item[0] for item in p[idx]]
         px_pos = []
         px_neg = []
-        for x in px:
-            if x>1e-16:
-                px_pos.append(x)
+        for idy in range(len(px)):
+            if px[idy]>1e-16:
+                px_pos.append(px[idy])
                 px_neg.append(1e-16)
             else:
                 px_pos.append(1e-16)
-                px_neg.append(-x)
-                  
+                px_neg.append(-px[idy])
         plt.semilogy(times[idx], px_pos, color = colg, alpha = 0.5, linewidth = 0.5)
         plt.semilogy(times[idx], px_neg, color = coll, alpha = 0.5, linewidth = 0.5)
     plt.title(r'$\dot{p}_x$ vs time')
@@ -290,8 +291,8 @@ def main():
                 pz_pos.append(1e-16)
                 pz_neg.append(-x)
 
-        plt.semilogy(times[idx], px_pos, color = colg, alpha = 0.5, linewidth = 0.5)
-        plt.semilogy(times[idx], px_neg, color = coll, alpha = 0.5, linewidth = 0.5)
+        plt.semilogy(times[idx], pz_pos, color = colg, alpha = 0.5, linewidth = 0.5)
+        plt.semilogy(times[idx], pz_neg, color = coll, alpha = 0.5, linewidth = 0.5)
 
     plt.title(r'$\dot{p}_z$ vs time')
     plt.xlabel(r'$t/M$')
