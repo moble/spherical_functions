@@ -85,6 +85,9 @@ def p_multiply(f, ellmin_f, ellmax_f):
 
     for ell1 in range(ellmin_f, ellmax_f+1):
         for m1 in range(-ell1, ell1+1):
+            if m1==0:
+                continue #skip m=0 modes completely, not trusted
+
             if ell1==ellmin_f:
                 ell2min = ell1
                 ell2max = ell1+2
@@ -102,13 +105,27 @@ def p_multiply(f, ellmin_f, ellmax_f):
                 
                  #m2 only has values m1-1 and m1+1 for x,y components
                 if m1 > -ell1 and m1 <ell1:
-                    py += -1j*(-1)**m1 *f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
-                        f[LM_index(ell2,m1-1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,1-m1,-1) + 
-                        f[LM_index(ell2,m1+1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,-1-m1,1))
+                    if m1+1 ==0: #don't consider m=0 componenets
+                        py += -1j*(-1)**m1 *f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
+                            f[LM_index(ell2,m1-1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,1-m1,-1)) 
+                        
+                        px += -(-1)**m1* f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
+                            f[LM_index(ell2,m1-1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,1-m1,-1)) 
+                             
+                    elif m1-1==0: #don't consider m=0 components
+                        py += -1j*(-1)**m1 *f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
+                            f[LM_index(ell2,m1+1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,-1-m1,1))
 
-                    px += -(-1)**m1* f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
-                        f[LM_index(ell2,m1-1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,1-m1,-1) - 
-                        f[LM_index(ell2,m1+1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,-1-m1,1))
+                        px += -(-1)**m1* f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
+                            -f[LM_index(ell2,m1+1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,-1-m1,1))
+                    else:
+                        py += -1j*(-1)**m1 *f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
+                            f[LM_index(ell2,m1-1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,1-m1,-1) +
+                            f[LM_index(ell2,m1+1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,-1-m1,1))
+
+                        px += -(-1)**m1* f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
+                            f[LM_index(ell2,m1-1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,1-m1,-1) -
+                            f[LM_index(ell2,m1+1,ellmin_f)].conjugate()*Wigner3j(ell1,ell2,1,m1,-1-m1,1))
 
                 elif m1 == -ell1:
                     py += -1j*(-1)**m1 *f[LM_index(ell1,m1,ellmin_f)]*math.sqrt((2*ell1+1)*(2*ell2+1)/2)*Wigner3j(ell1,ell2,1,2,-2,0)*(
