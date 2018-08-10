@@ -259,8 +259,8 @@ def main():
     times_coord = [] #holders for the coordinate time values for each simulation considered
     times = [] #holders for the retarded time values, explicitly for SWSH related values
     #timebounds = []
-    #simnum = [] #sxs simulation number/ simulation name
-    #altnum = [] #sxs simulation designation / alternative names
+    simnum = [] #sxs simulation number/ simulation name
+    altnum = [] #sxs simulation designation / alternative names
     acc_com = [] #com acceleration holder
     #mag_avg = [] #How much larger on avg acc_com is than pdot/M
     #magq1 = []
@@ -282,10 +282,10 @@ def main():
                         t_relaxed = float(line.split()[-1])
                     except ValueError:
                         pass
-                #if 'simulation-name' in line:
-                #    simnum.append(line.split()[-1][:-5])
-                #if 'alternative-names' in line:
-                #    altnum.append(line.split()[-1])
+                if 'simulation-name' in line:
+                    simnum.append(line.split()[-1][:-5])
+                if 'alternative-names' in line:
+                    altnum.append(line.split()[-1])
 
         with h5py.File(datadir[:-moveby]+'Horizons.h5','r') as horizons: #BH masses from apparent horizons.
             m_A = horizons['AhA.dir/ChristodoulouMass.dat'][int(t_relaxed)*2:,1] #only keep from junk radiation
@@ -295,11 +295,8 @@ def main():
             #t_C = horizons['AhC.dir/ChristodoulouMass.dat'][:,0]#times after common horizon found
 
         M = [a+b for a,b in zip(m_A,m_B)] #total mass for every timestep
-        #mc = np.ndarray.tolist(m_C)
-        #M = M + mc #M is now a list with all mass data
 
         temptime = t_A[:] - t_comhor
-        #temptime2 = t_C[:] - t_comhor
         times_coord.append(temptime)#only keep times before common horizon and after junk radiation phase for COM calculated acceleration 
 
         #timebounds.append([2*t_relaxed, t_comhor])
@@ -308,7 +305,7 @@ def main():
         U = h.t[:] - t_comhor #set t=0 to be at merger for all simulations
         times.append(U[(np.abs(U+t_comhor-t_relaxed).argmin()):(np.abs(U-0.0)).argmin()])#Only keep data before merger and after junk radiation phase
         if len(times[-1])>len(times_coord[-1]): #more values in retarded time array than in coordinate time array
-            #need to increase size of M so can divde pdot values
+            #need to increase size of M so can divide pdot values
             mtemp = [M[0] for idx in range(len(times[-1]) - len(times_coord[-1]))]
             M = mtemp + M
         elif len(times[-1])<len(times_coord[-1]): #more values in coordinate time than in retarded time array
@@ -317,59 +314,15 @@ def main():
         else:#arrays are the same size, good to go
             pass
 
-        h1 = start_with_ell_equals_zero(h)
-        hdot = np.empty_like(h1)
-
-       # try:
-       #     idx_coord = np.where(temptime==np.abs(temptime-0.0).min())[0][0] #index of common horizon time for coordinate time array
-       #     i = 0 #use temptime for idx_coord
-       # except IndexError:
-       #     try:
-       #         idx_coord = np.where(temptime2==np.abs(temptime2-0.0).min())[0][0] #if common horizon time not in time array, will be the second time array for AhC
-       #         i=1 #use temptime2 for idx_coord
-       #     except IndexError:
-       #         idx_coord = 0 #shouldn't get here, but common horizon time should be very close to 1st element of temptime2
-       #         i=1
-
-        #try:
-        #    idx_retarded = np.where(U==np.abs(U-0.0).min())[0][0] #index of common horizon time for retarded time 
-        #except IndexError:
-        #    print(datadir[:-moveby])
-        #    datadirs_maxLev.remove(datadir)
-        #    continue #skip run and remove from list, badly behaved
-
-        #if i==0:
-        #    extend_prior = abs(len(U[:idx_retarded]) - len(temptime[:idx_coord])) #how many more spots to go before start time
-        #    extend_post = abs(len(U[idx_retarded:]) - len(temptime[idx_coord:]) - len(temptime2)) #how many more spots to go after the end time
-        #else:
-        #    extend_prior = abs(len(U[:idx_retarded]) - len(temptime) - len(temptime2[:idx_coord])) #how many more spots to go before  start time                                                                                                         
-        #    extend_post = abs(len(U[idx_retarded:]) - len(temptime2[idx_coord:])) #how many more sp\ots to go after the end time 
-
-        #temptime = np.concatenate((temptime,temptime2[1:]),axis=0) #complete coordinate time array
-        
-        #if temptime[0]>U[0] and extend_prior!=0: #if U has more prior merger data
-        #    mtemp = [M[0] for idx in range(extend_prior)]
-        #    M = mtemp + M
-        #else: #same size or temptime has more prior data 
-        #    M = M[extend_prior:]
-
-        #if temptime[-1]<U[-1] and extend_post!=0: #if U has more post merger data
-        #    mtemp= [M[-1] for idx in range(extend_post)]
-        #    M = M + mtemp
-        #else: #same size or temptime has more post data
-        #    M = M[:-extend_post]
+        hdot = h.data_dot 
 
         p_temp = [] #all momentum values for the current simulation
         pmag_temp = [] #all momentum magnitude values for the current simulation
        # p_m0_temp = []
        # pmag_m0_temp = []
 
-        for j in range(h1.shape[1]):
-            hdot[:,j] = (spline(U,h1[:,j].real,k=5).derivative()(U) + #real part derived
-                1j*spline(U,h1[:,j].imag,k=5).derivative()(U))  #imaginary part derived, added back in 
-        
         for hdot_pt in hdot:
-            p_temp.append(p_multiply(hdot_pt,2,8))
+            p_temp.append(p_multiply_m0(hdot_pt,2,8))
             #p_m0_temp.append(p_multiply_m0(hdot_pt,2,8))
             #Each component of each element of p is returned as complex, so only need to save the real part.
             pmag_temp.append(math.sqrt(pow(abs(p_temp[-1][0]),2)+pow(abs(p_temp[-1][1]),2)+pow(abs(p_temp[-1][2]),2)))
@@ -447,13 +400,13 @@ def main():
         #print("Avg m=0 contribution to |p_dot| restricted: " + 
         #      repr(sum(per[int(2*timebounds[idx][0]):int(2*timebounds[idx][1])])/len(per[int(2*timebounds[idx][0]):int(2*timebounds[idx][1])])*100)+"%")
         #print("Avg m=0 contribution to |p_dot|: "+repr(sum(per)/len(per)*100)+"%\n")
-        if idx == len(datadirs_maxLev)-1:
-            plt.legend([r'|$\vec{\dot{p}}$|/M', r'|$\vec{a}_{COM}$|'])
-    plt.title(r'|$\vec{\dot{p}}$|/M and |$\vec{a}_{COM}$| vs time') #for '+altnum[idx])
-    plt.xlabel(r'$t/M$')
-    plt.ylabel(r'$Accelerations$')
-    plt.savefig(args.filename+'_accmagvstime.pdf', bbox_inches='tight')#+simnum[idx]+'_accmagvstime.pdf', bbox_inches = "tight")
-    plt.clf()
+        #if idx == len(datadirs_maxLev)-1:
+        plt.legend([r'|$\vec{\dot{p}}$|/M', r'|$\vec{a}_{COM}$|'])
+        plt.title(r'|$\vec{\dot{p}}$|/M and |$\vec{a}_{COM}$| vs time for '+altnum[idx])
+        plt.xlabel(r'$t/M$')
+        plt.ylabel(r'$Accelerations$')
+        plt.savefig(args.filename+'_'+simnum[idx]+'_accmagvstime.pdf', bbox_inches = "tight")
+        plt.clf()
 
     return #stop here for preliminary analysis 2018/07/20
 
