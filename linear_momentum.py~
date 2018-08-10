@@ -4,7 +4,7 @@ from spherical_functions import LM_total_size, LM_index, Wigner3j
 from numba import jit
 
 @jit('Tuple((complex128[:], intc, intc, intc))(complex128[:], intc, intc, intc, complex128[:], intc, intc, intc)')
-def multiply(f, ellmin_f, ellmax_f, s_f, g, ellmin_g, ellmax_g, s_g):
+def p_multiply(f, ellmin_f, ellmax_f, s_f, g, ellmin_g, ellmax_g, s_g):
     """Return modes of the decomposition of f*g
 
     s1Yl1m1 * s2Yl2m2 = sum([
@@ -28,6 +28,15 @@ def multiply(f, ellmin_f, ellmax_f, s_f, g, ellmin_g, ellmax_g, s_g):
           ])
     for s3 = s_f+s_g, m3 = m1+m2
 
+    For linear momentum mulitplication, we follow the form in Boyle (2014) in section 4:
+    dp/domega dt = R^2/16 pi |dh/dt|^2 r\hat ->
+    dp_j/dt = R^2/16 sum([
+    r\hat^(1,m'-m)_j* h\dot ^(l,m)* h\dot\bar^(l',m')*(-1)^m'* \sqrt(3(2l+1)(2l'+1)/4 pi)
+    *Wigner3j(l, l',1,m,-m',m'-m)*Wigner3j(l,l',1,2,-2,0)
+    for l, l', m, m' 
+    ])
+
+    where l' runs over (l-1, l, l+1), and m'=(m-1, m+1) for j=x,y and m'=0 for j=z.
 
     Parameters
     ----------
@@ -43,27 +52,11 @@ def multiply(f, ellmin_f, ellmax_f, s_f, g, ellmin_g, ellmax_g, s_g):
         See `f`
     s_f: int
         Spin weight of `f` function
-    g: complex array
-        As above, but for the second function
-    ellmin_g: int
-        As above, but for the second function
-    ellmax_f: int
-        As above, but for the second function
-    s_f: int
-        As above, but for the second function
-
     Returns
     -------
-    fg: complex array
-    ellmin_fg: int
-    ellmax_fg: int
-    s_fg: int
-        These outputs are analogous to the inputs, except for f*g.  The spin weight is necessarily
-            s_fg = s_f + s_g
-        and the max ell value is necessarily
-            ellmax_fg = ellmax_f + ellmax_g
-        For simplicity, we always return ellmin_fg=0, even though this may not be necessary.
-
+    dp_x/dt: complex array
+    dp_y/dt: complex array
+    dp_z/dt: complex array
     """
     s_fg = s_f + s_g
     ellmax_fg = ellmax_f + ellmax_g

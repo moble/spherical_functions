@@ -5,7 +5,7 @@ from numpy import *
 import pytest
 import spherical_functions as sf
 
-multiplication_functions = []#sf.multiply]
+multiplication_functions = [sf.multiply]
 
 try:
     import spinsfast
