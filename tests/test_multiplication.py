@@ -5,7 +5,7 @@ from numpy import *
 import pytest
 import spherical_functions as sf
 
-multiplication_functions = []#sf.multiply]
+multiplication_functions = [sf.multiply, sf.multiplication.multiply2, sf.multiplication.multiply3]
 
 try:
     import spinsfast
@@ -450,7 +450,7 @@ def test_first_nontrivial_multiplication(multiplication_function):
     atol = 2e-15
     rtol = 2e-15
     ellmax_g = 8
-    print()
+    #print()
     for ellmax_f in range(1, ellmax_g+1):
         # print(ellmax_f)
         f = np.zeros(sf.LM_total_size(0, ellmax_f), dtype=np.complex)

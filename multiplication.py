@@ -1,7 +1,10 @@
+import math
 import numpy as np
-from . import LM_total_size, Wigner3j
+from . import LM_total_size, Wigner3j, LM_index
+from quaternion.numba_wrapper import jit, njit, xrange
 
 
+@jit('Tuple((complex128[:], intc, intc, intc))(complex128[:], intc, intc, intc, complex128[:], intc, intc, intc)')
 def multiply(f, ellmin_f, ellmax_f, s_f, g, ellmin_g, ellmax_g, s_g):
     """Return modes of the decomposition of f*g
 
@@ -12,6 +15,20 @@ def multiply(f, ellmin_f, ellmax_f, s_f, g, ellmin_g, ellmax_g, s_g):
     ])
 
     Here, s3 = -s1 - s2 and m3 = -m1 - m2.
+
+    For general f and g with random ellmin/max and m:
+    f*g = sum([ sqrt(3*(2*l1+1)/4*pi)*f(l1,m1)
+               sum([ sqrt(2*l2+1)*g(l2,m2)
+                    sum([ s3Yl3m3.conjugate()*sqrt(2*l3+1)*(-1)**(l1+l2+l3)
+                          *Wigner3j(l1, l2, l3, s1, s2, s3) * Wigner3j(l1, l2, l3, m1, m2, m3)
+                    for l3 in range(abs(l1-l2), l1+l2+1)
+                    ])
+               for l2,m2 in range(ellmin_g, ellmax_g)
+               ])
+          for l1,m1 in range(ellmin_f, ellmax_f)
+          ])
+    for same s3,m3 as above
+
 
     Parameters
     ----------
@@ -52,10 +69,82 @@ def multiply(f, ellmin_f, ellmax_f, s_f, g, ellmin_g, ellmax_g, s_g):
     s_fg = s_f + s_g
     ellmax_fg = ellmax_f + ellmax_g
     ellmin_fg = 0
-    fg = np.zeros(LM_total_size(0, ellmax_fg), dtype=np.complex)
+    fg = np.zeros(LM_total_size(0, ellmax_fg), dtype=complex)
 
-    
-    raise NotImplementedError("Do the calculations here!")  # and remove this line
+    for ell1 in range(ellmin_f, ellmax_f+1):
+        for m1 in range(-ell1, ell1+1):
+            sum1 = math.sqrt((2*ell1+1)/(4*math.pi))*f[LM_index(ell1, m1, ellmin_f)]  # Calculate f contribution
+            for ell2 in range(ellmin_g, ellmax_g+1):
+                for m2 in range(-ell2, ell2+1):
+                    sum2 = math.sqrt(2*ell2+1)*g[LM_index(ell2, m2, ellmin_g)]   # Calculate g contribution
+                    m3 = m1+m2
+                    for ell3 in range(abs(ell1-ell2), ell1+ell2+1):
+                        # Could loop over same (ell3, m3) more than once, so add all contributions together
+                        fg[LM_index(ell3, m3, ellmin_fg)] += (
+                            math.pow(-1, ell1 + ell2 + ell3 + s_fg + m3)
+                            * math.sqrt(2*ell3+1)
+                            * Wigner3j(ell1, ell2, ell3, s_f, s_g, -s_fg)
+                            * Wigner3j(ell1, ell2, ell3, m1, m2, -m3)
+                            * sum1
+                            * sum2
+                        )
 
+    return fg, ellmin_fg, ellmax_fg, s_fg
+
+
+@jit('Tuple((complex128[:], intc, intc, intc))(complex128[:], intc, intc, intc, complex128[:], intc, intc, intc)')
+def multiply2(f, ellmin_f, ellmax_f, s_f, g, ellmin_g, ellmax_g, s_g):
+    s_fg = s_f + s_g
+    ellmax_fg = ellmax_f + ellmax_g
+    ellmin_fg = 0
+    fg = np.zeros(LM_total_size(0, ellmax_fg), dtype=complex)
+
+    for ell in range(ellmin_fg, ellmax_fg+1):
+        for m in range(-ell, ell+1):
+            i_fg = LM_index(ell, m, ellmin_fg)
+            for ell1 in range(ellmin_f, ellmax_f+1):
+                for m1 in range(-ell1, ell1+1):
+                    i_f = LM_index(ell1, m1, ellmin_f)
+                    for ell2 in range(max(abs(ell-ell1), ellmin_g), min(ell+ell1, ellmax_g)+1):
+                        for m2 in [m-m1]:
+                            if abs(m2) <= ell2:
+                                i_g = LM_index(ell2, m2, ellmin_g)
+                                fg[i_fg] += (
+                                    f[i_f]
+                                    * g[i_g]
+                                    * (-1)**(s_fg + ell + m + ell1 + ell2)
+                                    * math.sqrt((2*ell+1)*(2*ell1+1)*(2*ell2+1)/(4*math.pi))
+                                    * Wigner3j(ell1, ell2, ell, m1, m2, -m)
+                                    * Wigner3j(ell1, ell2, ell, s_f, s_g, -s_fg)
+                                )
+
+    return fg, ellmin_fg, ellmax_fg, s_fg
+
+
+@jit('Tuple((complex128[:], intc, intc, intc))(complex128[:], intc, intc, intc, complex128[:], intc, intc, intc)')
+def multiply3(f, ellmin_f, ellmax_f, s_f, g, ellmin_g, ellmax_g, s_g):
+    s_fg = s_f + s_g
+    ellmax_fg = ellmax_f + ellmax_g
+    ellmin_fg = 0
+    fg = np.zeros(LM_total_size(0, ellmax_fg), dtype=complex)
+
+    for ell in range(ellmin_fg, ellmax_fg+1):
+        for m in range(-ell, ell+1):
+            i_fg = LM_index(ell, m, ellmin_fg)
+            for ell1 in range(ellmin_f, ellmax_f+1):
+                for ell2 in range(max(abs(ell-ell1), ellmin_g), min(ell+ell1, ellmax_g)+1):
+                    for m1 in range(max(-ell1, m-ell2), min(ell1, m+ell2)+1):
+                        i_f = LM_index(ell1, m1, ellmin_f)
+                        for m2 in [m-m1]:
+                            if abs(m2) <= ell2:
+                                i_g = LM_index(ell2, m2, ellmin_g)
+                                fg[i_fg] += (
+                                    f[i_f]
+                                    * g[i_g]
+                                    * (-1)**(s_fg + ell + m + ell1 + ell2)
+                                    * math.sqrt((2*ell+1)*(2*ell1+1)*(2*ell2+1)/(4*math.pi))
+                                    * Wigner3j(ell1, ell2, ell, m1, m2, -m)
+                                    * Wigner3j(ell1, ell2, ell, s_f, s_g, -s_fg)
+                                )
 
     return fg, ellmin_fg, ellmax_fg, s_fg
