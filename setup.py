@@ -61,7 +61,6 @@ quaternions, as well as in the more standard forms of spherical coordinates and 
 """
 
 if __name__ == "__main__":
-    import numpy
     from setuptools import setup
     setup(name='spherical-functions',
           description='Python/numba implementation of Wigner D Matrices, spin-weighted spherical harmonics, and associated functions',
