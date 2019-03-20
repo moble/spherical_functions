@@ -277,6 +277,30 @@ def LMpM_total_size(ell_min, ell_max):
     return (((4 * ell_max + 12) * ell_max + 11) * ell_max + (-4 * ell_min ** 2 + 1) * ell_min + 3) // 3
 
 
+def theta_phi(n_theta, n_phi):
+    """Construct (theta, phi) grid
+
+    This grid is in the order expected by spinsfast
+
+    Parameters
+    ==========
+    n_theta: int
+        Number of points in the theta direction
+    n_phi: int
+        Number of points in the phi direction
+
+    Returns
+    =======
+    theta_phi_grid: ndarray
+        Array of pairs of floats giving the respective [theta, phi] pairs.  The shape of this array
+        is (n_theta, n_phi, 2).
+
+    """
+    return np.array([[[theta, phi]
+                      for phi in np.linspace(0.0, 2*np.pi, num=n_phi, endpoint=False)]
+                     for theta in np.linspace(0.0, np.pi, num=n_theta, endpoint=True)])
+
+
 from .Wigner3j import Wigner3j, clebsch_gordan
 from .WignerD import (Wigner_D_element, _Wigner_D_element,
                       Wigner_D_matrices, _Wigner_D_matrices,
