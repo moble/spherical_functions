@@ -75,6 +75,5 @@ if __name__ == "__main__":
           version=version,
           install_requires=[
               'numpy>=1.13',
-              'quaternion',
-              'fftw',
+              'numpy-quaternion',
           ],)
