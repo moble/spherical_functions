@@ -2,7 +2,11 @@
 
 set -e
 
-/bin/rm -rf build dist sxs.egg-info
+/bin/rm -rf build __pycache__ dist spherical_functions.egg-info
+python setup.py install
+python -c 'import spherical_functions as sf; print(sf.__version__)'
+
 pip install --quiet --upgrade twine
-python setup.py sdist bdist_wheel --universal
+/bin/rm -rf dist
+python setup.py sdist
 twine upload dist/*
