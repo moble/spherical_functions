@@ -1,5 +1,4 @@
-numpy>=1.7
+numpy>=1.13
 scipy
 numba
-pytest
--e git://github.com/moble/quaternion.git#egg=quaternion
+quaternion
