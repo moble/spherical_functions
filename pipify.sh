@@ -1,3 +1,5 @@
+#! /bin/bash
+
 set -e
 
 /bin/rm -rf build dist sxs.egg-info

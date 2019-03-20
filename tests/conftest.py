@@ -1,4 +1,4 @@
-# Copyright (c) 2016, Michael Boyle
+# Copyright (c) 2019, Michael Boyle
 # See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
 
 import os
