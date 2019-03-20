@@ -68,7 +68,7 @@ if __name__ == "__main__":
           long_description=long_description,
           url='https://github.com/moble/spherical_functions',
           author='Michael Boyle',
-          author_email='',
+          author_email='mob22@cornell.edu',
           packages=['spherical_functions', ],
           package_dir={'spherical_functions': '.'},
           package_data={'spherical_functions': ['*.npy']},
