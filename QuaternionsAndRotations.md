@@ -20,6 +20,7 @@ expressions are at least as simple as those using Euler angles, but
 are faster and more accurate to compute.  The derivation is shown on
 [this page](WignerDMatrices.html).
 
+
 ![Spherical-coordinate system; By Andeggs, via Wikimedia Commons]({{ site.url }}/spherical_functions/images/3D_Spherical_Coords.svg){: style="float:right;height:200px"}
 
 When necessary to make contact with previous literature, we will use
