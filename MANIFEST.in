@@ -1,2 +1,1 @@
 include README.txt LICENSE
-include auto_version/__init__.py
