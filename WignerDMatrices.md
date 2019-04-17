@@ -29,7 +29,7 @@ choose something with an eye to the desired result.
 The following is essentially the same as Wigner's original derivation,
 but with more elegance, and more sensitivity to numerical issues and
 special cases.  This version of the derivation comes from
-[a paper](http://arxiv.org/abs/1302.2919) I wrote a couple years ago,
+[a paper](https://arxiv.org/abs/1302.2919) I wrote a couple years ago,
 and is the source of the code used in this module.
 
 The basic idea of the derivation is to construct a
@@ -167,7 +167,7 @@ are implemented in this module's
 
 Now, that sum is essentially a polynomial, and the best way to evaluate a
 polynomial uses
-[Horner form](http://reference.wolfram.com/language/ref/HornerForm.html) ---
+[Horner form](https://reference.wolfram.com/language/ref/HornerForm.html) ---
 which is both faster and more accurate than the naive approach.  Also, since
 the coefficients involve factorials of the summation index, we can factor
 out the $\rho\_{\text{min}}$ binomials, and be left with just a few

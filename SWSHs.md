@@ -16,7 +16,7 @@ the coefficients of that expansion with respect to a rotated frame.
 These properties will all be derived and discussed below.
 
 This discussion is essentially an updated version of the one found in
-[my paper](http://arxiv.org/abs/1302.2919) of a couple years ago.  For
+[my paper](https://arxiv.org/abs/1302.2919) of a couple years ago.  For
 more references, see the citations therein.
 
 ## Spin-weighted functions
@@ -99,7 +99,7 @@ Newman-Penrose formalism and Lorentz transformations.)
 As a side note, a common mathematical device for simultaneously
 recording a position on the sphere and the orientation of the tangent
 basis is called the
-["Hopf fibration"](http://en.wikipedia.org/wiki/Hopf_fibration).  This
+["Hopf fibration"](https://en.wikipedia.org/wiki/Hopf_fibration).  This
 is a fiber bundle, where the base space is the sphere $S^2$
 (representing positions on the sphere), and the fibers are circles
 $S^1$ (corresponding to orientations of the tangent basis at that
@@ -128,7 +128,7 @@ Or, to put this in a form more useful for us, we have
 Plugging these expressions into the expression for $\mathfrak{D}$
 given [here](WignerDMatrices.html#mjx-eqn-eqD_RaGeqRb), for example,
 and comparing to the expressions in
-[the data-formats paper](http://arxiv.org/abs/0709.0093), we see that
+[the data-formats paper](https://arxiv.org/abs/0709.0093), we see that
 SWSHs can be written as
 \begin{equation}
   \label{eq:SWSHFromWignerD}
@@ -358,10 +358,10 @@ remember that rotations do not commute.
       actually scalars, and do actually transform trivially.
 
 [^2]: Footnote 2 of
-      [the NR data-formats paper](http://arxiv.org/abs/0709.0093)
+      [the NR data-formats paper](https://arxiv.org/abs/0709.0093)
       stipulates that $\boldsymbol{m}^a = (\boldsymbol{\vartheta}^a +
       i\, \boldsymbol{\varphi}^a) / \sqrt{2}$, while Eq. (3.1) of
-      [Newman-Penrose's introduction of SWSHs](http://link.aip.org/link/?JMP/7/863/1)
+      [Newman-Penrose's introduction of SWSHs](https://link.aip.org/link/?JMP/7/863/1)
       states that $\boldsymbol{m}' = \boldsymbol{m}\, e^{i\, \psi}$.
       It is not hard to see that a rotation through an angle $\gamma$
       in the positive sense about the vector pointing to $(\vartheta,

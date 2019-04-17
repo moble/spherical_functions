@@ -27,7 +27,7 @@ Gemfile.lock
 ```
 
 Unless you already have Jekyll installed, you'll need to get it.  I'm
-on OS X, so I use [homebrew](http://brew.sh/); package managers such
+on OS X, so I use [homebrew](https://brew.sh/); package managers such
 as `apt-get` should work the same.
 
 ```sh
@@ -48,7 +48,7 @@ bundle exec jekyll serve
 
 You can create new pages in the top directory (or any subdirectory),
 which will be get translated and be available at
-http://localhost:4000/ as long as that `serve` command is running.
+https://localhost:4000/ as long as that `serve` command is running.
 
 But for now, this will just show the `index.html` file that github created
 with the page generator, and any markdown pages you use will just be
@@ -80,7 +80,7 @@ section:
   };
 </script>
 <script type="text/javascript"
-        src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
+        src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
 </script>
 ```
 

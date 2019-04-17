@@ -65,7 +65,7 @@ transformation to a passive one, but he still seems to have made an error in
 writing down the transformation matrix.  Basically, all the angles should have
 their signs reversed.  In this version of the book, Edmonds mentions the paper
 by
-[Wolf (1969)](http://scitation.aip.org/content/aapt/journal/ajp/37/5/10.1119/1.1975665),
+[Wolf (1969)](https://scitation.aip.org/content/aapt/journal/ajp/37/5/10.1119/1.1975665),
 which sorted through various conventions and pointed out an error in older
 versions of Edmonds.  But I think there's still an error.
 
@@ -123,7 +123,7 @@ The Euler angles correspond to what I would have considered the
 ### Euler angles
 
 The
-[`sympy.physics.quantum.spin.Rotation`](http://docs.sympy.org/dev/modules/physics/quantum/spin.html#sympy.physics.quantum.spin.Rotation)
+[`sympy.physics.quantum.spin.Rotation`](https://docs.sympy.org/dev/modules/physics/quantum/spin.html#sympy.physics.quantum.spin.Rotation)
 class uses the $z''$-$y'$-$z$ convention (which the documentation refers to
 as the "passive $z$-$y$-$z$" convention).  This basically means that I have
 to swap the $\alpha$ and $\gamma$ arguments to keep mine consistent with
@@ -135,10 +135,10 @@ sympy:
 
 ### $\mathfrak{D}$ matrices
 
-[Sympy](http://sympy.org/en/index.html) (the symbolic math package for
+[Sympy](https://sympy.org/en/index.html) (the symbolic math package for
 python) implements the $\mathfrak{D}$ matrices as the function
 `sympy.physics.quantum.spin.WignerD`.  Note that
-[the documentation](http://docs.sympy.org/latest/modules/physics/quantum/spin.html#sympy.physics.quantum.spin.WignerD)
+[the documentation](https://docs.sympy.org/latest/modules/physics/quantum/spin.html#sympy.physics.quantum.spin.WignerD)
 swaps the symbols $m$ and $m'$ in their documentation, relative to the
 usual order.  Nonetheless, the arguments to the function are in the
 standard order $(m',m)$.  That is, if you call the function using what
