@@ -69,7 +69,7 @@ def multiply(f, ellmin_f, ellmax_f, s_f, g, ellmin_g, ellmax_g, s_g):
     s_fg = s_f + s_g
     ellmax_fg = ellmax_f + ellmax_g
     ellmin_fg = 0
-    fg = np.zeros(LM_total_size(0, ellmax_fg), dtype=complex)
+    fg = np.zeros(LM_total_size(0, ellmax_fg), dtype=np.complex_)
 
     for ell1 in range(ellmin_f, ellmax_f+1):
         for m1 in range(-ell1, ell1+1):
