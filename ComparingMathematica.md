@@ -1,38 +1,21 @@
 ## Comparison with Mathematica
 
-In the "Applications" section of Mathematica's documentation page for
-`WignerD`, the rotation matrix is constructed from Euler angles
-$(\psi,\theta,\phi)$ according to the expression
+I find it nearly impossible to decipher the *meaning* behind Mathematica's documentation (or anyone
+else's for that matter), so the only comparison I'm willing to make is between actual results when
+using different codes.  Specifically, the Mathematica expression
 
-```
-RotationMatrix[-phi, {0, 0, 1}].RotationMatrix[-theta, {0, 1, 0}].RotationMatrix[-psi, {0, 0, 1}]
-```
-
-This is the inverse of the matrix given by
-
-```
-RotationMatrix[psi, {0, 0, 1}].RotationMatrix[theta, {0, 1, 0}].RotationMatrix[phi, {0, 0, 1}]
+```mathematica
+WignerD[{j, m1, m2}, psi, theta, phi]
 ```
 
-The latter, of course, would be equivalent to a rotor
-$e^{\psi\basis{z}/2}\, e^{\theta\basis{y}/2}\, e^{\phi\basis{z}/2}$,
-which is what I would have denoted $\rotor{R}_{(\psi, \theta,
-\phi)}$.  So my rotor gives the inverse rotation of Mathematica's
-Euler angles.  This could also be viewed as a disagreement over active
-and passive transformations.
+results in a quantity that is identical to the output from my code with this expression:
 
-However, there are still other disagreements.  The same page states
-that
-
-```
-WignerD[{j,m1,m2},psi,theta,phi]
+```python
+(-1)**(m1+m2) * spherical_function.Wigner_D_element(quaternion.from_euler_angles(psi, theta, phi), j, m1, m2)
 ```
 
-gives the function $\mathfrak{D}^j\_{m\_1,m\_2}(\psi,\theta,\phi)$, and
-the spherical harmonics are related to $\mathfrak{D}$ by
+That is, if you chose actual values for `j, m1, m2, psi, theta, phi`, the numbers output by these
+two expressions would be identical (within numerical precision).
 
-\begin{equation}
-  \mathfrak{D}^\ell\_{0,m}(0, \theta, \phi) =
-  \sqrt{\frac{4\pi}{2\ell+1}} Y\_{\ell,m} (\theta, \phi).
-\end{equation}
-
+Note besides the different syntax, the only real difference is the factor of $(-1)^{m_1+m_2}$.  This
+is presumably related to the choice of Condon-Shortley phase.
