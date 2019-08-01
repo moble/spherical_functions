@@ -17,5 +17,5 @@ results in a quantity that is identical to the output from my code with this exp
 That is, if you chose actual values for `j, m1, m2, psi, theta, phi`, the numbers output by these
 two expressions would be identical (within numerical precision).
 
-Note besides the different syntax, the only real difference is the factor of $(-1)^{m_1+m_2}$.  This
-is presumably related to the choice of Condon-Shortley phase.
+Note that besides the different syntax, the only real difference is the factor of $(-1)^{m_1+m_2}$.
+This is presumably related to the choice of Condon-Shortley phase.
