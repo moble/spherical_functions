@@ -92,7 +92,8 @@ class HCalculator(object):
         m = np.array([m for n in range(self.n_max+2) for m in range(-n, n+1)])
         absn = np.array([n for n in range(self.n_max+2) for m in range(n+1)])
         absm = np.array([m for n in range(self.n_max+2) for m in range(n+1)])
-        self.sqrt_factorial_ratio = (-1)**absm * np.sqrt(factorial(absn-absm, exact=True) / factorial(absn+absm, exact=True))
+        self.sqrt_factorial_ratio = (-1)**absm * np.sqrt(
+            np.asarray(factorial(absn-absm, exact=True) / factorial(absn+absm, exact=True), dtype=float))
         self.a = np.sqrt((absn+1+absm) * (absn+1-absm) / ((2*absn+1)*(2*absn+3)))
         self.b = np.sqrt((n-m-1) * (n-m) / ((2*n-1)*(2*n+1)))
         self.b[m<0] *= -1
@@ -248,11 +249,15 @@ class HCalculator(object):
                 for m in range(-n, -mp-1):
                     Hnmpm[nmpm_index(n, mp, m), ...] = Hnmpm[nmpm_index(n, -mp, -m)]
 
-    def __call__(self, cosβ):
+    def workspace(self, cosβ):
+        """Return a new workspace sized for cosβ."""
+        return np.zeros((self.nmpm_total_size_plus1,) + cosβ.shape, dtype=float)
+
+    def __call__(self, cosβ, workspace=None):
         cosβ = np.asarray(cosβ, dtype=float)
         if np.max(cosβ) > 1.0 or np.min(cosβ) < -1.0:
             raise ValueError('Nonsensical value for range of cosβ: [{0}, {1}]'.format(np.min(cosβ), np.max(cosβ)))
-        Hnmpm = np.full((self.nmpm_total_size_plus1,) + cosβ.shape, np.nan, dtype=float)
+        Hnmpm = workspace if workspace is not None else self.workspace(cosβ)
         cosβ = cosβ.reshape((1,) + cosβ.shape)
         sinβ = np.sqrt(1 - cosβ**2)
         self._step_1(Hnmpm)
@@ -262,3 +267,5 @@ class HCalculator(object):
         self._step_5(Hnmpm)
         self._step_6(Hnmpm)
         return Hnmpm[:self.nmpm_total_size]  # Remove n_max+1 scratch space
+
+
