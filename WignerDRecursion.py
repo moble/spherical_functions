@@ -120,22 +120,24 @@ def _step_3(a, b, n_max, Hnmpm, cosβ, sinβ):
     """
     # a = self.a.reshape(self.a.shape + (1,)*(Hnmpm.ndim-1))
     for n in range(1, n_max+1):
-        nmpm_slice1 = slice(nmpm_index(n, 1, 1), nmpm_index(n, 1, n)+1)
-        nmpm_slice2 = slice(nmpm_index(n+1, 0, 2), nmpm_index(n+1, 0, n+1)+1)
-        nmpm_slice3 = slice(nmpm_index(n+1, 0, 0), nmpm_index(n+1, 0, n-1)+1)
-        nmpm_slice4 = slice(nmpm_index(n+1, 0, 1), nmpm_index(n+1, 0, n)+1)
-        nm_slice1 = slice(nm_index(n+1, 0), nm_index(n+1, 0)+1)
-        nm_slice2 = slice(nm_index(n+1, -2), nm_index(n+1, -n-1)-1, -1)
-        nm_slice3 = slice(nm_index(n+1, 0), nm_index(n+1, n-1)+1)
-        nm_slice4 = slice(nabsm_index(n, 1), nabsm_index(n, n)+1)
-        for j in range(Hnmpm.shape[1]):
-            Hnmpm[nmpm_slice1, j] = (1 / b[nm_slice1]) * (
-                0.5 * (
-                      b[nm_slice2] * (1-cosβ[j]) * Hnmpm[nmpm_slice2, j]
-                    - b[nm_slice3] * (1+cosβ[j]) * Hnmpm[nmpm_slice3, j]
+        # m = 1, ..., n
+        i1 = nmpm_index(n, 1, 1)
+        i2 = nmpm_index(n+1, 0, 2)
+        i3 = nmpm_index(n+1, 0, 0)
+        i4 = nmpm_index(n+1, 0, 1)
+        i5 = nm_index(n+1, 0)
+        i6 = nm_index(n+1, -2)
+        i7 = nm_index(n+1, 0)
+        i8 = nabsm_index(n, 1)
+        for i in range(n):
+            for j in range(Hnmpm.shape[1]):
+                Hnmpm[i+i1, j] = (1 / b[i5]) * (
+                    0.5 * (
+                          b[-i+i6] * (1-cosβ[j]) * Hnmpm[i+i2, j]
+                        - b[i+i7] * (1+cosβ[j]) * Hnmpm[i+i3, j]
+                    )
+                    - a[i+i8] * sinβ[j] * Hnmpm[i+i4, j]
                 )
-                - a[nm_slice4] * sinβ[j] * Hnmpm[nmpm_slice4, j]
-            )
         # print('step 3, n =', n, np.all(np.isfinite(Hnmpm[nmpm_slice1, :])))
 
 
