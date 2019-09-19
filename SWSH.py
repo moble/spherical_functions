@@ -39,7 +39,7 @@ def SWSH(R, s, indices):
         specified in `indices`.
 
     """
-    indices = np.array(indices)
+    indices = np.asarray(indices)
     if indices.size > 2 or not isinstance(R, np.ndarray):
         values = np.empty((indices.shape[0],), dtype=complex)
         _SWSH(R.a, R.b, s, indices, values)
