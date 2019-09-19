@@ -129,14 +129,18 @@ def _step_3(a, b, n_max, Hnmpm, cosβ, sinβ):
         i6 = nm_index(n+1, -2)
         i7 = nm_index(n+1, 0)
         i8 = nabsm_index(n, 1)
+        b5 = b[i5]
         for i in range(n):
+            b6 = b[-i+i6]
+            b7 = b[i+i7]
+            a8 = a[i+i8]
             for j in range(Hnmpm.shape[1]):
-                Hnmpm[i+i1, j] = (1 / b[i5]) * (
+                Hnmpm[i+i1, j] = (1 / b5) * (
                     0.5 * (
-                          b[-i+i6] * (1-cosβ[j]) * Hnmpm[i+i2, j]
-                        - b[i+i7] * (1+cosβ[j]) * Hnmpm[i+i3, j]
+                          b6 * (1-cosβ[j]) * Hnmpm[i+i2, j]
+                        - b7 * (1+cosβ[j]) * Hnmpm[i+i3, j]
                     )
-                    - a[i+i8] * sinβ[j] * Hnmpm[i+i4, j]
+                    - a8 * sinβ[j] * Hnmpm[i+i4, j]
                 )
         # print('step 3, n =', n, np.all(np.isfinite(Hnmpm[nmpm_slice1, :])))
 
@@ -160,18 +164,22 @@ def _step_4(d, n_max, Hnmpm):
             i4 = nmpm_index(n, mp, mp+1)
             i5 = nm_index(n, mp)
             i6 = nm_index(n, mp-1)
+            d5 = d[i5]
+            d6 = d[i6]
             for i in range(n-mp):
+                d7 = d[i+i6]
+                d8 = d[i+i5]
                 for j in range(Hnmpm.shape[1]):
-                    Hnmpm[i+i1, j] = (1 / d[i5]) * (
-                          d[i6] * Hnmpm[i+i2, j]
-                        - d[i+i6] * Hnmpm[i+i3, j]
-                        + d[i+i5] * Hnmpm[i+i4, j]
+                    Hnmpm[i+i1, j] = (1 / d5) * (
+                          d6 * Hnmpm[i+i2, j]
+                        - d7 * Hnmpm[i+i3, j]
+                        + d8 * Hnmpm[i+i4, j]
                     )
             # m = n
             i = n-mp
             for j in range(Hnmpm.shape[1]):
-                Hnmpm[i+i1, j] = (1 / d[i5]) * (
-                      d[i6] * Hnmpm[i+i2, j]
+                Hnmpm[i+i1, j] = (1 / d5) * (
+                      d6 * Hnmpm[i+i2, j]
                     - d[i+i6] * Hnmpm[i+i3, j]
                 )
             # print('step 4, n =', n, ' mp =', mp,
@@ -204,18 +212,22 @@ def _step_5(d, n_max, Hnmpm):
             i6 = nm_index(n, mp)
             i7 = nm_index(n, -mp-1)
             i8 = nm_index(n, -mp)
+            d5 = d[i5]
+            d6 = d[i6]
             for i in range(n+mp):
+                d7 = d[i+i7]
+                d8 = d[i+i8]
                 for j in range(Hnmpm.shape[1]):
-                    Hnmpm[i+i1, j] = (1 / d[i5]) * (
-                          d[i6] * Hnmpm[i+i2, j]
-                        + d[i+i7] * Hnmpm[i+i3, j]
-                        - d[i+i8] * Hnmpm[i+i4, j]
+                    Hnmpm[i+i1, j] = (1 / d5) * (
+                          d6 * Hnmpm[i+i2, j]
+                        + d7 * Hnmpm[i+i3, j]
+                        - d8 * Hnmpm[i+i4, j]
                     )
             # m = n
             i = n+mp
             for j in range(Hnmpm.shape[1]):
-                Hnmpm[i+i1, j] = (1 / d[i5]) * (
-                      d[i6] * Hnmpm[i+i2, j]
+                Hnmpm[i+i1, j] = (1 / d5) * (
+                      d6 * Hnmpm[i+i2, j]
                     + d[i+i7] * Hnmpm[i+i3, j]
                 )
             # print('step 5, n =', n, ' mp =', mp,
