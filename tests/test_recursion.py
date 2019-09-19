@@ -7,7 +7,7 @@ import sympy
 import numpy as np
 import quaternion
 import spherical_functions as sf
-from spherical_functions.WignerDRecursion import HCalculator
+from spherical_functions.WignerDRecursion import HCalculator, _step_2, _step_3, _step_4, _step_5, _step_6
 
 
 def test_WignerDRecursion_accuracy():
@@ -53,12 +53,15 @@ def test_WignerDRecursion_timing():
     cosβ = 2*np.random.rand(2*ell_max+1, 2*ell_max+1) - 1
     hcalc = HCalculator(ell_max)
     workspace = hcalc.workspace(cosβ)
-    time = timeit.timeit('hcalc(cosβ, workspace=workspace)', number=100, globals={'hcalc': hcalc, 'cosβ': cosβ, 'workspace': workspace})
-    print('\nTime for ell_max={} grid points was {}ns'.format(ell_max, time))
+    hcalc(cosβ, workspace=workspace)  # Run once to ensure everything is compiled
+    number = 100
+    time = timeit.timeit('hcalc(cosβ, workspace=workspace)', number=number, globals={'hcalc': hcalc, 'cosβ': cosβ, 'workspace': workspace})
+    print('\nTime for ell_max={} grid points was {}ms per call'.format(ell_max, 1000*time/number))
     cosβ = 2*np.random.rand(2*100+1, 2*100+1) - 1
     workspace = hcalc.workspace(cosβ)
-    time = timeit.timeit('hcalc(cosβ, workspace=workspace)', number=100, globals={'hcalc': hcalc, 'cosβ': cosβ, 'workspace': workspace})
-    print('Time for ell_max={} grid points was {}ns'.format(100, time))
+    number = 10
+    time = timeit.timeit('hcalc(cosβ, workspace=workspace)', number=number, globals={'hcalc': hcalc, 'cosβ': cosβ, 'workspace': workspace})
+    print('Time for ell_max={} grid points was {}ms per call'.format(100, 1000*time/number))
 
 
 def test_WignerDRecursion_lineprofiling():
@@ -67,7 +70,8 @@ def test_WignerDRecursion_lineprofiling():
     hcalc = HCalculator(ell_max)
     cosβ = 2*np.random.rand(100, 100) - 1
     workspace = hcalc.workspace(cosβ)
-    profiler = LineProfiler(hcalc.__call__)#, hcalc._step_2, hcalc._step_3, hcalc._step_4, hcalc._step_5, hcalc._step_6)
+    hcalc(cosβ, workspace=workspace)  # Run once to ensure everything is compiled
+    profiler = LineProfiler(hcalc.__call__)#, _step_2, _step_3, _step_4, _step_5, _step_6)
     profiler.runctx('hcalc(cosβ, workspace=workspace)', {'hcalc': hcalc, 'cosβ': cosβ, 'workspace': workspace}, {})
     print()
     profiler.print_stats()
