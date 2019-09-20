@@ -42,6 +42,36 @@ H^{m', m}_n(\beta) = (-1)^{m+m'} H^{m', m}_n(-\beta)
 
 """
 
+"""Associated Legendre function recursion
+
+All references are to "A unified approach to the Clenshaw summation and the recursive computation of
+very high degree and order normalised associated Legendre functions" by Holmes and Featherstone
+(2002).  The text suggests that the best approach -- both in terms of speed and accuracy -- is the
+"modified forward row method" described in Sec. 2.5.
+
+Define k=1 for m=0 and k=2 for m>0, j=2 for m=0 and j=1 for m>0, and
+
+\hat{P}_{n, m}(\theta) = \sqrt{ \frac{k(2n+1)(n-m)!} {(n+m)!} } P_{n,m}(\theta) / \sin^m(\theta)
+
+Now, define the coefficients
+
+g_{n,m} = \frac{2(m+1)} {\sqrt{(n-m)(n+m+1)}},
+
+and
+
+h_{n,m} = \sqrt{ \frac{(n+m+2)(n-m-1)} {(n-m)(n+m+1)} }.
+
+Noting that h_{n,n-1} is always 0, we formulate the recursion as
+
+\hat{P}_{1,1} = \sqrt{3},
+
+\hat{P}_{n,n} = \sqrt{\frac{2n+1} {2n}} \hat{P}_{n-1,n-1} \text{ for $n>1},
+
+\hat{P}_{n,m} = \frac{1}{\sqrt{j}} \left(g_{n,m} \cos\theta \hat{P}_{n,m+1} - h_{n,m} \sin^2\theta \hat{P}_{n,m+2}\right),
+
+where the last term in the last equation above drops out for $m=n-1$.
+"""
+
 
 @njit
 def sign(m):
@@ -85,7 +115,6 @@ def nmpm_index(n, mp, m):
 def _step_1(Hnmpm):
     """If n=0 set H_{0}^{0,0}=1."""
     Hnmpm[0, :] = 1.0
-    # print('step 1', np.all(np.isfinite(Hnmpm[0, ...])))
 
 
 @njit
@@ -185,7 +214,6 @@ def _step_3(a, b, n_max, Hnmpm, cosβ, sinβ):
                     )
                     - a8 * sinβ[j] * Hnmpm[i+i4, j]
                 )
-        # print('step 3, n =', n, np.all(np.isfinite(Hnmpm[nmpm_slice1, :])))
 
 
 @njit
@@ -225,9 +253,6 @@ def _step_4(d, n_max, Hnmpm):
                       d6 * Hnmpm[i+i2, j]
                     - d[i+i6] * Hnmpm[i+i3, j]
                 )
-            # print('step 4, n =', n, ' mp =', mp,
-            #       np.all(np.isfinite(Hnmpm[nmpm_slice1, :])),
-            #       np.all(np.isfinite(Hnmpm[nmpm_index(n, mp+1, n), :])))
 
 
 @njit
@@ -273,9 +298,6 @@ def _step_5(d, n_max, Hnmpm):
                       d6 * Hnmpm[i+i2, j]
                     + d[i+i7] * Hnmpm[i+i3, j]
                 )
-            # print('step 5, n =', n, ' mp =', mp,
-            #       np.all(np.isfinite(Hnmpm[nmpm_slice1, :])),
-            #       np.all(np.isfinite(Hnmpm[nmpm_index(n, mp-1, n), :])))
 
 
 @njit
@@ -323,8 +345,6 @@ class HCalculator(object):
             np.all(np.isfinite(self.a)) and
             np.all(np.isfinite(self.b)) and
             np.all(np.isfinite(self.d)) and
-            # np.all(np.isfinite(self.g)) and
-            # np.all(np.isfinite(self.h)) and
             np.all(np.isfinite(self.absm))
         ):
             raise ValueError("Found a non-finite value inside this object")
