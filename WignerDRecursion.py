@@ -303,8 +303,9 @@ class HCalculator(object):
         self.b[m<0] *= -1
         self.d = 0.5 * np.sqrt((n-m) * (n+m+1))
         self.d[m<0] *= -1
-        self.g = 2*(m+1) / np.sqrt((n-m)*(n+m+1))
-        self.h = np.sqrt((n+m+2)*(n-m-1) / ((n-m)*(n+m+1)))
+        with np.errstate(divide='ignore', invalid='ignore'):
+            self.g = 2*(m+1) / np.sqrt((n-m)*(n+m+1))
+            self.h = np.sqrt((n+m+2)*(n-m-1) / ((n-m)*(n+m+1)))
         self.absm = absm
         if not (
             np.all(np.isfinite(self.sqrt_factorial_ratio)) and
