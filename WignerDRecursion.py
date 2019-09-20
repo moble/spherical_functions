@@ -114,18 +114,29 @@ def _step_2(g, h, n_max, Hnmpm, cosβ, sinβ):
     # n = 2, ..., n_max+1
     for n in range(2, n_max+2):
         n0n_index = nmpm_index(n, 0, n)
+        nm10nm1_index = nmpm_index(n-1, 0, n-1)
         nn_index = nm_index(n, n)
-        # m = n
-        Hnmpm[n0n_index, :] = np.sqrt((2*n+1) / (2*n)) * Hnmpm[nmpm_index(n-1, 0, n-1), :]
-        # m = n-1
-        Hnmpm[n0n_index-1, :] = g[nn_index-1] * cosβ * Hnmpm[n0n_index, :]
+        const = np.sqrt((2*n+1) / (2*n))
+        gi = g[nn_index-1]
+        for j in range(Hnmpm.shape[1]):
+            # m = n
+            Hnmpm[n0n_index, j] = const * Hnmpm[nm10nm1_index, j]
+            # m = n-1
+            Hnmpm[n0n_index-1, j] = gi * cosβ[j] * Hnmpm[n0n_index, j]
         # m = n-2, ..., 1
         for i in range(2, n):
-            Hnmpm[n0n_index-i, :] = (g[nn_index-i] * cosβ * Hnmpm[n0n_index-i+1, :] - h[nn_index-i] * sin2β * Hnmpm[n0n_index-i+2, :])
+            gi = g[nn_index-i]
+            hi = h[nn_index-i]
+            for j in range(Hnmpm.shape[1]):
+                Hnmpm[n0n_index-i, j] = gi * cosβ[j] * Hnmpm[n0n_index-i+1, j] - hi * sin2β[j] * Hnmpm[n0n_index-i+2, j]
         # m = 0, with normalization
-        Hnmpm[n0n_index-n, :] = (g[nn_index-n] * cosβ * Hnmpm[n0n_index-n+1, :] - h[nn_index-n] * sin2β * Hnmpm[n0n_index-n+2, :]) / np.sqrt(2*(2*n+1))
+        const = np.sqrt(2*(2*n+1))
+        gi = g[nn_index-n]
+        hi = h[nn_index-n]
+        for j in range(Hnmpm.shape[1]):
+            Hnmpm[n0n_index-n, j] = (gi * cosβ[j] * Hnmpm[n0n_index-n+1, j] - hi * sin2β[j] * Hnmpm[n0n_index-n+2, j]) / const
         # Now, loop back through, correcting the normalization for this row, except for n=n element
-        prefactor = np.ones_like(sinβ) / np.sqrt(2*(2*n+1))
+        prefactor = np.full_like(sinβ, 1/const)
         for i in range(1, n):
             prefactor *= sinβ
             Hnmpm[n0n_index-n+i, :] *= prefactor

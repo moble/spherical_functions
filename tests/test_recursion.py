@@ -49,19 +49,15 @@ def test_WignerDRecursion_accuracy():
 def test_WignerDRecursion_timing():
     import timeit
     import textwrap
-    ell_max = 8
-    cosβ = 2*np.random.rand(2*ell_max+1, 2*ell_max+1) - 1
-    hcalc = HCalculator(ell_max)
-    workspace = hcalc.workspace(cosβ)
-    hcalc(cosβ, workspace=workspace)  # Run once to ensure everything is compiled
-    number = 100
-    time = timeit.timeit('hcalc(cosβ, workspace=workspace)', number=number, globals={'hcalc': hcalc, 'cosβ': cosβ, 'workspace': workspace})
-    print('\nTime for ell_max={} grid points was {}ms per call'.format(ell_max, 1000*time/number))
-    cosβ = 2*np.random.rand(2*100+1, 2*100+1) - 1
-    workspace = hcalc.workspace(cosβ)
-    number = 10
-    time = timeit.timeit('hcalc(cosβ, workspace=workspace)', number=number, globals={'hcalc': hcalc, 'cosβ': cosβ, 'workspace': workspace})
-    print('Time for ell_max={} grid points was {}ms per call'.format(100, 1000*time/number))
+    print()
+    hcalc = HCalculator(8)
+    for ell_max in [8, 100]:
+        cosβ = 2*np.random.rand(2*ell_max+1, 2*ell_max+1) - 1
+        workspace = hcalc.workspace(cosβ)
+        size = hcalc(cosβ, workspace=workspace).size  # Run once to ensure everything is compiled
+        number = 1000 // ell_max
+        time = timeit.timeit('hcalc(cosβ, workspace=workspace)', number=number, globals={'hcalc': hcalc, 'cosβ': cosβ, 'workspace': workspace})
+        print('Time for ell_max={} grid points was {}ms per call; {}ns per element'.format(100, 1_000*time/number, 1_000_000_000*time/(number*size)))
 
 
 def test_WignerDRecursion_lineprofiling():
