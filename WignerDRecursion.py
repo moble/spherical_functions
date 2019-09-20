@@ -88,26 +88,75 @@ def _step_1(Hnmpm):
     # print('step 1', np.all(np.isfinite(Hnmpm[0, ...])))
 
 
-#@njit
-def _step_2(sqrt_factorial_ratio, absm, n_max, Hnmpm, cosβ):
+# #@njit
+# def _step_2(sqrt_factorial_ratio, absm, n_max, Hnmpm, cosβ):
+#     """Compute values H^{0,m}_{n}(β)for m=0,...,n and H^{0,m}_{n+1}(β) for m=0,...,n+1 using Eq. (32):
+#         H^{0,m}_{n}(β) = (-1)^m \sqrt{(n-|m|)! / (n+|m|)!} P^{|m|}_{n}(cos β)
+
+#     NOTE: Though not specified in arxiv:1403.7698, there is not enough information for step 4 unless we
+#     also use symmetry to set H^{1,0}_{n} here.  Similarly, step 5 needs additional information, which
+#     depends on setting H^{0, -1}_{n} from its symmetric equivalent H^{0, 1}_{n} in this step.
+
+#     """
+#     from scipy.special import lpmv
+#     sqrt_factorial_ratio = sqrt_factorial_ratio.reshape(sqrt_factorial_ratio.shape + (1,)*(Hnmpm.ndim-1))
+#     absm = absm.reshape(absm.shape + (1,)*(Hnmpm.ndim-1))
+#     for n in range(1, n_max+2):
+#         nmpm_slice = slice(nmpm_index(n, 0, 0), nmpm_index(n, 0, n)+1)
+#         nabsm_slice = slice(nabsm_index(n, 0), nabsm_index(n, n)+1)
+#         Hnmpm[nmpm_slice, :] = sqrt_factorial_ratio[nabsm_slice] * lpmv(absm[nabsm_slice], n, cosβ)
+#         Hnmpm[nmpm_index(n, 1, 0), :] = Hnmpm[nmpm_index(n, 0, 1)]
+#         Hnmpm[nmpm_index(n, 0, -1), :] = Hnmpm[nmpm_index(n, 0, 1)]
+#         # print('step 2, n =', n, np.all(np.isfinite(Hnmpm[nmpm_slice, :])))
+
+
+@njit
+def _step_2(g, h, n_max, Hnmpm, cosβ, sinβ):
     """Compute values H^{0,m}_{n}(β)for m=0,...,n and H^{0,m}_{n+1}(β) for m=0,...,n+1 using Eq. (32):
         H^{0,m}_{n}(β) = (-1)^m \sqrt{(n-|m|)! / (n+|m|)!} P^{|m|}_{n}(cos β)
+                       = (-1)^m (sin β)^m \hat{P}^{|m|}_{n}(cos β) / \sqrt{k (2n+1)}
 
     NOTE: Though not specified in arxiv:1403.7698, there is not enough information for step 4 unless we
     also use symmetry to set H^{1,0}_{n} here.  Similarly, step 5 needs additional information, which
     depends on setting H^{0, -1}_{n} from its symmetric equivalent H^{0, 1}_{n} in this step.
 
     """
-    from scipy.special import lpmv
-    sqrt_factorial_ratio = sqrt_factorial_ratio.reshape(sqrt_factorial_ratio.shape + (1,)*(Hnmpm.ndim-1))
-    absm = absm.reshape(absm.shape + (1,)*(Hnmpm.ndim-1))
-    for n in range(1, n_max+2):
-        nmpm_slice = slice(nmpm_index(n, 0, 0), nmpm_index(n, 0, n)+1)
-        nabsm_slice = slice(nabsm_index(n, 0), nabsm_index(n, n)+1)
-        Hnmpm[nmpm_slice, :] = sqrt_factorial_ratio[nabsm_slice] * lpmv(absm[nabsm_slice], n, cosβ)
+    sin2β = sinβ**2
+
+    # n = 1
+    n0n_index = nmpm_index(1, 0, 1)
+    nn_index = nm_index(1, 1)
+    Hnmpm[n0n_index, :] = np.sqrt(3)  # Un-normalized
+    Hnmpm[n0n_index-1, :] = (g[nn_index-1] * cosβ) / np.sqrt(2)  # Normalized
+    # n = 2, ..., n_max+1
+    for n in range(2, n_max+2):
+        n0n_index = nmpm_index(n, 0, n)
+        nn_index = nm_index(n, n)
+        # m = n
+        Hnmpm[n0n_index, :] = np.sqrt((2*n+1) / (2*n)) * Hnmpm[nmpm_index(n-1, 0, n-1), :]
+        # m = n-1
+        Hnmpm[n0n_index-1, :] = (g[nn_index-1] * cosβ * Hnmpm[n0n_index, :]) / np.sqrt(2)
+        # m = n-2, ..., 1
+        for i in range(2, n):
+            Hnmpm[n0n_index-i, :] = (g[nn_index-i] * cosβ * Hnmpm[n0n_index-i+1, :] - h[nn_index-i] * sin2β * Hnmpm[n0n_index-i+2, :]) / np.sqrt(2)
+        # m = 0
+        Hnmpm[n0n_index-n, :] = (g[nn_index-n] * cosβ * Hnmpm[n0n_index-n+1, :] - h[nn_index-n] * sin2β * Hnmpm[n0n_index-n+2, :]) / np.sqrt(2*n+1)
+        # Now, loop back through, correcting the normalization for this row, except for n=n element
+        prefactor = np.ones_like(sinβ) / np.sqrt(2*(2*n+1))
+        for i in range(1, n):
+            prefactor *= -sinβ
+            Hnmpm[n0n_index-n+i, :] *= prefactor
+        # Supply extra edge cases as noted in docstring
         Hnmpm[nmpm_index(n, 1, 0), :] = Hnmpm[nmpm_index(n, 0, 1)]
         Hnmpm[nmpm_index(n, 0, -1), :] = Hnmpm[nmpm_index(n, 0, 1)]
-        # print('step 2, n =', n, np.all(np.isfinite(Hnmpm[nmpm_slice, :])))
+    # Correct normalization of n=n elements
+    prefactor = np.ones_like(sinβ)
+    for n in range(1, n_max+2):
+        prefactor *= -sinβ
+        Hnmpm[nmpm_index(n, 0, n), :] *= prefactor / np.sqrt(2*(2*n+1))
+    # Supply extra edge cases as noted in docstring
+    Hnmpm[nmpm_index(1, 1, 0), :] = Hnmpm[nmpm_index(1, 0, 1)]
+    Hnmpm[nmpm_index(1, 0, -1), :] = Hnmpm[nmpm_index(1, 0, 1)]
 
 
 @njit
@@ -271,12 +320,16 @@ class HCalculator(object):
         self.b[m<0] *= -1
         self.d = 0.5 * np.sqrt((n-m) * (n+m+1))
         self.d[m<0] *= -1
+        self.g = 2*(m+1) / np.sqrt((n-m)*(n+m+1))
+        self.h = np.sqrt((n+m+2)*(n-m-1) / ((n-m)*(n+m+1)))
         self.absm = absm
         if not (
             np.all(np.isfinite(self.sqrt_factorial_ratio)) and
             np.all(np.isfinite(self.a)) and
             np.all(np.isfinite(self.b)) and
             np.all(np.isfinite(self.d)) and
+            # np.all(np.isfinite(self.g)) and
+            # np.all(np.isfinite(self.h)) and
             np.all(np.isfinite(self.absm))
         ):
             raise ValueError("Found a non-finite value inside this object")
@@ -295,7 +348,7 @@ class HCalculator(object):
         sinβ = np.sqrt(1 - cosβ**2)
         Hnmpm = Hnmpm.reshape((-1, int(np.prod(cosβshape))))
         _step_1(Hnmpm)
-        _step_2(self.sqrt_factorial_ratio, self.absm, self.n_max, Hnmpm, cosβ)
+        _step_2(self.g, self.h, self.n_max, Hnmpm, cosβ, sinβ)
         _step_3(self.a, self.b, self.n_max, Hnmpm, cosβ, sinβ)
         _step_4(self.d, self.n_max, Hnmpm)
         _step_5(self.d, self.n_max, Hnmpm)

@@ -37,7 +37,7 @@ def test_WignerDRecursion_accuracy():
                 sympyd = sympy.re(sympy.N(sympyWignerD(n, mp, m, alpha, -beta, gamma).doit()))
                 myd = ϵ(mp) * ϵ(-m) * Hnmpm[i]
                 error = float(min(abs(sympyd+myd), abs(sympyd-myd)))
-                assert error < 1e-14, "Testing Wigner d recursion: n={}, m'={}, m={}, error={}".format(n, mp, m, error)
+                assert error < 1e-14, "Testing Wigner d recursion: n={}, m'={}, m={}, v1={}, v2={}, error={}".format(n, mp, m, sympyd, myd, error)
                 max_error = max(error, max_error)
                 # errors[i] = float(min(abs(sympyd+myd), abs(sympyd-myd)))
                 # print("{:>5} {:>5} {:>5} {:24} {:24} {:24}".format(n, mp, m, float(sympyd), myd, errors[i]))
