@@ -216,3 +216,8 @@ def test_modes_eth(self):
 @pytest.mark.xfail
 def test_modes_norm(self):
     raise NotImplementedError()
+
+
+@pytest.mark.xfail
+def test_modes_ufuncs(self):
+    raise NotImplementedError()

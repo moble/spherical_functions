@@ -235,4 +235,5 @@ class Modes(np.ndarray):
 
         return results[0] if len(results) == 1 else results
     
+
 Modes.conj.__doc__ = Modes.conjugate.__doc__
