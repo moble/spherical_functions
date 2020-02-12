@@ -209,15 +209,23 @@ def test_modes_real():
 
 
 @pytest.mark.xfail
-def test_modes_eth(self):
+def test_modes_eth():
     raise NotImplementedError()
 
 
-@pytest.mark.xfail
-def test_modes_norm(self):
-    raise NotImplementedError()
+def test_modes_norm():
+    tolerance = 1e-15
+    s = -2
+    ell_min = abs(s)
+    ell_max = 8
+    a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2).view(complex)
+    m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+    mmbar = m.multiply(m.conjugate())
+    norm = np.sqrt(2*np.sqrt(np.pi) * mmbar[..., 0].view(np.ndarray).real)
+    assert np.allclose(norm, m.norm(), rtol=tolerance, atol=tolerance)
 
 
+
 @pytest.mark.xfail
-def test_modes_ufuncs(self):
+def test_modes_ufuncs():
     raise NotImplementedError()
