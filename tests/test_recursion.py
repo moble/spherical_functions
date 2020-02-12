@@ -7,7 +7,7 @@ import sympy
 import numpy as np
 import quaternion
 import spherical_functions as sf
-from spherical_functions.WignerDRecursion import HCalculator, _step_2, _step_3, _step_4, _step_5, _step_6
+from spherical_functions.WignerD.WignerDRecursion import HCalculator, _step_2, _step_3, _step_4, _step_5, _step_6
 
 
 def test_WignerDRecursion_accuracy():

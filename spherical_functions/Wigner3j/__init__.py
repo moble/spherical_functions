@@ -10,7 +10,7 @@ This module uses code from sympy, originally written by Jens Rasch.
 from __future__ import print_function, division, absolute_import
 
 from math import sqrt
-from . import factorials
+from .. import factorials
 from quaternion.numba_wrapper import njit, xrange
 
 

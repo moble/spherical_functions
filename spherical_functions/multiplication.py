@@ -4,7 +4,29 @@ from . import LM_total_size, Wigner3j, LM_index
 from quaternion.numba_wrapper import jit, njit, xrange
 
 
-@jit('Tuple((complex128[:], intc, intc, intc))(complex128[:], intc, intc, intc, complex128[:], intc, intc, intc)')
+@njit()
+def _multiplication_helper(f, ellmin_f, ellmax_f, s_f,
+                           g, ellmin_g, ellmax_g, s_g,
+                           fg, ellmin_fg, ellmax_fg, s_fg):
+    # NOTE: This works in-place on fg, and returns fg for good measure
+    for ell1 in range(ellmin_f, ellmax_f+1):
+        for m1 in range(-ell1, ell1+1):
+            sum1 = math.sqrt((2*ell1+1)/(4*math.pi))*f[..., LM_index(ell1, m1, ellmin_f)]  # Calculate f contribution
+            for ell2 in range(ellmin_g, ellmax_g+1):
+                for m2 in range(-ell2, ell2+1):
+                    sum2 = math.sqrt(2*ell2+1)*g[..., LM_index(ell2, m2, ellmin_g)]   # Calculate g contribution
+                    m3 = m1+m2
+                    for ell3 in range(abs(ell1-ell2), min(ell1+ell2, ellmax_fg)+1):
+                        # Could loop over same (ell3, m3) more than once, so add all contributions together
+                        fg[..., LM_index(ell3, m3, ellmin_fg)] += (
+                            math.pow(-1, ell1 + ell2 + ell3 + s_fg + m3)
+                            * math.sqrt(2*ell3+1)
+                            * Wigner3j(ell1, ell2, ell3, s_f, s_g, -s_fg)
+                            * Wigner3j(ell1, ell2, ell3, m1, m2, -m3)
+                        ) * sum1 * sum2
+    return fg
+
+
 def multiply(f, ellmin_f, ellmax_f, s_f, g, ellmin_g, ellmax_g, s_g):
     """Return modes of the decomposition of f*g
 
@@ -72,20 +94,8 @@ def multiply(f, ellmin_f, ellmax_f, s_f, g, ellmin_g, ellmax_g, s_g):
     shape_fg = np.broadcast(f[..., 0], g[..., 0]).shape + (LM_total_size(0, ellmax_fg),)
     fg = np.zeros(shape_fg, dtype=np.complex_)
 
-    for ell1 in range(ellmin_f, ellmax_f+1):
-        for m1 in range(-ell1, ell1+1):
-            sum1 = math.sqrt((2*ell1+1)/(4*math.pi))*f[..., LM_index(ell1, m1, ellmin_f)]  # Calculate f contribution
-            for ell2 in range(ellmin_g, ellmax_g+1):
-                for m2 in range(-ell2, ell2+1):
-                    sum2 = math.sqrt(2*ell2+1)*g[..., LM_index(ell2, m2, ellmin_g)]   # Calculate g contribution
-                    m3 = m1+m2
-                    for ell3 in range(abs(ell1-ell2), ell1+ell2+1):
-                        # Could loop over same (ell3, m3) more than once, so add all contributions together
-                        fg[..., LM_index(ell3, m3, ellmin_fg)] += (
-                            math.pow(-1, ell1 + ell2 + ell3 + s_fg + m3)
-                            * math.sqrt(2*ell3+1)
-                            * Wigner3j(ell1, ell2, ell3, s_f, s_g, -s_fg)
-                            * Wigner3j(ell1, ell2, ell3, m1, m2, -m3)
-                        ) * sum1 * sum2
+    _multiplication_helper(f, ellmin_f, ellmax_f, s_f,
+                           g, ellmin_g, ellmax_g, s_g,
+                           fg, ellmin_fg, ellmax_fg, s_fg)
 
     return fg, ellmin_fg, ellmax_fg, s_fg

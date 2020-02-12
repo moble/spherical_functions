@@ -16,10 +16,10 @@ import numbers
 import cmath
 import numpy as np
 import quaternion
-from . import (_Wigner_coefficient as _coeff,
-               Wigner_coefficient as coeff,
-               epsilon, error_on_bad_indices, LMpM_total_size,
-               ell_max as sf_ell_max)
+from .. import (_Wigner_coefficient as _coeff,
+                Wigner_coefficient as coeff,
+                epsilon, error_on_bad_indices, LMpM_total_size,
+                ell_max as sf_ell_max)
 from quaternion.numba_wrapper import njit, jit, int64, complex128, xrange
 
 

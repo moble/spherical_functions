@@ -45,7 +45,7 @@ else:
         except:
             version = '0.0.0'
             print("Setup.py failed to determine the version; using '{0}'".format(version))
-with open('_version.py', 'w') as f:
+with open('spherical_functions/_version.py', 'w') as f:
     f.write('__version__ = "{0}"'.format(version))
 
 validate = True
@@ -68,11 +68,17 @@ if __name__ == "__main__":
           url='https://github.com/moble/spherical_functions',
           author='Michael Boyle',
           author_email='mob22@cornell.edu',
-          packages=['spherical_functions', ],
-          package_dir={'spherical_functions': '.'},
+          packages=[
+              'spherical_functions',
+              'spherical_functions.Wigner3j',
+              'spherical_functions.WignerD',
+              'spherical_functions.SWSH',
+          ],
           package_data={'spherical_functions': ['*.npy']},
           version=version,
           install_requires=[
               'numpy>=1.13',
               'numpy-quaternion',
-          ],)
+          ],
+          python_requires='>=3.6',
+    )
