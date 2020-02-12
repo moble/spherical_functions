@@ -1,6 +1,6 @@
 import numpy as np
 import spinsfast
-from . import LM_total_size, Wigner3j, LM_index
+from . import LM_total_size, Wigner3j, LM_index, LM_deduce_ell_max
 from .multiplication import _multiplication_helper
 
 
@@ -12,6 +12,11 @@ class Modes(np.ndarray):
             raise ValueError(f"Input array must have dtype `complex`; dtype is `{input_array.dtype}`.\n            "
                              +"You can use `input_array.view(complex)` if the data are\n            "
                              +"stored as consecutive real and imaginary parts.")
+        ell_max = ell_max or LM_deduce_ell_max(input_array.shape[-1], ell_min)
+        if input_array.shape[-1] != LM_total_size(ell_min, ell_max):
+            raise ValueError(f"Input array has shape {input_array.shape}.  Its last dimension should "
+                             +f"have size {LM_total_size(ell_min, ell_max)},\n            "
+                             f"to be consistent with the input ell_min ({ell_min}) and ell_max ({ell_max})")
         if ell_min == 0:
             obj = input_array.view(cls)
         else:
@@ -31,69 +36,18 @@ class Modes(np.ndarray):
         return self._s
     
     @property
-    def ell_max(self):
-        return self._ell_max
-    
-    @property
     def ell_min(self):
         return 0
+    
+    @property
+    def ell_max(self):
+        return self._ell_max
     
     def grid(self, n_theta=None, n_phi=None):
         n_theta = n_theta or 2*self.ell_max+1
         n_phi = n_phi or n_theta
         return spinsfast.salm2map(self.view(np.ndarray), self.s, self.ell_max, n_theta, n_phi)
 
-    def conj(self):
-        return self.conjugate()
-
-    def conjugate(self, inplace=False):
-        """Return Modes object corresponding to conjugated function
-        
-        The operations of conjugation and decomposition into mode weights do not commute.  That is,
-        the modes of a conjugated function do not equal the conjugated modes of a function.  So,
-        rather than simply returning the conjugate of the data from this Modes object, this
-        function returns a Modes object containing the data for the conjugated function.
-        
-        f = sum(f{s, l,m} * {s}Y{l,m} for l, m in LM)
-        conjugate(f) = sum(conjugate(f{s, l,m}) * conjugate({s}Y{l,m}))
-                     = sum(conjugate(f{s, l,m}) * (-1)**(s+m) * {-s}Y{l,-m})
-                     = sum((-1)**(s+m) * conjugate(f{s, l, -m}) * {-s}Y{l,m})
-        
-        conjugate(f){s', l',m'} = integral(
-            sum((-1)**(s+m) * conjugate(f{s,l,-m}) * {-s}Y{l,m}) * {s'}Y{l',m'},
-            dR  # integration over rotation group
-        )
-        = sum((-1)**(s+m) * conjugate(f{s,l,-m}) * delta_{-s, s'} * delta_{l, l'} * delta_{m, m'})
-        = (-1)**(s'+m') * conjugate(f{-s', l', -m'})
-        
-        conjugate(f){s, l, m} = (-1)**(s+m) * conjugate(f{-s, l, -m})
-        
-        """
-        s = self.view(np.ndarray)
-        c = s if inplace else np.zeros_like(s)
-        for ell in range(abs(self.s), self.ell_max+1):
-            i = sf.LM_index(ell, 0, self.ell_min)
-            c[..., i] = np.conjugate(s[..., i])
-            for m in range(1, ell+1):
-                i_p, i_n = sf.LM_index(ell, m, self.ell_min), sf.LM_index(ell, -m, self.ell_min)
-                if (self.s+m)%2 == 0:
-                    c[..., i_p], c[..., i_n] = np.conjugate(s[..., i_n]), np.conjugate(s[..., i_p])
-                else:
-                    c[..., i_p], c[..., i_n] = -np.conjugate(s[..., i_n]), -np.conjugate(s[..., i_p])
-        if inplace:
-            self._s *= -1
-            return self
-        return Modes(c, s=-self.s, ell_min=self.ell_min, ell_max=self.ell_max)
-    
-    def eth(self):
-        raise NotImplementedError()
-    
-    def ethbar(self):
-        raise NotImplementedError()
-        
-    def norm(self):
-        return np.linalg.norm(self.view(np.ndarray), axis=-1)
-    
     def add(self, other, subtraction=False):
         if isinstance(other, Modes):
             if self.s != other.s:
@@ -148,8 +102,105 @@ class Modes(np.ndarray):
         else:
             return self / other
     
+    def conj(self, inplace=False):
+        return self.conjugate(inplace=inplace)
+
+    def conjugate(self, inplace=False):
+        """Return Modes object corresponding to conjugated function
+        
+        The operations of conjugation and decomposition into mode weights do not commute.  That is,
+        the modes of a conjugated function do not equal the conjugated modes of a function.  So,
+        rather than simply returning the conjugate of the data from this Modes object, this
+        function returns a Modes object containing the data for the conjugated function.
+
+        If `inplace` is True, then the operation is performed in place, modifying this Modes object
+        itself.  Note that some copying is still needed, but only for 2 modes at a time, and those
+        copies are freed after this function returns.
+
+        Here is the derivation:
+
+            f = sum(f{s, l,m} * {s}Y{l,m} for l, m in LM)
+            conjugate(f) = sum(conjugate(f{s, l,m}) * conjugate({s}Y{l,m}))
+                         = sum(conjugate(f{s, l,m}) * (-1)**(s+m) * {-s}Y{l,-m})
+                         = sum((-1)**(s+m) * conjugate(f{s, l, -m}) * {-s}Y{l,m})
+
+            conjugate(f){s', l',m'} = integral(
+                sum((-1)**(s+m) * conjugate(f{s,l,-m}) * {-s}Y{l,m}) * {s'}Y{l',m'},
+                dR  # integration over rotation group
+            )
+            = sum((-1)**(s+m) * conjugate(f{s,l,-m}) * delta_{-s, s'} * delta_{l, l'} * delta_{m, m'})
+            = (-1)**(s'+m') * conjugate(f{-s', l', -m'})
+
+        The result is this:
+
+            conjugate(f){s, l, m} = (-1)**(s+m) * conjugate(f{-s, l, -m})
+
+        """
+        s = self.view(np.ndarray)
+        c = s if inplace else np.zeros_like(s)
+        for ell in range(abs(self.s), self.ell_max+1):
+            i = LM_index(ell, 0, self.ell_min)
+            c[..., i] = np.conjugate(s[..., i])
+            for m in range(1, ell+1):
+                i_p, i_n = LM_index(ell, m, self.ell_min), LM_index(ell, -m, self.ell_min)
+                if (self.s+m)%2 == 0:
+                    c[..., i_p], c[..., i_n] = np.conjugate(s[..., i_n]), np.conjugate(s[..., i_p])
+                else:
+                    c[..., i_p], c[..., i_n] = -np.conjugate(s[..., i_n]), -np.conjugate(s[..., i_p])
+        if inplace:
+            self._s *= -1
+            return self
+        return Modes(c, s=-self.s, ell_min=self.ell_min, ell_max=self.ell_max)
+
+    def real(self, inplace=False):
+        """Return Modes object corresponding to real-valued function
+
+        The condition that a function `f` be real is given by
+
+            f{l, m} = conjugate(f){l, m} = (-1)**(m) * conjugate(f{l, -m})
+
+        [Note that conj(f){l, m} != conj(f{l, m}).  See Modes.conjugate docstring.]
+
+        We enforce that condition by essentially averaging the two modes:
+
+            f{l, m} = (f{l, m} + (-1)**m * conjugate(f{l, -m})) / 2
+        
+        """
+        if self.s != 0:
+            raise ValueError("The real part of a function with non-zero spin weight is meaningless")
+        s = self.view(np.ndarray)
+        c = s if inplace else np.zeros_like(s)
+        for ell in range(abs(self.s), self.ell_max+1):
+            i = LM_index(ell, 0, self.ell_min)
+            c[..., i] = np.real(s[..., i])
+            for m in range(1, ell+1):
+                i_p, i_n = LM_index(ell, m, self.ell_min), LM_index(ell, -m, self.ell_min)
+                if m%2 == 0:
+                    c[..., i_p] = (s[..., i_p] + np.conjugate(s[..., i_n])) / 2
+                    c[..., i_n] = np.conjugate(c[..., i_p])
+                else:
+                    c[..., i_p] = (s[..., i_p] - np.conjugate(s[..., i_n])) / 2
+                    c[..., i_n] = -np.conjugate(c[..., i_p])
+        if inplace:
+            return self
+        return Modes(c, s=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
+    
+    def eth(self):
+        raise NotImplementedError()
+    
+    def ethbar(self):
+        raise NotImplementedError()
+        
+    def norm(self):
+        return np.linalg.norm(self.view(np.ndarray), axis=-1)
+
     def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
-        if method in [np.add, np.subtract, np.multiply, np.divide, np.true_divide, np.floor_divide, np.conj, np.conjugate, np.absolute]:
+        if ufunc in [np.add, np.subtract, np.multiply, np.divide, np.true_divide, np.floor_divide]:
+            if isinstance(args[0], Modes) and isinstance(args[1], Modes):
+                raise NotImplementedError()
+            else:
+                raise NotImplementedError()
+        if ufunc in [np.conj, np.conjugate, np.absolute]:
             raise NotImplementedError()
         
         args_view = [

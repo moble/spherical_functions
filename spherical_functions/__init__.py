@@ -154,6 +154,13 @@ def LM_total_size(ell_min, ell_max):
     return ell_max * (ell_max + 2) - ell_min ** 2 + 1
 
 
+def LM_deduce_ell_max(size, ell_min=0):
+    ell_max = int(np.sqrt(size + ell_min**2) - 1)
+    if ell_max * (ell_max + 2) - ell_min ** 2 + 1 != size:
+        raise ValueError(f"The input size {size} does not correspond to a possible array of modes with ell_min {ell_min}.")
+    return ell_max
+
+
 def LMpM_range(ell_min, ell_max):
     """Array of (ell,mp,m) indices in standard order
 
