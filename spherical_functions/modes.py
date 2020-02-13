@@ -22,6 +22,7 @@ class Modes(np.ndarray):
         else:
             insertion_indices = [0,]*LM_total_size(0, ell_min-1)
             obj = np.insert(input_array, insertion_indices, 0.0, axis=-1).view(cls)
+        obj[..., :LM_total_size(0, abs(s)-1)] = 0.0
         obj._s = s
         obj._ell_max = ell_max
         return obj
@@ -42,6 +43,9 @@ class Modes(np.ndarray):
     @property
     def ell_max(self):
         return self._ell_max
+
+    def index(self, ell, m):
+        return sf.LM_index(ell, m, self.ell_min)
     
     def grid(self, n_theta=None, n_phi=None):
         n_theta = n_theta or 2*self.ell_max+1
@@ -140,7 +144,10 @@ class Modes(np.ndarray):
         c = s if inplace else np.zeros_like(s)
         for ell in range(abs(self.s), self.ell_max+1):
             i = LM_index(ell, 0, self.ell_min)
-            c[..., i] = np.conjugate(s[..., i])
+            if self.s%2 == 0:
+                c[..., i] = np.conjugate(s[..., i])
+            else:
+                c[..., i] = -np.conjugate(s[..., i])
             for m in range(1, ell+1):
                 i_p, i_n = LM_index(ell, m, self.ell_min), LM_index(ell, -m, self.ell_min)
                 if (self.s+m)%2 == 0:
