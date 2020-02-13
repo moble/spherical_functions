@@ -24,7 +24,10 @@ def test_modes_creation():
         # Test successful creation with complex data of the right shape
         a = a.view(complex)
         m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
-        m = sf.Modes(a, s=s, ell_min=ell_min)
+        assert m.s == s
+        assert m.ell_min == 0  # NOTE: This is hard coded!!!
+        assert m.ell_max == ell_max
+        m = sf.Modes(a, s=s, ell_min=ell_min)  # ell_max is deduced!
         assert m.s == s
         assert m.ell_min == 0  # NOTE: This is hard coded!!!
         assert m.ell_max == ell_max
@@ -45,6 +48,15 @@ def test_modes_creation():
         # Test failed creation with complex data of impossible shape
         with pytest.raises(ValueError):
             m = sf.Modes(a[..., 1:], s=s, ell_min=ell_min)
+
+        # Test successful creation with complex data containing extraneous data at ell<abs(s)
+        a = np.random.rand(3, 7, sf.LM_total_size(0, ell_max)*2)
+        a = a.view(complex)
+        m = sf.Modes(a, s=s)
+        assert m.s == s
+        assert m.ell_min == 0  # NOTE: This is hard coded!!!
+        assert m.ell_max == ell_max
+        assert np.all(m[..., :sf.LM_total_size(0, abs(s)-1)] == 0.0)
 
 
 def test_modes_grid():
