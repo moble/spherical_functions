@@ -223,9 +223,34 @@ def test_modes_real():
             mreal = m.real(inplace)
 
 
-@pytest.mark.xfail
-def test_modes_eth():
+def test_modes_derivative_commutators():
     raise NotImplementedError()
+    tolerance = 1e-14
+    for s in range(-2, 2+1):
+        ell_min = abs(s)
+        ell_max = 8
+        a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2).view(complex)
+        m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+        # Test [Lz, Lp] = Lp
+        assert np.allclose(m.Lz().Lp() - m.Lp().Lz(), m.Lp(), rtol=tolerance, atol=tolerance)
+        # Test [Lz, Lm] = -Lm
+        assert np.allclose(m.Lz().Lp() - m.Lp().Lz(), -m.Lm(), rtol=tolerance, atol=tolerance)
+        # Test [Rz, Rp] = Rp
+        assert np.allclose(m.Rz().Rp() - m.Rp().Rz(), m.Rp(), rtol=tolerance, atol=tolerance)
+        # Test [Rz, Rm] = -Rm
+        assert np.allclose(m.Rz().Rp() - m.Rp().Rz(), -m.Rm(), rtol=tolerance, atol=tolerance)
+        # Test [ethbar, eth] = 2s  [Eq. (3.19) of Newman-Penrose]
+        assert np.allclose(m.ethbar().eth() - m.eth().ethbar(), 2 * m.s * m, rtol=tolerance, atol=tolerance)
+
+
+@pytest.mark.xfail
+def test_modes_eth_on_grids():
+    raise NotImplementedError()
+    for s in range(-2, 2+1):
+        # Test various expressions on grids
+        # Test eth sYlm = sqrt((l-s)(l+s+1)) s+1Ylm  [Eq. (2.7a) of Newman-Penrose]
+        # Test ethbar sYlm = -sqrt((l+s)(l-s+1)) s-1Ylm  [Eq. (2.7b) of Newman-Penrose]
+        # Test ethbar eth sYlm = -(l-s)(l+s+1) sYlm  [Eq. (2.8) of Newman-Penrose]
 
 
 def test_modes_norm():
@@ -240,7 +265,26 @@ def test_modes_norm():
         assert np.allclose(norm, m.norm(), rtol=tolerance, atol=tolerance)
 
 
+def test_modes_negation():
+    # Test negation
+    for s in range(-2, 2 + 1):
+        ell_min = abs(s)
+        ell_max = 8
+        a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2).view(complex)
+        m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+        assert np.all((-m).view(np.ndarray) == -(m.view(np.ndarray)))
+
 
 @pytest.mark.xfail
 def test_modes_ufuncs():
     raise NotImplementedError()
+    for s1 in range(-2, 2 + 1):
+        for s2 in range(-2, 2 + 1):
+            ell_min1 = abs(s1)
+            ell_max1 = 8
+            a1 = np.random.rand(11, sf.LM_total_size(ell_min1, ell_max1)*2).view(complex)
+            m1 = sf.Modes(a1, s=s1, ell_min=ell_min1, ell_max=ell_max1)
+            ell_min2 = abs(s2)
+            ell_max2 = 8
+            a2 = np.random.rand(3, 7, sf.LM_total_size(ell_min2, ell_max2)*2).view(complex)
+            m2 = sf.Modes(a2, s=s2, ell_min=ell_min2, ell_max=ell_max2)

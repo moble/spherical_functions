@@ -1,7 +1,10 @@
+import math
 import numpy as np
 import spinsfast
 from . import LM_total_size, Wigner3j, LM_index, LM_deduce_ell_max
 from .multiplication import _multiplication_helper
+# from .mode_conversions import eth_NP as eth
+# from .mode_conversions import ethbar_NP as ethbar
 
 
 class Modes(np.ndarray):
@@ -45,7 +48,7 @@ class Modes(np.ndarray):
         return self._ell_max
 
     def index(self, ell, m):
-        return sf.LM_index(ell, m, self.ell_min)
+        return LM_index(ell, m, self.ell_min)
     
     def grid(self, n_theta=None, n_phi=None):
         n_theta = n_theta or 2*self.ell_max+1
@@ -191,56 +194,344 @@ class Modes(np.ndarray):
         if inplace:
             return self
         return Modes(c, s=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
+
+    def Lz(self):
+        """Left Lie derivative with respect to rotation about z
+
+        The left Lie derivative of a function f(Q) over the unit
+        quaternions with respect to a generator of rotation g is
+        defined as
+
+            Lg(f){Q} = -0.5j df{exp(t*g) * Q} / dt |t=0
+
+        This agrees with the usual angular-momentum operators familiar
+        from spherical-harmonic theory, and reduces to it when the
+        function has spin weight 0, but also applies to functions of
+        general spin weight.  In terms of the SWSHs, we can write the
+        action of Lz as
+
+            Lz {s}Y{l,m} = m * {s}Y{l,m}
+
+        """
+        d = self.copy()
+        s = self.view(np.ndarray)
+        for ell in range(abs(self.s), self.ell_max+1):
+            for m in range(-ell, ell+1):
+                d[..., d.index(ell, m)] = m * s[..., self.index(ell, m)]
+        return d
     
-    def eth(self):
-        raise NotImplementedError()
-    
-    def ethbar(self):
-        raise NotImplementedError()
+    def Lplus(self):
+        """Raising operator for Lz
+
+        We define Lplus to be the raising operator for the left Lie
+        derivative with respect to rotation about z, Lz.  By
+        definition, this means that [Lz, Lplus] = Lplus, which allows
+        us to derive Lplus = Lx + 1j * Ly.  In terms of the SWSHs, we
+        can write the action of Lplus as
+
+            Lplus {s}Y{l,m} = sqrt((l-m)*(l+m+1)) {s}Y{l,m+1}
+
+        Consequently, the modes of a function are affected as
+
+            {Lplus f}{s, l, m} = sqrt((l+m)*(l-m-1)) * f{s,l,m-1}
         
+        """
+        # sYlm = (-1)**s sqrt((2ell+1)/(4pi)) D{l,m,-s}
+        # Lplus {s}Y{l,m} = (-1)**s sqrt((2ell+1)/(4pi)) Lplus D{l,m,-s}
+        #                 = (-1)**s sqrt((2ell+1)/(4pi)) sqrt((l-m)(l+m+1)) D{l,m+1,-s}
+        #                 = sqrt((l-m)(l+m+1)) (-1)**s sqrt((2ell+1)/(4pi)) D{l,m+1,-s}
+        #                 = sqrt((l-m)(l+m+1)) {s}Y{l,m+1}
+        # {L+ f}{s', l', m'}
+        #    = integral(L+ f {s'}Ybar{l',m'})  # Integral over rotation group
+        #    = integral(L+ sum(f{s,l,m}{s}Y{l,m}) {s'}Ybar{l',m'})
+        #    = sum(f{s,l,m} integral(L+ {s}Y{l,m} {s'}Ybar{l',m'}))
+        #    = sum(f{s,l,m} integral(sqrt((l-m)(l+m+1)) {s}Y{l,m+1} {s'}Ybar{l',m'}))
+        #    = sum(sqrt((l-m)(l+m+1)) f{s,l,m} integral({s}Y{l,m+1} {s'}Ybar{l',m'}))
+        #    = sum(sqrt((l-m)(l+m+1)) f{s,l,m} delta{s, s'} delta{m+1, m'} delta{l, l'}
+        #    = sqrt((l'-(m'-1))(l'+(m'-1)+1)) f{s',l',m'-1}
+        #    = sqrt((l'+m')(l'-m'-1)) f{s',l',m'-1}
+        # {L+ f}{s, l, m} = sqrt((l+m)(l-m-1)) f{s,l,m-1}
+        d = np.zeros_like(self)
+        s = self.view(np.ndarray)
+        for ell in range(abs(self.s), self.ell_max+1):
+            for m in range(ell, -ell, -1):
+                d[..., self.index(ell, m)] = math.sqrt((ell+m)*(ell-m-1)) * s[..., self.index(ell, m-1)]
+            d[..., self.index(ell, -ell)] = 0.0
+        return d
+    
+    def Lminus(self):
+        """Lowering operator for Lz
+
+        We define Lminus to be the lowering operator for the left Lie
+        derivative with respect to rotation about z, Lz.  By
+        definition, this means that [Lz, Lminus] = -Lminus, which allows
+        us to derive Lminus = Lx - 1j * Ly.  In terms of the SWSHs, we
+        can write the action of Lminus as
+
+            Lminus {s}Y{l,m} = sqrt((l+m)*(l-m+1)) * {s}Y{l,m-1}
+
+        Consequently, the modes of a function are affected as
+
+            {Lminus f}{s, l, m} = sqrt((l-m)*(l+m+1)) * f{s,l,m+1}
+
+        """
+        # sYlm = (-1)**s sqrt((2ell+1)/(4pi)) D{l,m,-s}
+        # Lminus {s}Y{l,m} = (-1)**s sqrt((2ell+1)/(4pi)) Lminus D{l,m,-s}
+        #                  = (-1)**s sqrt((2ell+1)/(4pi)) sqrt((l+m)(l-m+1)) D{l,m-1,-s}
+        #                  = sqrt((l+m)(l-m+1)) (-1)**s sqrt((2ell+1)/(4pi)) D{l,m-1,-s}
+        #                  = sqrt((l+m)(l-m+1)) {s}Y{l,m-1}
+        # {L- f}{s', l', m'}
+        #    = integral(L- f {s'}Ybar{l',m'})  # Integral over rotation group
+        #    = integral(L- sum(f{s,l,m}{s}Y{l,m}) {s'}Ybar{l',m'})
+        #    = sum(f{s,l,m} integral(L- {s}Y{l,m} {s'}Ybar{l',m'}))
+        #    = sum(f{s,l,m} integral(sqrt((l+m)(l-m+1)) {s}Y{l,m-1} {s'}Ybar{l',m'}))
+        #    = sum(sqrt((l+m)(l-m+1)) f{s,l,m} integral({s}Y{l,m-1} {s'}Ybar{l',m'}))
+        #    = sum(sqrt((l+m)(l-m+1)) f{s,l,m} delta{s, s'} delta{m-1, m'} delta{l, l'}
+        #    = sqrt((l'+(m'+1))(l'-(m'+1)+1)) f{s',l',m'+1}
+        #    = sqrt((l'-m')(l'+m'+1)) f{s',l',m'+1}
+        # {L- f}{s, l, m} = sqrt((l-m)(l+m+1)) f{s,l,m+1}
+        d = np.zeros_like(self)
+        s = self.view(np.ndarray)
+        for ell in range(abs(self.s), self.ell_max+1):
+            for m in range(-ell, ell):
+                d[..., self.index(ell, m)] = math.sqrt((ell-m)*(ell+m+1)) * s[..., self.index(ell, m+1)]
+            d[..., self.index(ell, ell)] = 0.0
+        return d
+    
+    def Rz(self):
+        """Right Lie derivative with respect to rotation about z
+
+        The right Lie derivative of a function f(Q) over the unit
+        quaternions with respect to a generator of rotation g is
+        defined as
+
+            Rg(f){Q} = -0.5j df{Q * exp(t*g)} / dt |t=0
+
+        This is unlike the usual angular-momentum operators Lz, etc.,
+        familiar from spherical-harmonic theory because the
+        exponential is on the right-hand side of the argument.  This
+        operator is less common in physics because it represents the
+        dependence of the function on the choice of frame.  In terms
+        of the SWSHs, we can write the action of Rz as
+
+            Rz {s}Y{l,m} = -s * {s}Y{l,m}
+
+        Equivalently, the modes of a function are affected as
+
+            {Rz f} {s,l,m} = -s * f{s,l,m}
+
+        Note the unfortunate sign of `s`, which seems to be opposite
+        to what we expect, and arises from the choice of definition of
+        `s` in the original paper by Newman and Penrose.
+
+        """
+        # {Rzf}{s', l', m'}
+        #    = integral(Rz f {s'}Ybar{l',m'})  # Integral over rotation group
+        #    = integral(Rz sum(f{s,l,m}{s}Y{l,m}) {s'}Ybar{l',m'})
+        #    = sum(f{s,l,m} integral(Rz {s}Y{l,m} {s'}Ybar{l',m'}))
+        #    = sum(f{s,l,m} integral(-s {s}Y{l,m} {s'}Ybar{l',m'}))
+        #    = sum(-s f{s,l,m} integral({s}Y{l,m} {s'}Ybar{l',m'}))
+        #    = sum(-s f{s,l,m} delta{s, s'} delta{m, m'} delta{l, l'}
+        #    = -s f{s',l',m'}
+        # {Rzf}{s, l, m} = -s f{s,l,m}
+        return Modes(-self.s * self.view(np.ndarray), s=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
+    
+    def Rplus(self):
+        """Raising operator for Rz
+
+        We define Rplus to be the raising operator for the right Lie
+        derivative with respect to rotation about z, Rz.  By
+        definition, this means that [Rz, Rplus] = Rplus, which allows
+        us to derive Rplus = Rx - 1j * Ry.  In terms of the SWSHs, we
+        can write the action of Rplus as
+
+            Rplus {s}Y{l,m} = sqrt((l+s)(l-s+1)) {s-1}Y{l,m}
+
+        Consequently, the modes of a function are affected as
+
+            {Rplus f} {s,l,m} = sqrt((l-s)(l+s+1)) f{s+1,l,m}
+
+        Again, because of the unfortunate choice of the sign of `s`
+        made in the original paper by Newman and Penrose, this looks
+        like a lowering operator for `s`.  But it really is a raising
+        operator for Rz, and raises the eigenvalue of the
+        corresponding Wigner matrix - though that lowers the value of
+        `s`.
+
+        """
+        # sYlm = (-1)**s sqrt((2ell+1)/(4pi)) D{l,m,-s}
+        # Rplus {s}Y{l,m} = (-1)**s sqrt((2ell+1)/(4pi)) Rplus D{l,m,-s}
+        #                 = (-1)**s sqrt((2ell+1)/(4pi)) sqrt((l+s)(l-s+1)) D{l,m,-s+1}
+        #                 = sqrt((l+s)(l-s+1)) (-1)**s sqrt((2ell+1)/(4pi)) D{l,m,-s+1}
+        #                 = sqrt((l+s)(l-s+1)) {s-1}Y{l,m}
+        # {R+f}{s', l', m'}
+        #    = integral(R+ f {s'}Ybar{l',m'})  # Integral over rotation group
+        #    = integral(R+ sum(f{s,l,m}{s}Y{l,m}) {s'}Ybar{l',m'})
+        #    = sum(f{s,l,m} integral(R+ {s}Y{l,m} {s'}Ybar{l',m'}))
+        #    = sum(f{s,l,m} integral(sqrt((l+s)(l-s+1)) {s-1}Y{l,m} {s'}Ybar{l',m'}))
+        #    = sum(sqrt((l+s)(l-s+1)) f{s,l,m} integral({s-1}Y{l,m} {s'}Ybar{l',m'}))
+        #    = sum(sqrt((l+s)(l-s+1)) f{s,l,m} delta{s-1, s'} delta{m, m'} delta{l, l'}
+        #    = sqrt((l'+s'+1)(l'-(s'+1)+1) f{s'+1,l',m'}
+        # {R+f}{s, l, m} = sqrt((l-s)(l+s+1)) f{s+1,l,m}
+        d = Modes(np.zeros_like(self.view(np.ndarray)), s=self.s-1, ell_min=min(abs(self.s-1), self.ell_min), ell_max=self.ell_max)
+        s = self.view(np.ndarray)
+        for ell in range(abs(d.s), d.ell_max+1):
+            if ell >= self.ell_min:
+                d[..., d.index(ell, -ell):d.index(ell, ell)+1] = (
+                    math.sqrt((ell-d.s)*(ell+d.s+1))
+                    * s[..., self.index(ell, -ell):self.index(ell, ell)+1]
+                )
+        return d
+    
+    def Rminus(self):
+        """Lowering operator for Rz
+
+        We define Rminus to be the lowering operator for the right Lie
+        derivative with respect to rotation about z, Rz.  By
+        definition, this means that [Rz, Rminus] = -Rminus, which
+        allows us to derive Rminus = Rx + 1j * Ry.  In terms of the
+        SWSHs, we can write the action of Rminus as
+
+            Rminus {s}Y{l,m} = sqrt((l-s)(l+s+1)) {s+1}Y{l,m}
+
+        Consequently, the modes of a function are affected as
+
+            {Rminus f} {s,l,m} = sqrt((l+s)(l-s+1)) f{s-1,l,m}
+
+        Again, because of the unfortunate choice of the sign of `s`
+        made in the original paper by Newman and Penrose, this looks
+        like a raising operator for `s`.  But it really is a lowering
+        operator for Rz, and lowers the eigenvalue of the
+        corresponding Wigner matrix - though that raises the value of
+        `s`.
+
+        """
+        # sYlm = (-1)**s sqrt((2ell+1)/(4pi)) D{l,m,-s}
+        # Rminus {s}Y{l,m} = (-1)**s sqrt((2ell+1)/(4pi)) Rminus D{l,m,-s}
+        #                  = (-1)**s sqrt((2ell+1)/(4pi)) sqrt((l-s)(l+s+1)) D{l,m,-s-1}
+        #                  = sqrt((l-s)(l+s+1)) (-1)**s sqrt((2ell+1)/(4pi)) D{l,m,-s-1}
+        #                  = sqrt((l-s)(l+s+1)) {s+1}Y{l,m}
+        # {R- f}{s', l', m'}
+        #    = integral(R- f {s'}Ybar{l',m'})  # Integral over rotation group
+        #    = integral(R- sum(f{s,l,m}{s}Y{l,m}) {s'}Ybar{l',m'})
+        #    = sum(f{s,l,m} integral(R- {s}Y{l,m} {s'}Ybar{l',m'}))
+        #    = sum(f{s,l,m} integral(sqrt((l-s)(l+s+1)) {s+1}Y{l,m} {s'}Ybar{l',m'}))
+        #    = sum(sqrt((l-s)(l+s+1)) f{s,l,m} integral({s+1}Y{l,m} {s'}Ybar{l',m'}))
+        #    = sum(sqrt((l-s)(l+s+1)) f{s,l,m} delta{s+1, s'} delta{m, m'} delta{l, l'}
+        #    = sqrt((l'-(s'-1))(l'+(s'-1)+1)) f{s'-1,l',m'}
+        #    = sqrt((l'-s'+1)(l'+s')) f{s'-1,l',m'}
+        # {R- f}{s, l, m} = sqrt((l+s)(l-s+1)) f{s-1,l,m}
+        d = Modes(np.zeros_like(self.view(np.ndarray)), s=self.s+1, ell_min=min(abs(self.s+1), self.ell_min), ell_max=self.ell_max)
+        s = self.view(np.ndarray)
+        for ell in range(abs(d.s), d.ell_max+1):
+            if ell >= self.ell_min:
+                d[..., d.index(ell, -ell):d.index(ell, ell)+1] = (
+                    math.sqrt((ell+d.s)*(ell-d.s+1))
+                    * s[..., self.index(ell, -ell):self.index(ell, ell)+1]
+                )
+        return d
+
+    def eth(self):
+        return self.Rminus()
+        # return eth(self, self.s, self.ell_min)
+
+    def ethbar(self):
+        return -self.Rplus()
+        # return ethbar(self, self.s, self.ell_min)
+
     def norm(self):
         return np.linalg.norm(self.view(np.ndarray), axis=-1)
 
     def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
-        if ufunc in [np.add, np.subtract, np.multiply, np.divide, np.true_divide, np.floor_divide]:
+        if ufunc not in [np.add, np.subtract,
+                         np.multiply, np.divide, np.true_divide,
+                         np.conj, np.conjugate, np.absolute]:
+            return NotImplemented
+
+        if kwargs:
+            raise NotImplementedError(f"Unrecognized arguments to Modes.__array_ufunc__: {kwargs}")
+
+        def check_broadcasting(modes, scalar, reverse=False):
+            try:
+                if reverse:
+                    np.broadcast(scalar, modes[..., 0])
+                else:
+                    np.broadcast(modes[..., 0], scalar)
+            except ValueError:
+                return False
+            return True
+
+        if ufunc in [np.add, np.subtract]:
+            if isinstance(args[0], Modes) and isinstance(args[1], Modes):
+                m1, m2 = args[:2]
+                if not m1.s == m2.s:
+                    return NotImplemented
+                raise NotImplementedError()
+            elif isinstance(args[0], Modes):
+                modes = args[0]
+                scalars = args[1]
+                if modes.s != 0 or not check_broadcasting(modes, scalars):
+                    return NotImplemented
+                result = ufunc(modes.view(np.ndarray), scalars, out=out)
+                if out is None:
+                    result = Modes(result, self.s, self.ell_min, self.ell_max)
+            elif isinstance(args[1], Modes):
+                scalars = args[0]
+                modes = args[1]
+                if modes.s != 0 or not check_broadcasting(modes, scalars, reverse=True):
+                    return NotImplemented
+                result = ufunc(scalars, modes.view(np.ndarray), out=out)
+                if out is None:
+                    result = Modes(result, self.s, self.ell_min, self.ell_max)
+            else:
+                return NotImplemented
+
+        elif ufunc is np.multiply:
             if isinstance(args[0], Modes) and isinstance(args[1], Modes):
                 raise NotImplementedError()
+            elif isinstance(args[0], Modes):
+                modes = args[0]
+                scalars = args[1]
+                if not check_broadcasting(modes, scalars):
+                    return NotImplemented
+                result = ufunc(modes.view(np.ndarray), scalars, out=out)
+                if out is None:
+                    result = Modes(result, self.s, self.ell_min, self.ell_max)
+            elif isinstance(args[1], Modes):
+                scalars = args[0]
+                modes = args[1]
+                if not check_broadcasting(modes, scalars, reverse=True):
+                    return NotImplemented
+                result = ufunc(scalars, modes.view(np.ndarray), out=out)
+                if out is None:
+                    result = Modes(result, self.s, self.ell_min, self.ell_max)
             else:
-                raise NotImplementedError()
-        if ufunc in [np.conj, np.conjugate, np.absolute]:
+                return NotImplemented
+
+        elif ufunc in [np.divide, np.true_divide]:
+            if isinstance(args[1], Modes):
+                return NotImplemented
+            modes = args[0]
+            scalars = args[1]
+            if not check_broadcasting(modes, scalars):
+                return NotImplemented
+            result = ufunc(modes.view(np.ndarray), scalars, out=out)
+            if out is None:
+                result = Modes(result, self.s, self.ell_min, self.ell_max)
+
+        elif ufunc in [np.conj, np.conjugate, np.absolute]:
             raise NotImplementedError()
-        
-        args_view = [
-            arg_i.view(np.ndarray) if isinstance(arg_i, Modes)
-            else arg_i
-            for arg_i in args
-        ]
-        if out is not None:
-            out_view = [
-                out_i.view(np.ndarray) if isinstance(out_i, Modes)
-                else out_i
-                for out_i in out
-            ]
-            kwargs['out'] = out_view
+
         else:
-            out_view = (None,) * ufunc.nout
-            kwargs['out'] = out
+            raise NotImplementedError(f"Modes.__array_ufunc__ has reached a point it should not have for ufunc {ufunc}")
 
-        results = super(Modes, self).__array_ufunc__(ufunc, method, *args_view, **kwargs)
+        if result is NotImplemented:
+            return NotImplemented
 
-        if results is NotImplemented:
-            return results
-        
         if method == 'at':
             return
 
-        if ufunc.nout == 1:
-            results = (results,)
-        
-        results = tuple(np.asarray(result).view(Modes) if output is None else output
-                        for result, output in zip(results, out_view))
-
-        return results[0] if len(results) == 1 else results
+        return result
     
 
 Modes.conj.__doc__ = Modes.conjugate.__doc__
