@@ -151,24 +151,64 @@ def test_modes_subtraction():
 def test_modes_multiplication():
     tolerance = 1e-13
     np.random.seed(1234)
-    for s1 in range(-2, 2 + 1):
-        for s2 in range(-s1, s1 + 1):
+    # Test without truncation
+    for i_mul, mul in enumerate([np.multiply, lambda a, b: a.multiply(b), lambda a, b: a.multiply(b, truncate=True)]):
+        for s1 in range(-2, 2 + 1):
             ell_min1 = abs(s1)
             ell_max1 = 8
             a1 = np.random.rand(3, 7, sf.LM_total_size(ell_min1, ell_max1)*2).view(complex)
             m1 = sf.Modes(a1, s=s1, ell_min=ell_min1, ell_max=ell_max1)
-            ell_min2 = ell_min1+1
-            ell_max2 = ell_max1-1
-            a2 = np.random.rand(3, 7, sf.LM_total_size(ell_min2, ell_max2)*2).view(complex)
-            m2 = sf.Modes(a2, s=s2, ell_min=ell_min2, ell_max=ell_max2)
-            m1m2 = m1.multiply(m2)
-            assert m1m2.s == s1 + s2
-            assert m1m2.ell_max == m1.ell_max + m2.ell_max
-            g12 = m1m2.grid()
-            n_theta, n_phi = g12.shape[-2:]
+            # Check scalar multiplications
+            s = np.random.rand()
+            m1s = mul(m1, s)
+            assert m1.s == s1
+            assert m1s.ell_max == m1.ell_max
+            g1s = m1s.grid()
+            n_theta, n_phi = g1s.shape[-2:]
             g1 = m1.grid(n_theta, n_phi)
-            g2 = m2.grid(n_theta, n_phi)
-            assert np.allclose(g1*g2, g12, rtol=tolerance, atol=tolerance)
+            assert np.allclose(g1*s, g1s, rtol=tolerance, atol=tolerance)
+            if mul is np.multiply:
+                sm1 = mul(s, m1)
+                assert sm1.s == s1
+                assert sm1.ell_max == m1.ell_max
+                sg1 = sm1.grid()
+                n_theta, n_phi = sg1.shape[-2:]
+                g1 = m1.grid(n_theta, n_phi)
+                assert np.allclose(s*g1, sg1, rtol=tolerance, atol=tolerance)
+            # Check scalar-array multiplications
+            s = np.random.rand(3, 7)
+            m1s = mul(m1, s)
+            assert m1.s == s1
+            assert m1s.ell_max == m1.ell_max
+            g1s = m1s.grid()
+            n_theta, n_phi = g1s.shape[-2:]
+            g1 = m1.grid(n_theta, n_phi)
+            assert np.allclose(g1*s[..., np.newaxis, np.newaxis], g1s, rtol=tolerance, atol=tolerance)
+            if mul is np.multiply:
+                sm1 = mul(s, m1)
+                assert sm1.s == s1
+                assert sm1.ell_max == m1.ell_max
+                sg1 = sm1.grid()
+                n_theta, n_phi = sg1.shape[-2:]
+                g1 = m1.grid(n_theta, n_phi)
+                assert np.allclose(s[..., np.newaxis, np.newaxis]*g1, sg1, rtol=tolerance, atol=tolerance)
+            # Check spin-weighted multiplications
+            for s2 in range(-s1, s1 + 1):
+                ell_min2 = ell_min1+1
+                ell_max2 = ell_max1-1
+                a2 = np.random.rand(3, 7, sf.LM_total_size(ell_min2, ell_max2)*2).view(complex)
+                m2 = sf.Modes(a2, s=s2, ell_min=ell_min2, ell_max=ell_max2)
+                m1m2 = mul(m1, m2)
+                assert m1m2.s == s1 + s2
+                if i_mul == 2:
+                    assert m1m2.ell_max == max(m1.ell_max, m2.ell_max)
+                else:
+                    assert m1m2.ell_max == m1.ell_max + m2.ell_max
+                    g12 = m1m2.grid()
+                    n_theta, n_phi = g12.shape[-2:]
+                    g1 = m1.grid(n_theta, n_phi)
+                    g2 = m2.grid(n_theta, n_phi)
+                    assert np.allclose(g1*g2, g12, rtol=tolerance, atol=tolerance)
 
 
 def test_modes_conjugate():
@@ -251,6 +291,7 @@ def test_modes_eth_on_grids():
         # Test eth sYlm = sqrt((l-s)(l+s+1)) s+1Ylm  [Eq. (2.7a) of Newman-Penrose]
         # Test ethbar sYlm = -sqrt((l+s)(l-s+1)) s-1Ylm  [Eq. (2.7b) of Newman-Penrose]
         # Test ethbar eth sYlm = -(l-s)(l+s+1) sYlm  [Eq. (2.8) of Newman-Penrose]
+        raise NotImplementedError()
 
 
 def test_modes_norm():

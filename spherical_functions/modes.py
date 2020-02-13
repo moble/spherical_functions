@@ -3,8 +3,6 @@ import numpy as np
 import spinsfast
 from . import LM_total_size, Wigner3j, LM_index, LM_deduce_ell_max
 from .multiplication import _multiplication_helper
-# from .mode_conversions import eth_NP as eth
-# from .mode_conversions import ethbar_NP as ethbar
 
 
 class Modes(np.ndarray):
@@ -433,11 +431,9 @@ class Modes(np.ndarray):
 
     def eth(self):
         return self.Rminus()
-        # return eth(self, self.s, self.ell_min)
 
     def ethbar(self):
         return -self.Rplus()
-        # return ethbar(self, self.s, self.ell_min)
 
     def norm(self):
         return np.linalg.norm(self.view(np.ndarray), axis=-1)
@@ -464,23 +460,23 @@ class Modes(np.ndarray):
         if ufunc in [np.add, np.subtract]:
             if isinstance(args[0], Modes) and isinstance(args[1], Modes):
                 m1, m2 = args[:2]
-                if not m1.s == m2.s:
+                if m1.s != m2.s:
                     return NotImplemented
                 raise NotImplementedError()
             elif isinstance(args[0], Modes):
                 modes = args[0]
-                scalars = args[1]
+                scalars = np.asanyarray(args[1])
                 if modes.s != 0 or not check_broadcasting(modes, scalars):
                     return NotImplemented
-                result = ufunc(modes.view(np.ndarray), scalars, out=out)
+                result = ufunc(modes.view(np.ndarray), scalars[..., np.newaxis], out=out)
                 if out is None:
                     result = Modes(result, self.s, self.ell_min, self.ell_max)
             elif isinstance(args[1], Modes):
-                scalars = args[0]
+                scalars = np.asanyarray(args[0])
                 modes = args[1]
                 if modes.s != 0 or not check_broadcasting(modes, scalars, reverse=True):
                     return NotImplemented
-                result = ufunc(scalars, modes.view(np.ndarray), out=out)
+                result = ufunc(scalars[..., np.newaxis], modes.view(np.ndarray), out=out)
                 if out is None:
                     result = Modes(result, self.s, self.ell_min, self.ell_max)
             else:
@@ -488,34 +484,49 @@ class Modes(np.ndarray):
 
         elif ufunc is np.multiply:
             if isinstance(args[0], Modes) and isinstance(args[1], Modes):
-                raise NotImplementedError()
+                s = args[0].view(np.ndarray)
+                o = args[1].view(np.ndarray)
+                result_s = args[0].s + args[1].s
+                result_ell_min = 0
+                result_ell_max = args[0].ell_max + args[1].ell_max
+                result_shape = np.broadcast(s[..., 0], o[..., 0]).shape + (LM_total_size(result_ell_min, result_ell_max),)
+                result = out or np.zeros(result_shape, dtype=np.complex_)
+                _multiplication_helper(s, args[0].ell_min, args[0].ell_max, args[0].s,
+                                       o, args[1].ell_min, args[1].ell_max, args[1].s,
+                                       result, result_ell_min, result_ell_max, result_s)
+                if out is None:
+                    result = Modes(result, s=result_s, ell_min=result_ell_min, ell_max=result_ell_max)
+                elif isinstance(out, Modes):
+                    out._s = result_s
+                    # out._ell_min = result_ell_min
+                    out._ell_max = result_ell_max
             elif isinstance(args[0], Modes):
                 modes = args[0]
-                scalars = args[1]
+                scalars = np.asanyarray(args[1])
                 if not check_broadcasting(modes, scalars):
                     return NotImplemented
-                result = ufunc(modes.view(np.ndarray), scalars, out=out)
+                result = ufunc(modes.view(np.ndarray), scalars[..., np.newaxis], out=out)
                 if out is None:
                     result = Modes(result, self.s, self.ell_min, self.ell_max)
             elif isinstance(args[1], Modes):
-                scalars = args[0]
+                scalars = np.asanyarray(args[0])
                 modes = args[1]
                 if not check_broadcasting(modes, scalars, reverse=True):
                     return NotImplemented
-                result = ufunc(scalars, modes.view(np.ndarray), out=out)
+                result = ufunc(scalars[..., np.newaxis], modes.view(np.ndarray), out=out)
                 if out is None:
                     result = Modes(result, self.s, self.ell_min, self.ell_max)
             else:
                 return NotImplemented
 
         elif ufunc in [np.divide, np.true_divide]:
-            if isinstance(args[1], Modes):
+            if isinstance(args[1], Modes) or not isinstance(args[0], Modes):
                 return NotImplemented
             modes = args[0]
-            scalars = args[1]
+            scalars = np.asanyarray(args[1])
             if not check_broadcasting(modes, scalars):
                 return NotImplemented
-            result = ufunc(modes.view(np.ndarray), scalars, out=out)
+            result = ufunc(modes.view(np.ndarray), scalars[..., np.newaxis], out=out)
             if out is None:
                 result = Modes(result, self.s, self.ell_min, self.ell_max)
 
