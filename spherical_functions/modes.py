@@ -6,6 +6,59 @@ from .multiplication import _multiplication_helper
 
 
 class Modes(np.ndarray):
+    """Object to store SWHS modes
+
+    This class subclasses numpy's ndarray object, so that it should act like a numpy array in many
+    respects, even with functions like np.zeros_like.
+
+    Note that the number of dimensions is arbitrary (as long as it is greater than 0), but the modes
+    must be stored in the last axis.  For example, a SWSH function of time may be stored as a 2-d
+    array where the first axis represents different times, and the second axis represents the mode
+    weights at each instant of time.
+
+    This class also does three important things that are unlike numpy arrays:
+
+    1) It tracks the spin weight and minimum and maximum ell values stored in this data.
+
+    2) It provides additional convenience methods, like `index` to find the index of a particular
+       (ell, m) mode; a `grid` method to convert modes to the SWSH values on a grid over the sphere
+       (while correctly handling additional dimensions); and the various derivative operators,
+       including $\eth$ and $\bar{\eth}$.
+
+    3) It overrides most of numpy's "universal functions" (ufuncs) to work appropriately for
+       spin-weighted functions.  Specifically, these ufuncs are interpreted as acting on the
+       spin-weighted function itself, rather than just the mode weights.  Most importantly, we have
+       these
+
+       a) Conjugating a Modes object will result in a new Modes object that represents the
+          conjugated spin-weighted function, rather than simply conjugating the mode-weights of the
+          function.
+
+       b) Multiplying two Modes objects will result in a new Modes object that represents the
+          pointwise product of the functions themselves (and will correctly have spin weight given
+          by the sum of the spin weights of the first two functions), rather than the product of the
+          mode weights.  Division is only permitted when the divisor is a constant.
+
+       c) Addition (and subtraction) is permitted for functions of the same spin weight, but it does
+          not make sense to add (or subtract) functions with different spin weights, so any attempt
+          to do so raises a ValueError.  [Note that adding a constant is equivalent to adding a
+          function of spin weight zero, and is treated in the same way.]
+
+       d) The "absolute" ufunc does not return the absolute value of each mode weight (which is
+          almost certainly meaningless); it returns the L2 norm of spin-weighted function over the
+          sphere -- which happens to equal the sum of the squares of the absolute values of the mode
+          weights.
+
+       Numerous other ufuncs -- such as log, exp, trigonometric ufuncs, bit-twiddling ufuncs, and so
+       on -- are disabled because they don't make sense when applied to functions.
+
+    It is possible to treat the underlying data of a Modes object `m` as an ordinary numpy array by
+    taking `m.view(np.ndarray)`.  However, it is hoped that this class already performs all
+    reasonable operations.  If you find a missing feature that requires you to resort to this,
+    please feel free to open an issue in this project's github page to discuss it.
+
+    """
+
 
     def __new__(cls, input_array, s=None, ell_min=0, ell_max=None):
         input_array = np.asarray(input_array)
@@ -17,7 +70,7 @@ class Modes(np.ndarray):
         if input_array.shape[-1] != LM_total_size(ell_min, ell_max):
             raise ValueError(f"Input array has shape {input_array.shape}.  Its last dimension should "
                              +f"have size {LM_total_size(ell_min, ell_max)},\n            "
-                             f"to be consistent with the input ell_min ({ell_min}) and ell_max ({ell_max})")
+                             +f"to be consistent with the input ell_min ({ell_min}) and ell_max ({ell_max})")
         if ell_min == 0:
             obj = input_array.view(cls)
         else:
@@ -35,17 +88,24 @@ class Modes(np.ndarray):
 
     @property
     def s(self):
+        """Spin weight of this Modes object"""
         return self._s
     
     @property
     def ell_min(self):
+        """Smallest ell value stored in data [need not equal abs(s)]"""
         return 0
     
     @property
     def ell_max(self):
+        """Largest ell value stored in data"""
         return self._ell_max
 
     def index(self, ell, m):
+        if ell < abs(self.s) or ell < abs(m):
+            raise ValueError(f"Bad index (ell, m)=({ell}, {m}) for spin weight s={self.s}")
+        if ell > self.ell_min: # or ell < self.ell_min:
+            raise ValueError(f"Requested ell index {ell} outside bounds of this data ({self.ell_min, self.ell_max})")
         return LM_index(ell, m, self.ell_min)
     
     def grid(self, n_theta=None, n_phi=None):
@@ -115,8 +175,8 @@ class Modes(np.ndarray):
         
         The operations of conjugation and decomposition into mode weights do not commute.  That is,
         the modes of a conjugated function do not equal the conjugated modes of a function.  So,
-        rather than simply returning the conjugate of the data from this Modes object, this
-        function returns a Modes object containing the data for the conjugated function.
+        rather than simply returning the conjugate of the data from this Modes object, this function
+        returns a Modes object containing the data for the conjugated function.
 
         If `inplace` is True, then the operation is performed in place, modifying this Modes object
         itself.  Note that some copying is still needed, but only for 2 modes at a time, and those
@@ -163,6 +223,9 @@ class Modes(np.ndarray):
     def real(self, inplace=False):
         """Return Modes object corresponding to real-valued function
 
+        Note that this only makes sense for functions of spin weight zero; other spins will raise
+        ValueErrors.
+
         The condition that a function `f` be real is given by
 
             f{l, m} = conjugate(f){l, m} = (-1)**(m) * conjugate(f{l, -m})
@@ -172,7 +235,7 @@ class Modes(np.ndarray):
         We enforce that condition by essentially averaging the two modes:
 
             f{l, m} = (f{l, m} + (-1)**m * conjugate(f{l, -m})) / 2
-        
+
         """
         if self.s != 0:
             raise ValueError("The real part of a function with non-zero spin weight is meaningless")
@@ -444,13 +507,6 @@ class Modes(np.ndarray):
             args = [arg.view(np.ndarray) if isinstance(arg, Modes) else arg for arg in args]
             kwargs['out'] = out
             return ufunc(*args, **kwargs)
-
-        # # These are also required, but require conversion on both input and output
-        # if ufunc in [np.positive, np.negative]:
-        #     arg = args[0].view(np.ndarray) if isinstance(args[0], Modes) else args[0]
-        #     kwargs['out'] = out.view(np.ndarray) if isinstance(out, Modes) else out
-        #     result = ufunc(*args, **kwargs)
-        #     return result.view(Modes) if isinstance(args[0], Modes) else result
 
         # Here are all the functions we will support directly; all other ufuncs are probably meaningless
         elif ufunc not in [np.positive, np.negative, np.add, np.subtract,
