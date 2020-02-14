@@ -79,6 +79,7 @@ def test_modes_grid():
 
 def test_modes_addition():
     tolerance = 1e-14
+    np.random.seed(1234)
     for s1 in range(-2, 2 + 1):
         ell_min1 = abs(s1)
         ell_max1 = 8
@@ -254,6 +255,7 @@ def test_modes_conjugate():
 
 def test_modes_real():
     tolerance = 1e-14
+    np.random.seed(1234)
     for inplace in [False, True]:
         s = 0
         ell_min = abs(s)
@@ -281,14 +283,51 @@ def test_modes_real():
             mreal = m.real(inplace)
 
 
-def test_modes_derivative_commutators():
+def test_modes_squared_angular_momenta():
     tolerance = 1e-13
-    # Note that post-fix operators are in the opposite order compared
-    # to prefixed commutators, so we pull the post-fix operators out
-    # as functions.
+    np.random.seed(1234)
+    L2 = sf.Modes.Lsquared
     Lz = sf.Modes.Lz
     Lp = sf.Modes.Lplus
     Lm = sf.Modes.Lminus
+    R2 = sf.Modes.Rsquared
+    Rz = sf.Modes.Rz
+    Rp = sf.Modes.Rplus
+    Rm = sf.Modes.Rminus
+    for s in range(-2, 2+1):
+        ell_min = abs(s)
+        ell_max = 8
+        a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2).view(complex)
+        m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+
+        # Test L^2 = 0.5(L+L- + L-L+) + LzLz
+        m1 = L2(m)
+        m2 = 0.5 * (Lp(Lm(m)) + Lm(Lp(m))) + Lz(Lz(m))
+        assert np.allclose(m1, m2, rtol=tolerance, atol=tolerance)
+
+        # Test R^2 = 0.5(R+R- + R-R+) + RzRz
+        m1 = R2(m)
+        m2 = 0.5 * (Rp(Rm(m)) + Rm(Rp(m))) + Rz(Rz(m))
+        assert np.allclose(m1, m2, rtol=tolerance, atol=tolerance)
+
+        # Test L^2 = R^2
+        m1 = L2(m)
+        m2 = R2(m)
+        assert np.allclose(m1, m2, rtol=tolerance, atol=tolerance)
+
+
+def test_modes_derivative_commutators():
+    tolerance = 1e-13
+    np.random.seed(1234)
+    # Note that post-fix operators are in the opposite order compared
+    # to prefixed commutators, so we pull the post-fix operators out
+    # as functions to make things look right.
+    np.random.seed(1234)
+    L2 = sf.Modes.Lsquared
+    Lz = sf.Modes.Lz
+    Lp = sf.Modes.Lplus
+    Lm = sf.Modes.Lminus
+    R2 = sf.Modes.Rsquared
     Rz = sf.Modes.Rz
     Rp = sf.Modes.Rplus
     Rm = sf.Modes.Rminus
@@ -299,6 +338,16 @@ def test_modes_derivative_commutators():
         ell_max = 8
         a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2).view(complex)
         m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+        # Test [Ri, Lj] = 0
+        for R in [Rz, Rp, Rm]:
+            for L in [Lz, Lp, Lm]:
+                assert np.max(np.abs(L(R(m)) - R(L(m)))) < tolerance
+        # Test [L2, Lj] = 0
+        for L in [Lz, Lp, Lm]:
+            assert np.max(np.abs(L2(L(m)) - L(L2(m)))) < 5*tolerance
+        # Test [R2, Rj] = 0
+        for R in [Rz, Rp, Rm]:
+            assert np.max(np.abs(R2(R(m)) - R(R2(m)))) < 5*tolerance
         # Test [Lz, Lp] = Lp
         assert np.allclose(Lz(Lp(m)) - Lp(Lz(m)), Lp(m), rtol=tolerance, atol=tolerance)
         # Test [Lz, Lm] = -Lm
@@ -317,24 +366,103 @@ def test_modes_derivative_commutators():
 
 def test_modes_derivatives_on_grids():
     # Test various SWSH-derivative expressions on grids
-    tolerance = 1e-3
-    print()
+    tolerance = 2e-14
+    np.random.seed(1234)
     for s in range(-2, 2+1):
         ell_min = 0
         ell_max = abs(s)+5
+        zeros = lambda: np.zeros(sf.LM_total_size(ell_min, ell_max), dtype=complex)
         for ell in range(abs(s), ell_max+1):
             for m in range(-ell, ell+1):
-                print(s, ell, m)
-                data = np.zeros(sf.LM_total_size(ell_min, ell_max), dtype=complex)
-                sYlm = sf.Modes(data, s=s, ell_min=ell_min, ell_max=ell_max)
+                sYlm = sf.Modes(zeros(), s=s, ell_min=ell_min, ell_max=ell_max)
                 sYlm[sYlm.index(ell, m)] = 1.0
                 g_sYlm = sYlm.grid()
                 n_theta, n_phi = g_sYlm.shape[-2:]
 
-                # Test eth sYlm = sqrt((l-s)(l+s+1)) s+1Ylm
-                data = np.zeros(sf.LM_total_size(ell_min, ell_max), dtype=complex)
-                sp1Ylm = sf.Modes(data, s=s+1, ell_min=ell_min, ell_max=ell_max)
-                if abs(s+1) > ell:
+                # Test Lsquared {s}Y{l,m} = l * (l+1) * {s}Y{l,m}
+                L2_sYlm = sYlm.Lsquared()
+                g_L2_sYlm = L2_sYlm.grid(n_theta, n_phi)
+                factor = ell * (ell+1)
+                assert np.allclose(g_L2_sYlm, factor*g_sYlm, rtol=tolerance, atol=tolerance)
+
+                # Test Lz {s}Y{l,m} = m * {s}Y{l,m}
+                Lz_sYlm = sYlm.Lz()
+                g_Lz_sYlm = Lz_sYlm.grid(n_theta, n_phi)
+                factor = m
+                assert np.allclose(g_Lz_sYlm, factor*g_sYlm, rtol=tolerance, atol=tolerance)
+
+                # Test Lplus {s}Y{l,m} = sqrt((l-m)*(l+m+1)) {s}Y{l,m+1}
+                invalid = abs(m+1) > ell
+                sYlmp1 = sf.Modes(zeros(), s=s, ell_min=ell_min, ell_max=ell_max)
+                if invalid:
+                    with pytest.raises(ValueError):
+                        sYlmp1.index(ell, m+1)
+                else:
+                    sYlmp1[sYlmp1.index(ell, m+1)] = 1.0
+                g_sYlmp1 = sYlmp1.grid(n_theta, n_phi)
+                Lp_sYlm = sYlm.Lplus()
+                g_Lp_sYlm = Lp_sYlm.grid(n_theta, n_phi)
+                factor = 0.0 if invalid else math.sqrt((ell-m)*(ell+m+1))
+                assert np.allclose(g_Lp_sYlm, factor*g_sYlmp1, rtol=tolerance, atol=tolerance)
+
+                # Test Lminus {s}Y{l,m} = sqrt((l+m)*(l-m+1)) * {s}Y{l,m-1}
+                invalid = abs(m-1) > ell
+                sYlmm1 = sf.Modes(zeros(), s=s, ell_min=ell_min, ell_max=ell_max)
+                if invalid:
+                    with pytest.raises(ValueError):
+                        sYlmm1.index(ell, m-1)
+                else:
+                    sYlmm1[sYlmm1.index(ell, m-1)] = 1.0
+                g_sYlmm1 = sYlmm1.grid(n_theta, n_phi)
+                Lm_sYlm = sYlm.Lminus()
+                g_Lm_sYlm = Lm_sYlm.grid(n_theta, n_phi)
+                factor = 0.0 if invalid else math.sqrt((ell+m)*(ell-m+1))
+                assert np.allclose(g_Lm_sYlm, factor*g_sYlmm1, rtol=tolerance, atol=tolerance)
+
+                # Test Rsquared {s}Y{l,m} = l * (l+1) * {s}Y{l,m}
+                R2_sYlm = sYlm.Rsquared()
+                g_R2_sYlm = R2_sYlm.grid(n_theta, n_phi)
+                factor = ell * (ell+1)
+                assert np.allclose(g_R2_sYlm, factor*g_sYlm, rtol=tolerance, atol=tolerance)
+
+                # Test Rz {s}Y{l,m} = -s * {s}Y{l,m}
+                Rz_sYlm = sYlm.Rz()
+                g_Rz_sYlm = Rz_sYlm.grid(n_theta, n_phi)
+                factor = -s
+                assert np.allclose(g_Rz_sYlm, factor*g_sYlm, rtol=tolerance, atol=tolerance)
+
+                # Test Rplus {s}Y{l,m} = sqrt((l+s)(l-s+1)) {s-1}Y{l,m}
+                invalid = abs(s-1) > ell
+                sm1Ylm = sf.Modes(zeros(), s=s-1, ell_min=ell_min, ell_max=ell_max)
+                if invalid:
+                    with pytest.raises(ValueError):
+                        sm1Ylm.index(ell, m)
+                else:
+                    sm1Ylm[sm1Ylm.index(ell, m)] = 1.0
+                g_sm1Ylm = sm1Ylm.grid(n_theta, n_phi)
+                Rp_sYlm = sYlm.Rplus()
+                g_Rp_sYlm = Rp_sYlm.grid(n_theta, n_phi)
+                factor = 0.0 if invalid else math.sqrt((ell+s)*(ell-s+1))
+                assert np.allclose(g_Rp_sYlm, factor*g_sm1Ylm, rtol=tolerance, atol=tolerance)
+
+                # Test Rminus {s}Y{l,m} = sqrt((l-s)(l+s+1)) {s+1}Y{l,m}
+                invalid = abs(s+1) > ell
+                sp1Ylm = sf.Modes(zeros(), s=s+1, ell_min=ell_min, ell_max=ell_max)
+                if invalid:
+                    with pytest.raises(ValueError):
+                        sp1Ylm.index(ell, m)
+                else:
+                    sp1Ylm[sp1Ylm.index(ell, m)] = 1.0
+                Rm_sYlm = sYlm.Rminus()
+                g_sp1Ylm = sp1Ylm.grid(n_theta, n_phi)
+                g_Rm_sYlm = Rm_sYlm.grid(n_theta, n_phi)
+                factor = 0.0 if invalid else math.sqrt((ell-s)*(ell+s+1))
+                assert np.allclose(g_Rm_sYlm, factor*g_sp1Ylm, rtol=tolerance, atol=tolerance)
+
+                # Test eth {s}Y{l,m} = sqrt((l-s)(l+s+1)) {s+1}Y{l,m}
+                invalid = abs(s+1) > ell
+                sp1Ylm = sf.Modes(zeros(), s=s+1, ell_min=ell_min, ell_max=ell_max)
+                if invalid:
                     with pytest.raises(ValueError):
                         sp1Ylm.index(ell, m)
                 else:
@@ -342,13 +470,13 @@ def test_modes_derivatives_on_grids():
                 eth_sYlm = sYlm.eth()
                 g_sp1Ylm = sp1Ylm.grid(n_theta, n_phi)
                 g_eth_sYlm = eth_sYlm.grid(n_theta, n_phi)
-                factor = 0.0 if abs(s+1) > ell else np.sqrt((ell-s)*(ell+s+1))
+                factor = 0.0 if invalid else math.sqrt((ell-s)*(ell+s+1))
                 assert np.allclose(g_eth_sYlm, factor*g_sp1Ylm, rtol=tolerance, atol=tolerance)
 
-                # Test ethbar sYlm = sqrt((l+s)(l-s+1)) s-1Ylm
-                data = np.zeros(sf.LM_total_size(ell_min, ell_max), dtype=complex)
-                sm1Ylm = sf.Modes(data, s=s-1, ell_min=ell_min, ell_max=ell_max)
-                if abs(s-1) > ell:
+                # Test ethbar {s}Y{l,m} = -sqrt((l+s)(l-s+1)) {s-1}Y{l,m}
+                invalid = abs(s-1) > ell
+                sm1Ylm = sf.Modes(zeros(), s=s-1, ell_min=ell_min, ell_max=ell_max)
+                if invalid:
                     with pytest.raises(ValueError):
                         sm1Ylm.index(ell, m)
                 else:
@@ -356,40 +484,26 @@ def test_modes_derivatives_on_grids():
                 g_sm1Ylm = sm1Ylm.grid(n_theta, n_phi)
                 ethbar_sYlm = sYlm.ethbar()
                 g_ethbar_sYlm = ethbar_sYlm.grid(n_theta, n_phi)
-                factor = 0.0 if abs(s-1) > ell else -np.sqrt((ell+s)*(ell-s+1))
-                # if s>0 or (s<=0 and ell > abs(s)): factor *= -1
-                # elif ell >= abs(s): factor *= -1
-                # if s==-2 and ell==3 and m==-3:
-                # if s==-2 and ell==4 and m==-4:
-                # if s==-1 and ell==2 and m==-2:
-                if s==1 and ell==1 and m==-1:
-                    a = g_ethbar_sYlm.flatten()
-                    b = factor*g_sm1Ylm.flatten()
-                    c = np.empty((a.size + b.size,), dtype=a.dtype)
-                    c[0::2] = a
-                    c[1::2] = b
-                    print(c)
-                    print(factor)
+                factor = 0.0 if invalid else -math.sqrt((ell+s)*(ell-s+1))
                 assert np.allclose(g_ethbar_sYlm, factor*g_sm1Ylm, rtol=tolerance, atol=tolerance)
 
-                # # Fails for s=-2, ell=2, m=-2
                 # Test ethbar eth sYlm = -(l-s)(l+s+1) sYlm
                 ethbar_eth_sYlm = sYlm.eth().ethbar()
                 g_ethbar_eth_sYlm = ethbar_eth_sYlm.grid(n_theta, n_phi)
-                factor = 0.0 if (abs(s+1) > ell or abs(s-1) > ell) else (ell-s)*(ell+s+1)
-                if ell > abs(s+1): factor *= -1
+                factor = 0.0 if (abs(s+1) > ell or abs(s) > ell) else -(ell-s)*(ell+s+1)
                 assert np.allclose(g_ethbar_eth_sYlm, factor*g_sYlm, rtol=tolerance, atol=tolerance)
 
 
 def test_modes_norm():
     tolerance = 1e-15
+    np.random.seed(1234)
     for s in range(-2, 2 + 1):
         ell_min = abs(s)
         ell_max = 8
         a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2).view(complex)
         m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
         mmbar = m.multiply(m.conjugate())
-        norm = np.sqrt(2*np.sqrt(np.pi) * mmbar[..., 0].view(np.ndarray).real)
+        norm = np.sqrt(2*math.sqrt(np.pi) * mmbar[..., 0].view(np.ndarray).real)
         assert np.allclose(norm, m.norm(), rtol=tolerance, atol=tolerance)
 
 
