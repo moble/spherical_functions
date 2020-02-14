@@ -73,6 +73,7 @@ if __name__ == "__main__":
               'spherical_functions.Wigner3j',
               'spherical_functions.WignerD',
               'spherical_functions.SWSH',
+              'spherical_functions.SWSH_modes',
           ],
           package_data={'spherical_functions': ['*.npy']},
           version=version,
