@@ -315,15 +315,43 @@ def test_modes_derivative_commutators():
         assert np.allclose(ethbar(eth(m)) - eth(ethbar(m)), 2 * m.s * m, rtol=tolerance, atol=tolerance)
 
 
-@pytest.mark.xfail
 def test_modes_derivatives_on_grids():
-    raise NotImplementedError()
+    # Test various SWSH-derivative expressions on grids
+    tolerance = 1e-3
     for s in range(-2, 2+1):
-        # Test various expressions on grids
-        # Test eth sYlm = sqrt((l-s)(l+s+1)) s+1Ylm  [Eq. (2.7a) of Newman-Penrose]
-        # Test ethbar sYlm = -sqrt((l+s)(l-s+1)) s-1Ylm  [Eq. (2.7b) of Newman-Penrose]
-        # Test ethbar eth sYlm = -(l-s)(l+s+1) sYlm  [Eq. (2.8) of Newman-Penrose]
-        raise NotImplementedError()
+        ell_min = 0
+        ell_max = abs(s)+3
+        for ell in range(abs(s), ell_max+1):
+            for m in range(-ell, ell+1):
+                data = np.zeros(sf.LM_total_size(ell_min, ell_max), dtype=complex)
+                sYlm = sf.Modes(data, s=s, ell_min=ell_min, ell_max=ell_max)
+                sYlm[sYlm.index(ell, m)] = 1.0
+                g_sYlm = sYlm.grid()
+                n_theta, n_phi = g_sYlm.shape[-2:]
+                # raise NotImplementedError()
+                # Test eth sYlm = sqrt((l-s)(l+s+1)) s+1Ylm  [Eq. (2.7a) of Newman-Penrose]
+                data = np.zeros(sf.LM_total_size(ell_min, ell_max), dtype=complex)
+                sp1Ylm = sf.Modes(data, s=s+1, ell_min=ell_min, ell_max=ell_max)
+                sp1Ylm[sp1Ylm.index(ell, m)] = 1.0
+                g_sp1Ylm = sp1Ylm.grid(n_theta, n_phi)
+                eth_sYlm = sYlm.eth()
+                g_eth_sYlm = eth_sYlm.grid(n_theta, n_phi)
+                assert np.allclose(g_eth_sYlm, np.sqrt((ell-s)*(ell+s+1))*g_sp1Ylm, rtol=tolerance, atol=tolerance)
+                # Test ethbar sYlm = sqrt((l+s)(l-s+1)) s-1Ylm  [Eq. (2.7b) of Newman-Penrose]
+                data = np.zeros(sf.LM_total_size(ell_min, ell_max), dtype=complex)
+                sm1Ylm = sf.Modes(data, s=s-1, ell_min=ell_min, ell_max=ell_max)
+                sm1Ylm[sm1Ylm.index(ell, m)] = 1.0
+                g_sm1Ylm = sm1Ylm.grid(n_theta, n_phi)
+                ethbar_sYlm = sYlm.ethbar()
+                g_ethbar_sYlm = ethbar_sYlm.grid(n_theta, n_phi)
+                assert np.allclose(g_ethbar_sYlm, np.sqrt((ell+s)*(ell-s+1))*g_sm1Ylm, rtol=tolerance, atol=tolerance)
+                # Test ethbar eth sYlm = -(l-s)(l+s+1) sYlm  [Eq. (2.8) of Newman-Penrose]
+                ethbar_eth_sYlm = sYlm.eth().ethbar()
+                g_ethbar_eth_sYlm = ethbar_eth_sYlm.grid(n_theta, n_phi)
+                # print(gsYlm[1])
+                # print(g3[1])
+                # print(s, ell, m, np.allclose((ell-s)*(ell+s+1)*gsYlm, g3, rtol=tolerance, atol=tolerance))
+                assert np.allclose((ell-s)*(ell+s+1)*g_sYlm, g_ethbar_eth_sYlm, rtol=tolerance, atol=tolerance)
 
 
 def test_modes_norm():
