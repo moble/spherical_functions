@@ -14,6 +14,10 @@ class Modes(np.ndarray):
     This class subclasses numpy's ndarray object, so that it should act like a numpy array in many
     respects, even with functions like np.zeros_like.
 
+    NOTE: The functions `np.copy(modes)` and `np.array(modes, copy=True)` return `ndarray` objects;
+    they lose information about the SWSH attributes, and have different ufuncs.  If you wish to keep
+    this information, use `modes.copy()`.
+
     Note that the number of dimensions is arbitrary (as long as it is greater than 0), but the modes
     must be stored in the last axis.  For example, a SWSH function of time may be stored as a 2-d
     array where the first axis represents different times, and the second axis represents the mode
