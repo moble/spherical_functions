@@ -231,7 +231,7 @@ class Modes(np.ndarray):
 
         Consequently, the modes of a function are affected as
 
-            {Lplus f}{s, l, m} = sqrt((l+m)*(l-m-1)) * f{s,l,m-1}
+            {Lplus f}{s, l, m} = sqrt((l+m)*(l-m+1)) * f{s,l,m-1}
         
         """
         # sYlm = (-1)**s sqrt((2ell+1)/(4pi)) D{l,m,-s}
@@ -247,14 +247,14 @@ class Modes(np.ndarray):
         #    = sum(sqrt((l-m)(l+m+1)) f{s,l,m} integral({s}Y{l,m+1} {s'}Ybar{l',m'}))
         #    = sum(sqrt((l-m)(l+m+1)) f{s,l,m} delta{s, s'} delta{m+1, m'} delta{l, l'}
         #    = sqrt((l'-(m'-1))(l'+(m'-1)+1)) f{s',l',m'-1}
-        #    = sqrt((l'+m')(l'-m'-1)) f{s',l',m'-1}
-        # {L+ f}{s, l, m} = sqrt((l+m)(l-m-1)) f{s,l,m-1}
+        #    = sqrt((l'+m')(l'-m'+1)) f{s',l',m'-1}
+        # {L+ f}{s, l, m} = sqrt((l+m)(l-m+1)) f{s,l,m-1}
         d = np.zeros_like(self)
         s = self.view(np.ndarray)
         for ell in range(abs(self.s), self.ell_max+1):
-            for m in range(ell, -ell, -1):
-                d[..., self.index(ell, m)] = math.sqrt((ell+m)*(ell-m-1)) * s[..., self.index(ell, m-1)]
             d[..., self.index(ell, -ell)] = 0.0
+            for m in range(-ell+1, ell+1):
+                d[..., d.index(ell, m)] = math.sqrt((ell+m)*(ell-m+1)) * s[..., self.index(ell, m-1)]
         return d
     
     def Lminus(self):
@@ -439,11 +439,26 @@ class Modes(np.ndarray):
         return np.linalg.norm(self.view(np.ndarray), axis=-1)
 
     def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
-        if ufunc not in [np.add, np.subtract,
-                         np.multiply, np.divide, np.true_divide,
-                         np.conj, np.conjugate, np.absolute]:
+        # These are required for basic support, but can be more-or-less passed through because they return bools
+        if ufunc in [np.not_equal, np.equal, np.isfinite, np.isinf, np.isnan]:
+            args = [arg.view(np.ndarray) if isinstance(arg, Modes) else arg for arg in args]
+            kwargs['out'] = out
+            return ufunc(*args, **kwargs)
+
+        # # These are also required, but require conversion on both input and output
+        # if ufunc in [np.positive, np.negative]:
+        #     arg = args[0].view(np.ndarray) if isinstance(args[0], Modes) else args[0]
+        #     kwargs['out'] = out.view(np.ndarray) if isinstance(out, Modes) else out
+        #     result = ufunc(*args, **kwargs)
+        #     return result.view(Modes) if isinstance(args[0], Modes) else result
+
+        # Here are all the functions we will support directly; all other ufuncs are probably meaningless
+        elif ufunc not in [np.positive, np.negative, np.add, np.subtract,
+                           np.multiply, np.divide, np.true_divide,
+                           np.conj, np.conjugate, np.absolute]:
             return NotImplemented
 
+        # We will not be supporting any more ufunc keywords
         if kwargs:
             raise NotImplementedError(f"Unrecognized arguments to Modes.__array_ufunc__: {kwargs}")
 
@@ -457,12 +472,40 @@ class Modes(np.ndarray):
                 return False
             return True
 
-        if ufunc in [np.add, np.subtract]:
+        if ufunc in [np.positive, np.negative]:
+            result = out or np.zeros(self.shape, dtype=np.complex_)
+            ufunc(self.view(np.ndarray), out=result)
+            if out is None:
+                result = Modes(result, s=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
+            elif isinstance(out, Modes):
+                out._s = self.s
+                # out._ell_min = self.ell_min
+                out._ell_max = self.ell_max
+        elif ufunc in [np.add, np.subtract]:
             if isinstance(args[0], Modes) and isinstance(args[1], Modes):
                 m1, m2 = args[:2]
                 if m1.s != m2.s:
                     return NotImplemented
-                raise NotImplementedError()
+                s = m1.s
+                ell_min = min(m1.ell_min, m2.ell_min)
+                ell_max = max(m1.ell_max, m2.ell_max)
+                shape = np.broadcast(m1[..., 0], m2[..., 0]).shape + (LM_total_size(ell_min, ell_max),)
+                result = out or np.zeros(shape, dtype=np.complex_)
+                i_s1 = LM_total_size(ell_min, m1.ell_min-1)
+                i_s2 = i_s1+LM_total_size(m1.ell_min, m1.ell_max)
+                i_o1 = LM_total_size(ell_min, m2.ell_min-1)
+                i_o2 = i_o1+LM_total_size(m2.ell_min, m2.ell_max)
+                result[..., i_s1:i_s2] = m1.view(np.ndarray)
+                if ufunc is np.subtract:
+                    result[..., i_o1:i_o2] -= m2.view(np.ndarray)
+                else:
+                    result[..., i_o1:i_o2] += m2.view(np.ndarray)
+                if out is None:
+                    result = Modes(result, s=s, ell_min=ell_min, ell_max=ell_max)
+                elif isinstance(out, Modes):
+                    out._s = s
+                    # out._ell_min = ell_min
+                    out._ell_max = ell_max
             elif isinstance(args[0], Modes):
                 modes = args[0]
                 scalars = np.asanyarray(args[1])
@@ -530,10 +573,14 @@ class Modes(np.ndarray):
             if out is None:
                 result = Modes(result, self.s, self.ell_min, self.ell_max)
 
-        elif ufunc in [np.conj, np.conjugate, np.absolute]:
+        elif ufunc in [np.conj, np.conjugate]:
             raise NotImplementedError()
 
+        elif ufunc is np.absolute:
+            return args[0].norm()
+
         else:
+            # I thought we filtered everything else out...
             raise NotImplementedError(f"Modes.__array_ufunc__ has reached a point it should not have for ufunc {ufunc}")
 
         if result is NotImplemented:

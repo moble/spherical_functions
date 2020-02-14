@@ -80,11 +80,20 @@ def test_modes_grid():
 def test_modes_addition():
     tolerance = 1e-14
     for s1 in range(-2, 2 + 1):
+        ell_min1 = abs(s1)
+        ell_max1 = 8
+        a1 = np.random.rand(3, 7, sf.LM_total_size(ell_min1, ell_max1)*2)
+        a2 = np.random.rand(*a1.shape)
+        a1 = a1.view(complex)
+        a2 = a2.view(complex)
+        m1 = sf.Modes(a1, s=s1, ell_min=ell_min1, ell_max=ell_max1)
+        m2 = sf.Modes(a2, s=s1, ell_min=ell_min1, ell_max=ell_max1)
+        m1m2 = m1+m2
+        assert m1m2.s == s1
+        assert m1m2.ell_max == m1.ell_max
+        assert np.array_equal(m1m2, m1.add(m2))
+        assert np.array_equal(m1m2, m1.view(np.ndarray)+m2.view(np.ndarray))
         for s2 in range(-s1, s1 + 1):
-            ell_min1 = abs(s1)
-            ell_max1 = 8
-            a1 = np.random.rand(3, 7, sf.LM_total_size(ell_min1, ell_max1)*2).view(complex)
-            m1 = sf.Modes(a1, s=s1, ell_min=ell_min1, ell_max=ell_max1)
             ell_min2 = ell_min1+1
             ell_max2 = ell_max1-1
             a2 = np.random.rand(3, 7, sf.LM_total_size(ell_min2, ell_max2)*2).view(complex)
@@ -116,11 +125,20 @@ def test_modes_subtraction():
     tolerance = 1e-14
     np.random.seed(1234)
     for s1 in range(-2, 2 + 1):
+        ell_min1 = abs(s1)
+        ell_max1 = 8
+        a1 = np.random.rand(3, 7, sf.LM_total_size(ell_min1, ell_max1)*2)
+        a2 = np.random.rand(*a1.shape)
+        a1 = a1.view(complex)
+        a2 = a2.view(complex)
+        m1 = sf.Modes(a1, s=s1, ell_min=ell_min1, ell_max=ell_max1)
+        m2 = sf.Modes(a2, s=s1, ell_min=ell_min1, ell_max=ell_max1)
+        m1m2 = m1-m2
+        assert m1m2.s == s1
+        assert m1m2.ell_max == m1.ell_max
+        assert np.array_equal(m1m2, m1.subtract(m2))
+        assert np.array_equal(m1m2, m1.view(np.ndarray)-m2.view(np.ndarray))
         for s2 in range(-s1, s1 + 1):
-            ell_min1 = abs(s1)
-            ell_max1 = 8
-            a1 = np.random.rand(3, 7, sf.LM_total_size(ell_min1, ell_max1)*2).view(complex)
-            m1 = sf.Modes(a1, s=s1, ell_min=ell_min1, ell_max=ell_max1)
             ell_min2 = ell_min1+1
             ell_max2 = ell_max1-1
             a2 = np.random.rand(3, 7, sf.LM_total_size(ell_min2, ell_max2)*2).view(complex)
@@ -264,27 +282,41 @@ def test_modes_real():
 
 
 def test_modes_derivative_commutators():
-    raise NotImplementedError()
-    tolerance = 1e-14
+    tolerance = 1e-13
+    # Note that post-fix operators are in the opposite order compared
+    # to prefixed commutators, so we pull the post-fix operators out
+    # as functions.
+    Lz = sf.Modes.Lz
+    Lp = sf.Modes.Lplus
+    Lm = sf.Modes.Lminus
+    Rz = sf.Modes.Rz
+    Rp = sf.Modes.Rplus
+    Rm = sf.Modes.Rminus
+    eth = sf.Modes.eth
+    ethbar = sf.Modes.ethbar
     for s in range(-2, 2+1):
         ell_min = abs(s)
         ell_max = 8
         a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2).view(complex)
         m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
         # Test [Lz, Lp] = Lp
-        assert np.allclose(m.Lz().Lp() - m.Lp().Lz(), m.Lp(), rtol=tolerance, atol=tolerance)
+        assert np.allclose(Lz(Lp(m)) - Lp(Lz(m)), Lp(m), rtol=tolerance, atol=tolerance)
         # Test [Lz, Lm] = -Lm
-        assert np.allclose(m.Lz().Lp() - m.Lp().Lz(), -m.Lm(), rtol=tolerance, atol=tolerance)
+        assert np.allclose(Lz(Lm(m)) - Lm(Lz(m)), -Lm(m), rtol=tolerance, atol=tolerance)
+        # Test [Lp, Lm] = 2Lz
+        assert np.allclose(Lp(Lm(m)) - Lm(Lp(m)), 2 * Lz(m), rtol=tolerance, atol=tolerance)
         # Test [Rz, Rp] = Rp
-        assert np.allclose(m.Rz().Rp() - m.Rp().Rz(), m.Rp(), rtol=tolerance, atol=tolerance)
+        assert np.allclose(Rz(Rp(m)) - Rp(Rz(m)), Rp(m), rtol=tolerance, atol=tolerance)
         # Test [Rz, Rm] = -Rm
-        assert np.allclose(m.Rz().Rp() - m.Rp().Rz(), -m.Rm(), rtol=tolerance, atol=tolerance)
-        # Test [ethbar, eth] = 2s  [Eq. (3.19) of Newman-Penrose]
-        assert np.allclose(m.ethbar().eth() - m.eth().ethbar(), 2 * m.s * m, rtol=tolerance, atol=tolerance)
+        assert np.allclose(Rz(Rm(m)) - Rm(Rz(m)), -Rm(m), rtol=tolerance, atol=tolerance)
+        # Test [Rp, Rm] = 2Rz
+        assert np.allclose(Rp(Rm(m)) - Rm(Rp(m)), 2 * Rz(m), rtol=tolerance, atol=tolerance)
+        # Test [ethbar, eth] = 2s
+        assert np.allclose(ethbar(eth(m)) - eth(ethbar(m)), 2 * m.s * m, rtol=tolerance, atol=tolerance)
 
 
 @pytest.mark.xfail
-def test_modes_eth_on_grids():
+def test_modes_derivatives_on_grids():
     raise NotImplementedError()
     for s in range(-2, 2+1):
         # Test various expressions on grids
@@ -306,26 +338,18 @@ def test_modes_norm():
         assert np.allclose(norm, m.norm(), rtol=tolerance, atol=tolerance)
 
 
-def test_modes_negation():
-    # Test negation
-    for s in range(-2, 2 + 1):
-        ell_min = abs(s)
-        ell_max = 8
-        a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2).view(complex)
-        m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
-        assert np.all((-m).view(np.ndarray) == -(m.view(np.ndarray)))
-
-
-@pytest.mark.xfail
 def test_modes_ufuncs():
-    raise NotImplementedError()
     for s1 in range(-2, 2 + 1):
-        for s2 in range(-2, 2 + 1):
-            ell_min1 = abs(s1)
-            ell_max1 = 8
-            a1 = np.random.rand(11, sf.LM_total_size(ell_min1, ell_max1)*2).view(complex)
-            m1 = sf.Modes(a1, s=s1, ell_min=ell_min1, ell_max=ell_max1)
-            ell_min2 = abs(s2)
-            ell_max2 = 8
-            a2 = np.random.rand(3, 7, sf.LM_total_size(ell_min2, ell_max2)*2).view(complex)
-            m2 = sf.Modes(a2, s=s2, ell_min=ell_min2, ell_max=ell_max2)
+        ell_min1 = abs(s1)
+        ell_max1 = 8
+        a1 = np.random.rand(11, sf.LM_total_size(ell_min1, ell_max1)*2).view(complex)
+        m1 = sf.Modes(a1, s=s1, ell_min=ell_min1, ell_max=ell_max1)
+        positivem1 = +m1
+        assert np.array_equal(m1.view(np.ndarray), positivem1.view(np.ndarray))
+        negativem1 = -m1
+        assert np.array_equal(-(m1.view(np.ndarray)), negativem1.view(np.ndarray))
+        # for s2 in range(-2, 2 + 1):
+        #     ell_min2 = abs(s2)
+        #     ell_max2 = 8
+        #     a2 = np.random.rand(3, 7, sf.LM_total_size(ell_min2, ell_max2)*2).view(complex)
+        #     m2 = sf.Modes(a2, s=s2, ell_min=ell_min2, ell_max=ell_max2)
