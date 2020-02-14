@@ -1,9 +1,9 @@
 # Copyright (c) 2020, Michael Boyle
 # See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
 
-### NOTE: The functions in this file are intended purely for inclusion in the SWSHModes class.  In
-### particular, they assume that the first argument, `self` is an instance of SWSHModes.  They
-### should probably not be used outside of that class.
+### NOTE: The functions in this file are intended purely for inclusion in the Modes class.  In
+### particular, they assume that the first argument, `self` is an instance of Modes.  They should
+### probably not be used outside of that class.
 
 import numpy as np
 from .. import LM_total_size, LM_index
