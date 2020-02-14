@@ -16,7 +16,8 @@ class Modes(np.ndarray):
 
     NOTE: The functions `np.copy(modes)` and `np.array(modes, copy=True)` return `ndarray` objects;
     they lose information about the SWSH attributes, and have different ufuncs.  If you wish to keep
-    this information, use `modes.copy()`.
+    this information, use `modes.copy()`.  Also note that pickling works as expected, as do
+    copy.copy and copy.deepcopy.
 
     Note that the number of dimensions is arbitrary (as long as it is greater than 0), but the modes
     must be stored in the last axis.  For example, a SWSH function of time may be stored as a 2-d

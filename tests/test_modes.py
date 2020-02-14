@@ -6,6 +6,7 @@
 import math
 import cmath
 import pickle
+import copy
 import numpy as np
 import quaternion
 import spherical_functions as sf
@@ -72,10 +73,17 @@ def ndarray_copy(m):
 def pickle_roundtrip(m):
     return pickle.loads(pickle.dumps(m))
 
+def copy_copy(m):
+    return copy.copy(m)
+
+def copy_deepcopy(m):
+    return copy.copy(m)
+
 # Note that np.copy and np.array(..., copy=True) return ndarray's, and thus lose information
 copy_xfail = lambda f: pytest.param(f, marks=pytest.mark.xfail)
 
-@pytest.mark.parametrize("copier", [copy_xfail(np_copy), copy_xfail(np_array_copy), ndarray_copy, pickle_roundtrip])
+@pytest.mark.parametrize("copier",
+    [copy_xfail(np_copy), copy_xfail(np_array_copy), ndarray_copy, pickle_roundtrip, copy_copy, copy_deepcopy])
 def test_modes_copying_and_pickling(copier):
     for s in range(-2, 2 + 1):
         ell_min = abs(s)
