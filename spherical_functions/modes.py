@@ -52,8 +52,8 @@ class Modes(np.ndarray):
        Numerous other ufuncs -- such as log, exp, trigonometric ufuncs, bit-twiddling ufuncs, and so
        on -- are disabled because they don't make sense when applied to functions.
 
-    It is possible to treat the underlying data of a Modes object `m` as an ordinary numpy array by
-    taking `m.view(np.ndarray)`.  However, it is hoped that this class already performs all
+    It is possible to treat the underlying data of a Modes object `modes` as an ordinary numpy array
+    by taking `modes.view(np.ndarray)`.  However, it is hoped that this class already performs all
     reasonable operations.  If you find a missing feature that requires you to resort to this,
     please feel free to open an issue in this project's github page to discuss it.
 
@@ -102,9 +102,21 @@ class Modes(np.ndarray):
         return self._ell_max
 
     def index(self, ell, m):
+        """Return index of (ell, m) mode in data
+
+        Note that the modes are always stored in the last axis of the data, so if your Modes object
+        `modes` has (or even just might have) more than one dimension, you might extract a
+        particular mode weight with something like this:
+
+            i = modes.index(ell, m)
+            ell_m_modes = modes[..., i]
+
+        The ellipsis just represents all other dimensions (even if there are none).
+
+        """
         if ell < abs(self.s) or ell < abs(m):
             raise ValueError(f"Bad index (ell, m)=({ell}, {m}) for spin weight s={self.s}")
-        if ell > self.ell_min: # or ell < self.ell_min:
+        if ell < self.ell_min or ell > self.ell_max:
             raise ValueError(f"Requested ell index {ell} outside bounds of this data ({self.ell_min, self.ell_max})")
         return LM_index(ell, m, self.ell_min)
     
@@ -436,7 +448,7 @@ class Modes(np.ndarray):
         # {R+f}{s, l, m} = sqrt((l-s)(l+s+1)) f{s+1,l,m}
         d = Modes(np.zeros_like(self.view(np.ndarray)), s=self.s-1, ell_min=min(abs(self.s-1), self.ell_min), ell_max=self.ell_max)
         s = self.view(np.ndarray)
-        for ell in range(abs(d.s), d.ell_max+1):
+        for ell in range(max(abs(d.s), abs(self.s)), d.ell_max+1):
             if ell >= self.ell_min:
                 d[..., d.index(ell, -ell):d.index(ell, ell)+1] = (
                     math.sqrt((ell-d.s)*(ell+d.s+1))
@@ -484,7 +496,7 @@ class Modes(np.ndarray):
         # {R- f}{s, l, m} = sqrt((l+s)(l-s+1)) f{s-1,l,m}
         d = Modes(np.zeros_like(self.view(np.ndarray)), s=self.s+1, ell_min=min(abs(self.s+1), self.ell_min), ell_max=self.ell_max)
         s = self.view(np.ndarray)
-        for ell in range(abs(d.s), d.ell_max+1):
+        for ell in range(max(abs(d.s), abs(self.s)), d.ell_max+1):
             if ell >= self.ell_min:
                 d[..., d.index(ell, -ell):d.index(ell, ell)+1] = (
                     math.sqrt((ell+d.s)*(ell-d.s+1))
