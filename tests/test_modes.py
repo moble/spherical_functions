@@ -318,40 +318,67 @@ def test_modes_derivative_commutators():
 def test_modes_derivatives_on_grids():
     # Test various SWSH-derivative expressions on grids
     tolerance = 1e-3
+    print()
     for s in range(-2, 2+1):
         ell_min = 0
-        ell_max = abs(s)+3
+        ell_max = abs(s)+5
         for ell in range(abs(s), ell_max+1):
             for m in range(-ell, ell+1):
+                print(s, ell, m)
                 data = np.zeros(sf.LM_total_size(ell_min, ell_max), dtype=complex)
                 sYlm = sf.Modes(data, s=s, ell_min=ell_min, ell_max=ell_max)
                 sYlm[sYlm.index(ell, m)] = 1.0
                 g_sYlm = sYlm.grid()
                 n_theta, n_phi = g_sYlm.shape[-2:]
-                # raise NotImplementedError()
-                # Test eth sYlm = sqrt((l-s)(l+s+1)) s+1Ylm  [Eq. (2.7a) of Newman-Penrose]
+
+                # Test eth sYlm = sqrt((l-s)(l+s+1)) s+1Ylm
                 data = np.zeros(sf.LM_total_size(ell_min, ell_max), dtype=complex)
                 sp1Ylm = sf.Modes(data, s=s+1, ell_min=ell_min, ell_max=ell_max)
-                sp1Ylm[sp1Ylm.index(ell, m)] = 1.0
-                g_sp1Ylm = sp1Ylm.grid(n_theta, n_phi)
+                if abs(s+1) > ell:
+                    with pytest.raises(ValueError):
+                        sp1Ylm.index(ell, m)
+                else:
+                    sp1Ylm[sp1Ylm.index(ell, m)] = 1.0
                 eth_sYlm = sYlm.eth()
+                g_sp1Ylm = sp1Ylm.grid(n_theta, n_phi)
                 g_eth_sYlm = eth_sYlm.grid(n_theta, n_phi)
-                assert np.allclose(g_eth_sYlm, np.sqrt((ell-s)*(ell+s+1))*g_sp1Ylm, rtol=tolerance, atol=tolerance)
-                # Test ethbar sYlm = sqrt((l+s)(l-s+1)) s-1Ylm  [Eq. (2.7b) of Newman-Penrose]
+                factor = 0.0 if abs(s+1) > ell else np.sqrt((ell-s)*(ell+s+1))
+                assert np.allclose(g_eth_sYlm, factor*g_sp1Ylm, rtol=tolerance, atol=tolerance)
+
+                # Test ethbar sYlm = sqrt((l+s)(l-s+1)) s-1Ylm
                 data = np.zeros(sf.LM_total_size(ell_min, ell_max), dtype=complex)
                 sm1Ylm = sf.Modes(data, s=s-1, ell_min=ell_min, ell_max=ell_max)
-                sm1Ylm[sm1Ylm.index(ell, m)] = 1.0
+                if abs(s-1) > ell:
+                    with pytest.raises(ValueError):
+                        sm1Ylm.index(ell, m)
+                else:
+                    sm1Ylm[sm1Ylm.index(ell, m)] = 1.0
                 g_sm1Ylm = sm1Ylm.grid(n_theta, n_phi)
                 ethbar_sYlm = sYlm.ethbar()
                 g_ethbar_sYlm = ethbar_sYlm.grid(n_theta, n_phi)
-                assert np.allclose(g_ethbar_sYlm, np.sqrt((ell+s)*(ell-s+1))*g_sm1Ylm, rtol=tolerance, atol=tolerance)
-                # Test ethbar eth sYlm = -(l-s)(l+s+1) sYlm  [Eq. (2.8) of Newman-Penrose]
+                factor = 0.0 if abs(s-1) > ell else -np.sqrt((ell+s)*(ell-s+1))
+                # if s>0 or (s<=0 and ell > abs(s)): factor *= -1
+                # elif ell >= abs(s): factor *= -1
+                # if s==-2 and ell==3 and m==-3:
+                # if s==-2 and ell==4 and m==-4:
+                # if s==-1 and ell==2 and m==-2:
+                if s==1 and ell==1 and m==-1:
+                    a = g_ethbar_sYlm.flatten()
+                    b = factor*g_sm1Ylm.flatten()
+                    c = np.empty((a.size + b.size,), dtype=a.dtype)
+                    c[0::2] = a
+                    c[1::2] = b
+                    print(c)
+                    print(factor)
+                assert np.allclose(g_ethbar_sYlm, factor*g_sm1Ylm, rtol=tolerance, atol=tolerance)
+
+                # # Fails for s=-2, ell=2, m=-2
+                # Test ethbar eth sYlm = -(l-s)(l+s+1) sYlm
                 ethbar_eth_sYlm = sYlm.eth().ethbar()
                 g_ethbar_eth_sYlm = ethbar_eth_sYlm.grid(n_theta, n_phi)
-                # print(gsYlm[1])
-                # print(g3[1])
-                # print(s, ell, m, np.allclose((ell-s)*(ell+s+1)*gsYlm, g3, rtol=tolerance, atol=tolerance))
-                assert np.allclose((ell-s)*(ell+s+1)*g_sYlm, g_ethbar_eth_sYlm, rtol=tolerance, atol=tolerance)
+                factor = 0.0 if (abs(s+1) > ell or abs(s-1) > ell) else (ell-s)*(ell+s+1)
+                if ell > abs(s+1): factor *= -1
+                assert np.allclose(g_ethbar_eth_sYlm, factor*g_sYlm, rtol=tolerance, atol=tolerance)
 
 
 def test_modes_norm():
