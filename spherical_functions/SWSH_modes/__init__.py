@@ -60,6 +60,8 @@ class Modes(np.ndarray):
     reasonable operations.  If you find a missing feature that requires you to resort to this,
     please feel free to open an issue in this project's github page to discuss it.
 
+    Also, be aware that ndarrays also have various built-in methods that cannot be overridden very easily, such as max
+
     """
 
     # https://numpy.org/doc/1.18/user/basics.subclassing.html
@@ -84,10 +86,22 @@ class Modes(np.ndarray):
         obj._ell_max = ell_max
         return obj
 
+    # https://numpy.org/doc/1.18/user/basics.subclassing.html
     def __array_finalize__(self, obj):
         if obj is None: return
         self._s = getattr(obj, 's', None)
         self._ell_max = getattr(obj, 'ell_max', None)
+
+    # For pickling
+    def __reduce__(self):
+        state = super(Modes, self).__reduce__()
+        new_attributes = state[2] + (self._s, self._ell_max)
+        return (state[0], state[1], new_attributes)
+
+    # For unpickling
+    def __setstate__(self, state):
+        self._s, self._ell_max = state[-2:]
+        super(Modes, self).__setstate__(state[:-2])
 
     @property
     def s(self):

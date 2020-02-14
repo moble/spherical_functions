@@ -39,13 +39,17 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
 
     if ufunc in [np.positive, np.negative]:
         result = out or np.zeros(self.shape, dtype=np.complex_)
+        if isinstance(result, tuple):
+            result = result[0]
+        if isinstance(result, type(self)):
+            result = result.view(np.ndarray)
         ufunc(self.view(np.ndarray), out=result)
         if out is None:
             result = type(self)(result, s=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
-        elif isinstance(out, type(self)):
-            out._s = self.s
-            # out._ell_min = self.ell_min
-            out._ell_max = self.ell_max
+        elif isinstance(out[0], type(self)):
+            out[0]._s = self.s
+            # out[0]._ell_min = self.ell_min
+            out[0]._ell_max = self.ell_max
     elif ufunc in [np.add, np.subtract]:
         if isinstance(args[0], type(self)) and isinstance(args[1], type(self)):
             m1, m2 = args[:2]
@@ -56,6 +60,10 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             ell_max = max(m1.ell_max, m2.ell_max)
             shape = np.broadcast(m1[..., 0], m2[..., 0]).shape + (LM_total_size(ell_min, ell_max),)
             result = out or np.zeros(shape, dtype=np.complex_)
+            if isinstance(result, tuple):
+                result = result[0]
+            if isinstance(result, type(self)):
+                result = result.view(np.ndarray)
             i_s1 = LM_total_size(ell_min, m1.ell_min-1)
             i_s2 = i_s1+LM_total_size(m1.ell_min, m1.ell_max)
             i_o1 = LM_total_size(ell_min, m2.ell_min-1)
@@ -67,10 +75,10 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
                 result[..., i_o1:i_o2] += m2.view(np.ndarray)
             if out is None:
                 result = type(self)(result, s=s, ell_min=ell_min, ell_max=ell_max)
-            elif isinstance(out, type(self)):
-                out._s = s
-                # out._ell_min = ell_min
-                out._ell_max = ell_max
+            elif isinstance(out[0], type(self)):
+                out[0]._s = s
+                # out[0]._ell_min = ell_min
+                out[0]._ell_max = ell_max
         elif isinstance(args[0], type(self)):
             modes = args[0]
             scalars = np.asanyarray(args[1])
@@ -99,15 +107,19 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             result_ell_max = args[0].ell_max + args[1].ell_max
             result_shape = np.broadcast(s[..., 0], o[..., 0]).shape + (LM_total_size(result_ell_min, result_ell_max),)
             result = out or np.zeros(result_shape, dtype=np.complex_)
+            if isinstance(result, tuple):
+                result = result[0]
+            if isinstance(result, type(self)):
+                result = result.view(np.ndarray)
             _multiplication_helper(s, args[0].ell_min, args[0].ell_max, args[0].s,
                                    o, args[1].ell_min, args[1].ell_max, args[1].s,
                                    result, result_ell_min, result_ell_max, result_s)
             if out is None:
                 result = type(self)(result, s=result_s, ell_min=result_ell_min, ell_max=result_ell_max)
-            elif isinstance(out, type(self)):
-                out._s = result_s
-                # out._ell_min = result_ell_min
-                out._ell_max = result_ell_max
+            elif isinstance(out[0], type(self)):
+                out[0]._s = result_s
+                # out[0]._ell_min = result_ell_min
+                out[0]._ell_max = result_ell_max
         elif isinstance(args[0], type(self)):
             modes = args[0]
             scalars = np.asanyarray(args[1])

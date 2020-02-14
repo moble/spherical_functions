@@ -26,15 +26,18 @@ def index(self, ell, m):
         raise ValueError(f"Requested ell index {ell} outside bounds of this data ({self.ell_min, self.ell_max})")
     return LM_index(ell, m, self.ell_min)
 
+
 def grid(self, n_theta=None, n_phi=None):
     """Return values of function on an equi-angular grid
 
     This method uses `spinsfast` to convert mode weights of spin-weighted function to values on a
     grid.  The grid has `n_theta` evenly spaced points along the usual polar (colatitude) angle
     theta, and `n_phi` evenly spaced points along the usual azimuthal angle phi.  This grid
-    corresponds to the one produced by `spherical_functions.theta_phi`.  The output array has one
-    more dimension than this object; rather than the last axis giving the mode weights, the last two
-    axes give the values on the two-dimensional grid.
+    corresponds to the one produced by `spherical_functions.theta_phi`; see that function for
+    specifics.
+
+    The output array has one more dimension than this object; rather than the last axis giving the
+    mode weights, the last two axes give the values on the two-dimensional grid.
 
     """
     import numpy as np

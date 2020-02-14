@@ -41,6 +41,7 @@ def Lsquared(self):
         )
     return d
 
+
 def Lz(self):
     """Left Lie derivative with respect to rotation about z
 
@@ -63,6 +64,7 @@ def Lz(self):
         for m in range(-ell, ell+1):
             d[..., d.index(ell, m)] = m * s[..., self.index(ell, m)]
     return d
+
 
 def Lplus(self):
     """Raising operator for Lz
@@ -102,6 +104,7 @@ def Lplus(self):
         for m in range(-ell+1, ell+1):
             d[..., d.index(ell, m)] = math.sqrt((ell+m)*(ell-m+1)) * s[..., self.index(ell, m-1)]
     return d
+
 
 def Lminus(self):
     """Lowering operator for Lz
@@ -143,6 +146,7 @@ def Lminus(self):
         d[..., self.index(ell, ell)] = 0.0
     return d
 
+
 def Rsquared(self):
     """Total angular-momentum operator
 
@@ -169,6 +173,7 @@ def Rsquared(self):
 
     """
     return self.Lsquared()
+
 
 def Rz(self):
     """Right Lie derivative with respect to rotation about z
@@ -204,6 +209,7 @@ def Rz(self):
     # {Rzf}{s, l, m} = -s f{s,l,m}
     import numpy as np
     return type(self)(-self.s * self.view(np.ndarray), s=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
+
 
 def Rplus(self):
     """Raising operator for Rz
@@ -249,6 +255,7 @@ def Rplus(self):
                 * s[..., self.index(ell, -ell):self.index(ell, ell)+1]
             )
     return d
+
 
 def Rminus(self):
     """Lowering operator for Rz
@@ -297,6 +304,7 @@ def Rminus(self):
             )
     return d
 
+
 def eth(self):
     """Spin-raising derivative operator defined by Newman and Penrose
 
@@ -314,6 +322,7 @@ def eth(self):
 
     """
     return self.Rminus()
+
 
 def ethbar(self):
     """Spin-lowering conjugate-derivative operator defined by Newman and Penrose

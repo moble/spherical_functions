@@ -5,6 +5,7 @@
 
 import math
 import cmath
+import pickle
 import numpy as np
 import quaternion
 import spherical_functions as sf
@@ -57,6 +58,37 @@ def test_modes_creation():
         assert m.ell_min == 0  # NOTE: This is hard coded!!!
         assert m.ell_max == ell_max
         assert np.all(m[..., :sf.LM_total_size(0, abs(s)-1)] == 0.0)
+
+
+def np_copy(m):
+    return np.copy(m)
+
+def np_array_copy(m):
+    return np.array(m, copy=True)
+
+def ndarray_copy(m):
+    return m.copy()
+
+def pickle_roundtrip(m):
+    return pickle.loads(pickle.dumps(m))
+
+# Note that np.copy and np.array(..., copy=True) return ndarray's, and thus lose information
+copy_xfail = lambda f: pytest.param(f, marks=pytest.mark.xfail)
+
+@pytest.mark.parametrize("copier", [copy_xfail(np_copy), copy_xfail(np_array_copy), ndarray_copy, pickle_roundtrip])
+def test_modes_copying_and_pickling(copier):
+    for s in range(-2, 2 + 1):
+        ell_min = abs(s)
+        ell_max = 8
+        a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2).view(complex)
+        m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+        c = copier(m)
+        assert m is not c
+        assert np.array_equal(c, m)
+        assert isinstance(c, type(m))
+        assert c.s == m.s
+        assert c.ell_min == m.ell_min
+        assert c.ell_max == m.ell_max
 
 
 def test_modes_grid():

@@ -13,6 +13,7 @@ from ..multiplication import _multiplication_helper
 def conj(self, inplace=False):
     return self.conjugate(inplace=inplace)
 
+
 def conjugate(self, inplace=False):
     """Return Modes object corresponding to conjugated function
 
@@ -65,6 +66,7 @@ def conjugate(self, inplace=False):
 
 conj.__doc__ = conjugate.__doc__
 
+
 def real(self, inplace=False):
     """Return Modes object corresponding to real-valued function
 
@@ -101,8 +103,10 @@ def real(self, inplace=False):
         return self
     return type(self)(c, s=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
 
+
 def norm(self):
     return np.linalg.norm(self.view(np.ndarray), axis=-1)
+
 
 def add(self, other, subtraction=False):
     if isinstance(other, type(self)):
@@ -128,6 +132,7 @@ def add(self, other, subtraction=False):
     else:
         return np.add(self, other)
 
+
 def subtract(self, other):
     if isinstance(other, type(self)):
         if self.s != other.s:
@@ -135,6 +140,7 @@ def subtract(self, other):
         return self.add(other, True)
     else:
         return np.subtract(self, other)
+
 
 def multiply(self, other, truncate=False):
     if isinstance(other, type(self)):
@@ -151,6 +157,7 @@ def multiply(self, other, truncate=False):
         return type(self)(new, s=new_s, ell_min=new_ell_min, ell_max=new_ell_max)
     else:
         return self * other
+
 
 def divide(self, other):
     if isinstance(other, type(self)):
