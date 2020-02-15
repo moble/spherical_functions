@@ -67,6 +67,9 @@ def np_copy(m):
 def np_array_copy(m):
     return np.array(m, copy=True)
 
+def np_array_copy_subok(m):
+    return np.array(m, copy=True, subok=True)
+
 def ndarray_copy(m):
     return m.copy()
 
@@ -77,13 +80,15 @@ def copy_copy(m):
     return copy.copy(m)
 
 def copy_deepcopy(m):
-    return copy.copy(m)
+    return copy.deepcopy(m)
 
 # Note that np.copy and np.array(..., copy=True) return ndarray's, and thus lose information
-copy_xfail = lambda f: pytest.param(f, marks=pytest.mark.xfail)
+copy_xfail = lambda f: pytest.param(f, marks=pytest.mark.xfail(reason="Unexpected numpy defaults"))
 
-@pytest.mark.parametrize("copier",
-    [copy_xfail(np_copy), copy_xfail(np_array_copy), ndarray_copy, pickle_roundtrip, copy_copy, copy_deepcopy])
+@pytest.mark.parametrize("copier", [
+    copy_xfail(np_copy), copy_xfail(np_array_copy), np_array_copy_subok,
+    ndarray_copy, pickle_roundtrip, copy_copy, copy_deepcopy
+])
 def test_modes_copying_and_pickling(copier):
     for s in range(-2, 2 + 1):
         ell_min = abs(s)
@@ -318,9 +323,10 @@ def test_modes_real():
         assert np.allclose(np.real(g), np.real(greal), rtol=tolerance, atol=tolerance)
         assert np.allclose(np.zeros_like(g, dtype=float), np.imag(greal), rtol=tolerance, atol=tolerance)
         # Test failure with s!=0
-        m = sf.Modes(a, s=1, ell_min=ell_min, ell_max=ell_max)
-        with pytest.raises(ValueError):
-            mreal = m.real(inplace)
+        for s in [-3, -2, -1, 1, 2, 3]:
+            m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+            with pytest.raises(ValueError):
+                mreal = m.real(inplace)
 
 
 def test_modes_squared_angular_momenta():

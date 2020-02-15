@@ -97,7 +97,7 @@ def eth_GHP(modes, spin_weight, ell_min=0):
 
     """
     ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min - 1))) - 1
-    eth_modes = np.array(modes)
+    eth_modes = np.copy(modes)
     i_mode = 0
     for ell in xrange(ell_min, ell_max + 1):
         factor = (0.0 if ell < abs(spin_weight + 1) else sqrt((ell - spin_weight) * (ell + spin_weight + 1.) / 2.))
@@ -132,7 +132,7 @@ def ethbar_GHP(modes, spin_weight, ell_min=0):
 
     """
     ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min - 1))) - 1
-    ethbar_modes = np.array(modes)
+    ethbar_modes = np.copy(modes)
     i_mode = 0
     for ell in xrange(ell_min, ell_max + 1):
         factor = (0.0 if ell < abs(spin_weight - 1) else -sqrt((ell + spin_weight) * (ell - spin_weight + 1.) / 2.))
@@ -167,7 +167,7 @@ def eth_NP(modes, spin_weight, ell_min=0):
 
     """
     ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min - 1))) - 1
-    eth_modes = np.array(modes)
+    eth_modes = np.copy(modes)
     i_mode = 0
     for ell in xrange(ell_min, ell_max + 1):
         factor = (0.0 if ell < abs(spin_weight + 1) else sqrt((ell - spin_weight) * (ell + spin_weight + 1.)))
@@ -202,7 +202,7 @@ def ethbar_NP(modes, spin_weight, ell_min=0):
 
     """
     ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min - 1))) - 1
-    ethbar_modes = np.array(modes)
+    ethbar_modes = np.copy(modes)
     i_mode = 0
     for ell in xrange(ell_min, ell_max + 1):
         factor = (0.0 if ell < abs(spin_weight - 1) else -sqrt((ell + spin_weight) * (ell - spin_weight + 1.)))
@@ -224,7 +224,7 @@ def ethbar_inverse_NP(modes, spin_weight, ell_min=0):
 
     """
     ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min - 1))) - 1
-    ethbar_inverse_modes = np.array(modes)
+    ethbar_inverse_modes = np.copy(modes)
     i_mode = 0
     for ell in xrange(ell_min, ell_max + 1):
         term = (ell + spin_weight + 1.) * (ell - spin_weight)
