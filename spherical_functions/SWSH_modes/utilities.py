@@ -46,3 +46,31 @@ def grid(self, n_theta=None, n_phi=None):
     n_phi = n_phi or n_theta
     return spinsfast.salm2map(self.view(np.ndarray), self.s, self.ell_max, n_theta, n_phi)
 
+
+def _check_broadcasting(self, array, reverse=False):
+    """Test whether or not the given array can broadcast against this object
+
+    
+    """
+    import numpy as np
+
+    if isinstance(array, type(self)):
+        try:
+            if reverse:
+                np.broadcast(array, self)
+            else:
+                np.broadcast(self, array)
+        except ValueError:
+            return False
+        else:
+            return True
+    else:
+        try:
+            if reverse:
+                np.broadcast(array, self[..., 0])
+            else:
+                np.broadcast(self[..., 0], array)
+        except ValueError:
+            return False
+        else:
+            return True

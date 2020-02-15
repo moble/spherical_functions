@@ -135,7 +135,7 @@ class Modes(np.ndarray):
     )
 
     from .utilities import (
-        index, grid
+        index, grid, _check_broadcasting
     )
 
     from .ufuncs import __array_ufunc__
