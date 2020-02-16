@@ -159,26 +159,37 @@ def test_modes_addition():
             a2 = np.random.rand(3, 7, sf.LM_total_size(ell_min2, ell_max2)*2).view(complex)
             m2 = sf.Modes(a2, s=s2, ell_min=ell_min2, ell_max=ell_max2)
             if s1 != s2:
+                # Don't allow addition of non-zero data
                 with pytest.raises(ValueError):
-                    m1m2 = m1.subtract(m2)
+                    m1m2 = m1.add(m2)
+                # Do allow addition with various forms of 0, for convenience
+                for m3 in [
+                        m1.add(0), m1.add(np.zeros(1)), m1.add(np.zeros((1,))), m1.add(np.zeros((7,))), m1.add(np.zeros((3,7))),
+                        m1+0, m1+np.zeros(1), m1+np.zeros((1,)), m1+np.zeros((7,)), m1+np.zeros((3,7)),
+                        0+m1, np.zeros(1)+m1, np.zeros((1,))+m1, np.zeros((7,))+m1, np.zeros((3,7))+m1,
+                ]:
+                    assert m3.s == s1
+                    assert m3.ell_min == m1.ell_min
+                    assert m3.ell_max == m1.ell_max
+                    assert np.array_equal(m1, m3)
             else:
-                m1m2 = m1.add(m2)
-                assert m1m2.s == s1
-                assert m1m2.ell_max == m1.ell_max
-                i1 = sf.LM_total_size(0, min(ell_min1, ell_min2)-1)
-                i2 = sf.LM_total_size(0, max(ell_min1, ell_min2)-1)
-                i3 = sf.LM_total_size(0, min(ell_max1, ell_max2))
-                i4 = sf.LM_total_size(0, max(ell_max1, ell_max2))
-                assert np.array_equiv(m1m2[..., :i1], 0.0)
-                assert np.array_equal(m1m2[..., i1:i2], a1[..., :i2-i1])
-                assert np.array_equal(m1m2[..., i1:i2], m1.view(np.ndarray)[..., i1:i2])
-                assert np.array_equal(m1m2[..., i2:i3], m1.view(np.ndarray)[..., i2:i3]+m2.view(np.ndarray)[..., i2:i3])
-                assert np.array_equal(m1m2[..., i3:i4], m1.view(np.ndarray)[..., i3:i4])
-                g12 = m1m2.grid()
-                n_theta, n_phi = g12.shape[-2:]
-                g1 = m1.grid(n_theta, n_phi)
-                g2 = m2.grid(n_theta, n_phi)
-                assert np.allclose(g1+g2, g12, rtol=tolerance, atol=tolerance)
+                for m1m2 in [m1.add(m2), m2.add(m1)]:
+                    assert m1m2.s == s1
+                    assert m1m2.ell_max == m1.ell_max
+                    i1 = sf.LM_total_size(0, min(ell_min1, ell_min2)-1)
+                    i2 = sf.LM_total_size(0, max(ell_min1, ell_min2)-1)
+                    i3 = sf.LM_total_size(0, min(ell_max1, ell_max2))
+                    i4 = sf.LM_total_size(0, max(ell_max1, ell_max2))
+                    assert np.array_equiv(m1m2[..., :i1], 0.0)
+                    assert np.array_equal(m1m2[..., i1:i2], a1[..., :i2-i1])
+                    assert np.array_equal(m1m2[..., i1:i2], m1.view(np.ndarray)[..., i1:i2])
+                    assert np.array_equal(m1m2[..., i2:i3], m1.view(np.ndarray)[..., i2:i3]+m2.view(np.ndarray)[..., i2:i3])
+                    assert np.array_equal(m1m2[..., i3:i4], m1.view(np.ndarray)[..., i3:i4])
+                    g12 = m1m2.grid()
+                    n_theta, n_phi = g12.shape[-2:]
+                    g1 = m1.grid(n_theta, n_phi)
+                    g2 = m2.grid(n_theta, n_phi)
+                    assert np.allclose(g1+g2, g12, rtol=tolerance, atol=tolerance)
 
 
 def test_modes_subtraction():
@@ -204,8 +215,26 @@ def test_modes_subtraction():
             a2 = np.random.rand(3, 7, sf.LM_total_size(ell_min2, ell_max2)*2).view(complex)
             m2 = sf.Modes(a2, s=s2, ell_min=ell_min2, ell_max=ell_max2)
             if s1 != s2:
+                # Don't allow addition of non-zero data
                 with pytest.raises(ValueError):
                     m1m2 = m1.subtract(m2)
+                # Do allow subtraction with various forms of 0, for convenience
+                for m3 in [
+                        m1.subtract(0), m1.subtract(np.zeros(1)), m1.subtract(np.zeros((1,))),
+                        m1.subtract(np.zeros((7,))), m1.subtract(np.zeros((3,7))),
+                        m1-0, m1-np.zeros(1), m1-np.zeros((1,)), m1-np.zeros((7,)), m1-np.zeros((3,7)),
+                ]:
+                    assert m3.s == s1
+                    assert m3.ell_min == m1.ell_min
+                    assert m3.ell_max == m1.ell_max
+                    assert np.array_equal(m1, m3)
+                for m3 in [
+                        0-m1, np.zeros(1)-m1, np.zeros((1,))-m1, np.zeros((7,))-m1, np.zeros((3,7))-m1,
+                ]:
+                    assert m3.s == s1
+                    assert m3.ell_min == m1.ell_min
+                    assert m3.ell_max == m1.ell_max
+                    assert np.array_equal(-m1, m3)
             else:
                 m1m2 = m1.subtract(m2)
                 assert m1m2.s == s1

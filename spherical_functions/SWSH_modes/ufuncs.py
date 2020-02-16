@@ -70,7 +70,7 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
         elif isinstance(args[0], type(self)):
             modes = args[0]
             scalars = np.asanyarray(args[1])
-            if modes.s != 0 or not modes._check_broadcasting(scalars):
+            if (modes.s != 0 and np.any(scalars)) or not modes._check_broadcasting(scalars):
                 return NotImplemented
             result = ufunc(modes.view(np.ndarray), scalars[..., np.newaxis], out=out)
             if out is None:
@@ -78,7 +78,7 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
         elif isinstance(args[1], type(self)):
             scalars = np.asanyarray(args[0])
             modes = args[1]
-            if modes.s != 0 or not modes._check_broadcasting(scalars, reverse=True):
+            if (modes.s != 0 and np.any(scalars)) or not modes._check_broadcasting(scalars, reverse=True):
                 return NotImplemented
             result = ufunc(scalars[..., np.newaxis], modes.view(np.ndarray), out=out)
             if out is None:
