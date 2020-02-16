@@ -5,6 +5,7 @@
 ### particular, they assume that the first argument, `self` is an instance of Modes.  They should
 ### probably not be used outside of that class.
 
+import copy
 import numpy as np
 from .. import LM_total_size
 from ..multiplication import _multiplication_helper
@@ -37,9 +38,7 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
         if out is None:
             result = type(self)(result, s=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
         elif isinstance(out[0], type(self)):
-            out[0]._s = self.s
-            # out[0]._ell_min = self.ell_min
-            out[0]._ell_max = self.ell_max
+            out[0]._metadata = copy.deepcopy(self._metadata)
 
     elif ufunc in [np.add, np.subtract]:
         if isinstance(args[0], type(self)) and isinstance(args[1], type(self)):
@@ -67,9 +66,7 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             if out is None:
                 result = type(self)(result, s=s, ell_min=ell_min, ell_max=ell_max)
             elif isinstance(out[0], type(self)):
-                out[0]._s = s
-                # out[0]._ell_min = ell_min
-                out[0]._ell_max = ell_max
+                out[0]._metadata = copy.deepcopy(self._metadata)
         elif isinstance(args[0], type(self)):
             modes = args[0]
             scalars = np.asanyarray(args[1])
@@ -108,9 +105,7 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             if out is None:
                 result = type(self)(result, s=result_s, ell_min=result_ell_min, ell_max=result_ell_max)
             elif isinstance(out[0], type(self)):
-                out[0]._s = result_s
-                # out[0]._ell_min = result_ell_min
-                out[0]._ell_max = result_ell_max
+                out[0]._metadata = copy.deepcopy(self._metadata)
         elif isinstance(args[0], type(self)):
             modes = args[0]
             scalars = np.asanyarray(args[1])

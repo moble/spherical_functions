@@ -1,6 +1,7 @@
 # Copyright (c) 2020, Michael Boyle
 # See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
 
+import copy
 import math
 import numpy as np
 import spinsfast
@@ -70,8 +71,18 @@ class Modes(np.ndarray):
     """
 
     # https://numpy.org/doc/1.18/user/basics.subclassing.html
-    def __new__(cls, input_array, s=None, ell_min=0, ell_max=None):
+    def __new__(cls, input_array, s, ell_min=0, ell_max=None):
         input_array = np.asarray(input_array, dtype=complex)
+        if isinstance(s, dict):
+            metadata = copy.deepcopy(s)
+            if 'spin_weight' not in metadata:
+                raise ValueError("When second argument is a dict, it must contain the key 'spin_weight'")
+            if ell_max is not None and 'ell_max' in metadata and ell_max != metadata['ell_max']:
+                raise ValueError("The 'ell_max' value should only be specified once; it is specified in the second argument and as a keyword argument")
+            s = metadata['spin_weight']
+            ell_max = metadata.get('ell_max', ell_max)
+        else:
+            metadata = None
         ell_max = ell_max or LM_deduce_ell_max(input_array.shape[-1], ell_min)
         if input_array.shape[-1] != LM_total_size(ell_min, ell_max):
             raise ValueError(f"Input array has shape {input_array.shape} when viewed as a complex array.\n           "
@@ -83,31 +94,32 @@ class Modes(np.ndarray):
             insertion_indices = [0,]*LM_total_size(0, ell_min-1)
             obj = np.insert(input_array, insertion_indices, 0.0, axis=-1).view(cls)
         obj[..., :LM_total_size(0, abs(s)-1)] = 0.0
-        obj._s = s
-        obj._ell_max = ell_max
+        obj._metadata = metadata or {
+            'spin_weight': s,
+            'ell_max': ell_max,
+        }
         return obj
 
     # https://numpy.org/doc/1.18/user/basics.subclassing.html
     def __array_finalize__(self, obj):
         if obj is None: return
-        self._s = getattr(obj, 's', None)
-        self._ell_max = getattr(obj, 'ell_max', None)
+        self._metadata = copy.deepcopy(getattr(obj, '_metadata', {'spin_weight': None, 'ell_max': None}))
 
     # For pickling
     def __reduce__(self):
         state = super(Modes, self).__reduce__()
-        new_attributes = state[2] + (self._s, self._ell_max)
+        new_attributes = state[2] + (self._metadata,)
         return (state[0], state[1], new_attributes)
 
     # For unpickling
     def __setstate__(self, state):
-        self._s, self._ell_max = state[-2:]
-        super(Modes, self).__setstate__(state[:-2])
+        self._metadata = copy.deepcopy(state[-1])
+        super(Modes, self).__setstate__(state[:-1])
 
     @property
     def s(self):
         """Spin weight of this Modes object"""
-        return self._s
+        return self._metadata['spin_weight']
 
     @property
     def ell_min(self):
@@ -117,7 +129,7 @@ class Modes(np.ndarray):
     @property
     def ell_max(self):
         """Largest ell value stored in data"""
-        return self._ell_max
+        return self._metadata['ell_max']
 
     from .algebra import (
         conj, conjugate, bar, real, norm,

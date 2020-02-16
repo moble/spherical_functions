@@ -60,7 +60,7 @@ def conjugate(self, inplace=False):
             else:
                 c[..., i_p], c[..., i_n] = -np.conjugate(s[..., i_n]), -np.conjugate(s[..., i_p])
     if inplace:
-        self._s *= -1
+        self._metadata['spin_weight'] = -self.s
         return self
     return type(self)(c, s=-self.s, ell_min=self.ell_min, ell_max=self.ell_max)
 
