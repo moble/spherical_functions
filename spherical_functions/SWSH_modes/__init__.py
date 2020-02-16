@@ -72,7 +72,7 @@ class Modes(np.ndarray):
 
     # https://numpy.org/doc/1.18/user/basics.subclassing.html
     def __new__(cls, input_array, s, ell_min=0, ell_max=None):
-        input_array = np.asarray(input_array, dtype=complex)
+        input_array = np.asarray(input_array).view(complex)
         if isinstance(s, dict):
             metadata = copy.deepcopy(s)
             if 'spin_weight' not in metadata:
@@ -85,9 +85,9 @@ class Modes(np.ndarray):
             metadata = None
         ell_max = ell_max or LM_deduce_ell_max(input_array.shape[-1], ell_min)
         if input_array.shape[-1] != LM_total_size(ell_min, ell_max):
-            raise ValueError(f"Input array has shape {input_array.shape} when viewed as a complex array.\n           "
-                             +f"Its last dimension should have size {LM_total_size(ell_min, ell_max)},\n            "
-                             +f"to be consistent with the input ell_min ({ell_min}) and ell_max ({ell_max}).")
+            raise ValueError(f"Input array has shape {input_array.shape} when viewed as a complex array.\n            "
+                             +f"Its last dimension should have size {LM_total_size(ell_min, ell_max)}, "
+                             +f"for consistency with the input ell_min ({ell_min}) and ell_max ({ell_max}).")
         if ell_min == 0:
             obj = input_array.view(cls)
         else:

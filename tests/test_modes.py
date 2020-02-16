@@ -18,10 +18,20 @@ def test_modes_creation():
         ell_min = abs(s)
         ell_max = 8
 
-        # Test failed creation with real data
+        # Test successful creation with real data of the right shape
         a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2)
-        with pytest.raises(ValueError):
-            m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+        m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+        assert m.s == s
+        assert m.ell_min == 0  # NOTE: This is hard coded!!!
+        assert m.ell_max == ell_max
+        assert np.array_equal(a.view(complex), m[..., sf.LM_total_size(0, ell_min-1):])
+        assert np.all(m[..., :sf.LM_total_size(0, abs(s)-1)] == 0.0)
+        m = sf.Modes(a, s=s, ell_min=ell_min)  # ell_max is deduced!
+        assert m.s == s
+        assert m.ell_min == 0  # NOTE: This is hard coded!!!
+        assert m.ell_max == ell_max
+        assert np.array_equal(a.view(complex), m[..., sf.LM_total_size(0, ell_min-1):])
+        assert np.all(m[..., :sf.LM_total_size(0, abs(s)-1)] == 0.0)
 
         # Test successful creation with complex data of the right shape
         a = a.view(complex)
@@ -29,10 +39,14 @@ def test_modes_creation():
         assert m.s == s
         assert m.ell_min == 0  # NOTE: This is hard coded!!!
         assert m.ell_max == ell_max
+        assert np.array_equal(a, m[..., sf.LM_total_size(0, ell_min-1):])
+        assert np.all(m[..., :sf.LM_total_size(0, abs(s)-1)] == 0.0)
         m = sf.Modes(a, s=s, ell_min=ell_min)  # ell_max is deduced!
         assert m.s == s
         assert m.ell_min == 0  # NOTE: This is hard coded!!!
         assert m.ell_max == ell_max
+        assert np.array_equal(a, m[..., sf.LM_total_size(0, ell_min-1):])
+        assert np.all(m[..., :sf.LM_total_size(0, abs(s)-1)] == 0.0)
 
         # Test failed creation with complex data of inconsistent shape
         if ell_min != 0:
