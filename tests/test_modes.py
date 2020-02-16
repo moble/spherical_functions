@@ -377,8 +377,8 @@ def test_modes_derivative_commutators():
     Rz = sf.Modes.Rz
     Rp = sf.Modes.Rplus
     Rm = sf.Modes.Rminus
-    eth = sf.Modes.eth
-    ethbar = sf.Modes.ethbar
+    eth = lambda modes: modes.eth
+    ethbar = lambda modes: modes.ethbar
     for s in range(-2, 2+1):
         ell_min = abs(s)
         ell_max = 8
@@ -513,7 +513,7 @@ def test_modes_derivatives_on_grids():
                         sp1Ylm.index(ell, m)
                 else:
                     sp1Ylm[sp1Ylm.index(ell, m)] = 1.0
-                eth_sYlm = sYlm.eth()
+                eth_sYlm = sYlm.eth
                 g_sp1Ylm = sp1Ylm.grid(n_theta, n_phi)
                 g_eth_sYlm = eth_sYlm.grid(n_theta, n_phi)
                 factor = 0.0 if invalid else math.sqrt((ell-s)*(ell+s+1))
@@ -528,13 +528,13 @@ def test_modes_derivatives_on_grids():
                 else:
                     sm1Ylm[sm1Ylm.index(ell, m)] = 1.0
                 g_sm1Ylm = sm1Ylm.grid(n_theta, n_phi)
-                ethbar_sYlm = sYlm.ethbar()
+                ethbar_sYlm = sYlm.ethbar
                 g_ethbar_sYlm = ethbar_sYlm.grid(n_theta, n_phi)
                 factor = 0.0 if invalid else -math.sqrt((ell+s)*(ell-s+1))
                 assert np.allclose(g_ethbar_sYlm, factor*g_sm1Ylm, rtol=tolerance, atol=tolerance)
 
                 # Test ethbar eth sYlm = -(l-s)(l+s+1) sYlm
-                ethbar_eth_sYlm = sYlm.eth().ethbar()
+                ethbar_eth_sYlm = sYlm.eth.ethbar
                 g_ethbar_eth_sYlm = ethbar_eth_sYlm.grid(n_theta, n_phi)
                 factor = 0.0 if (abs(s+1) > ell or abs(s) > ell) else -(ell-s)*(ell+s+1)
                 assert np.allclose(g_ethbar_eth_sYlm, factor*g_sYlm, rtol=tolerance, atol=tolerance)

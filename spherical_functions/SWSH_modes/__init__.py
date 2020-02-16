@@ -71,16 +71,12 @@ class Modes(np.ndarray):
 
     # https://numpy.org/doc/1.18/user/basics.subclassing.html
     def __new__(cls, input_array, s=None, ell_min=0, ell_max=None):
-        input_array = np.asarray(input_array)
-        if input_array.dtype != np.complex:
-            raise ValueError(f"Input array must have dtype `complex`; dtype is `{input_array.dtype}`.\n            "
-                             +"You can use `input_array.view(complex)` if the data are\n            "
-                             +"stored as consecutive real and imaginary parts.")
+        input_array = np.asarray(input_array, dtype=complex)
         ell_max = ell_max or LM_deduce_ell_max(input_array.shape[-1], ell_min)
         if input_array.shape[-1] != LM_total_size(ell_min, ell_max):
-            raise ValueError(f"Input array has shape {input_array.shape}.  Its last dimension should "
-                             +f"have size {LM_total_size(ell_min, ell_max)},\n            "
-                             +f"to be consistent with the input ell_min ({ell_min}) and ell_max ({ell_max})")
+            raise ValueError(f"Input array has shape {input_array.shape} when viewed as a complex array.\n           "
+                             +f"Its last dimension should have size {LM_total_size(ell_min, ell_max)},\n            "
+                             +f"to be consistent with the input ell_min ({ell_min}) and ell_max ({ell_max}).")
         if ell_min == 0:
             obj = input_array.view(cls)
         else:
@@ -124,7 +120,7 @@ class Modes(np.ndarray):
         return self._ell_max
 
     from .algebra import (
-        conj, conjugate, real, norm,
+        conj, conjugate, bar, real, norm,
         add, subtract, multiply, divide
     )
 

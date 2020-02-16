@@ -67,6 +67,12 @@ def conjugate(self, inplace=False):
 conj.__doc__ = conjugate.__doc__
 
 
+@property
+def bar(self):
+    return self.conjugate()
+bar.__doc__ = conjugate.__doc__
+
+
 def real(self, inplace=False):
     """Return Modes object corresponding to real-valued function
 

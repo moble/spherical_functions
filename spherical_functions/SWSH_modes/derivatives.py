@@ -305,6 +305,7 @@ def Rminus(self):
     return d
 
 
+@property
 def eth(self):
     """Spin-raising derivative operator defined by Newman and Penrose
 
@@ -324,6 +325,7 @@ def eth(self):
     return self.Rminus()
 
 
+@property
 def ethbar(self):
     """Spin-lowering conjugate-derivative operator defined by Newman and Penrose
 
