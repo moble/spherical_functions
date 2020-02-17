@@ -131,6 +131,11 @@ class Modes(np.ndarray):
         """Largest ell value stored in data"""
         return self._metadata['ell_max']
 
+    @property
+    def n_modes(self):
+        """Number of elements along the last axis"""
+        return self.shape[-1]
+
     from .algebra import (
         conj, conjugate, bar, real, norm,
         add, subtract, multiply, divide
