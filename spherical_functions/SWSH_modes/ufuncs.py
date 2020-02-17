@@ -36,7 +36,7 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             result = result.view(np.ndarray)
         ufunc(self.view(np.ndarray), out=result)
         if out is None:
-            result = type(self)(result, s=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
+            result = type(self)(result, spin_weight=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
         elif isinstance(out[0], type(self)):
             out[0]._metadata = copy.deepcopy(self._metadata)
 
@@ -64,7 +64,7 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             else:
                 result[..., i_o1:i_o2] += m2.view(np.ndarray)
             if out is None:
-                result = type(self)(result, s=s, ell_min=ell_min, ell_max=ell_max)
+                result = type(self)(result, spin_weight=s, ell_min=ell_min, ell_max=ell_max)
             elif isinstance(out[0], type(self)):
                 out[0]._metadata = copy.deepcopy(self._metadata)
         elif isinstance(args[0], type(self)):
@@ -103,7 +103,7 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
                                    o, args[1].ell_min, args[1].ell_max, args[1].s,
                                    result, result_ell_min, result_ell_max, result_s)
             if out is None:
-                result = type(self)(result, s=result_s, ell_min=result_ell_min, ell_max=result_ell_max)
+                result = type(self)(result, spin_weight=result_s, ell_min=result_ell_min, ell_max=result_ell_max)
             elif isinstance(out[0], type(self)):
                 out[0]._metadata = copy.deepcopy(self._metadata)
         elif isinstance(args[0], type(self)):

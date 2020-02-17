@@ -62,7 +62,7 @@ def conjugate(self, inplace=False):
     if inplace:
         self._metadata['spin_weight'] = -self.s
         return self
-    return type(self)(c, s=-self.s, ell_min=self.ell_min, ell_max=self.ell_max)
+    return type(self)(c, spin_weight=-self.s, ell_min=self.ell_min, ell_max=self.ell_max)
 
 conj.__doc__ = conjugate.__doc__
 
@@ -107,7 +107,7 @@ def real(self, inplace=False):
                 c[..., i_n] = -np.conjugate(c[..., i_p])
     if inplace:
         return self
-    return type(self)(c, s=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
+    return type(self)(c, spin_weight=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
 
 
 def imag(self, inplace=False):
@@ -144,7 +144,7 @@ def imag(self, inplace=False):
                 c[..., i_n] = np.conjugate(c[..., i_p])
     if inplace:
         return self
-    return type(self)(c, s=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
+    return type(self)(c, spin_weight=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
 
 
 def norm(self):
@@ -169,7 +169,7 @@ def add(self, other, subtraction=False):
             result[..., i_o1:i_o2] -= other.view(np.ndarray)
         else:
             result[..., i_o1:i_o2] += other.view(np.ndarray)
-        return type(self)(result, s=s, ell_min=ell_min, ell_max=ell_max)
+        return type(self)(result, spin_weight=s, ell_min=ell_min, ell_max=ell_max)
     elif subtraction:
         return np.subtract(self, other)
     else:
@@ -199,7 +199,7 @@ def multiply(self, other, truncate=False):
         new = _multiplication_helper(s, self.ell_min, self.ell_max, self.s,
                                      o, other.ell_min, other.ell_max, other.s,
                                      new, new_ell_min, new_ell_max, new_s)
-        return type(self)(new, s=new_s, ell_min=new_ell_min, ell_max=new_ell_max)
+        return type(self)(new, spin_weight=new_s, ell_min=new_ell_min, ell_max=new_ell_max)
     else:
         return self * other
 

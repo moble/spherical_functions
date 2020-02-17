@@ -20,13 +20,13 @@ def test_modes_creation():
 
         # Test successful creation with real data of the right shape
         a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2)
-        m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+        m = sf.Modes(a, spin_weight=s, ell_min=ell_min, ell_max=ell_max)
         assert m.s == s
         assert m.ell_min == 0  # NOTE: This is hard coded!!!
         assert m.ell_max == ell_max
         assert np.array_equal(a.view(complex), m[..., sf.LM_total_size(0, ell_min-1):])
         assert np.all(m[..., :sf.LM_total_size(0, abs(s)-1)] == 0.0)
-        m = sf.Modes(a, s=s, ell_min=ell_min)  # ell_max is deduced!
+        m = sf.Modes(a, spin_weight=s, ell_min=ell_min)  # ell_max is deduced!
         assert m.s == s
         assert m.ell_min == 0  # NOTE: This is hard coded!!!
         assert m.ell_max == ell_max
@@ -35,13 +35,13 @@ def test_modes_creation():
 
         # Test successful creation with complex data of the right shape
         a = a.view(complex)
-        m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+        m = sf.Modes(a, spin_weight=s, ell_min=ell_min, ell_max=ell_max)
         assert m.s == s
         assert m.ell_min == 0  # NOTE: This is hard coded!!!
         assert m.ell_max == ell_max
         assert np.array_equal(a, m[..., sf.LM_total_size(0, ell_min-1):])
         assert np.all(m[..., :sf.LM_total_size(0, abs(s)-1)] == 0.0)
-        m = sf.Modes(a, s=s, ell_min=ell_min)  # ell_max is deduced!
+        m = sf.Modes(a, spin_weight=s, ell_min=ell_min)  # ell_max is deduced!
         assert m.s == s
         assert m.ell_min == 0  # NOTE: This is hard coded!!!
         assert m.ell_max == ell_max
@@ -51,24 +51,24 @@ def test_modes_creation():
         # Test failed creation with complex data of inconsistent shape
         if ell_min != 0:
             with pytest.raises(ValueError):
-                m = sf.Modes(a, s=s)
+                m = sf.Modes(a, spin_weight=s)
         with pytest.raises(ValueError):
-            m = sf.Modes(a, s=s, ell_min=ell_min-1, ell_max=ell_max)
+            m = sf.Modes(a, spin_weight=s, ell_min=ell_min-1, ell_max=ell_max)
         with pytest.raises(ValueError):
-            m = sf.Modes(a, s=s, ell_min=ell_min+1, ell_max=ell_max)
+            m = sf.Modes(a, spin_weight=s, ell_min=ell_min+1, ell_max=ell_max)
         with pytest.raises(ValueError):
-            m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max-1)
+            m = sf.Modes(a, spin_weight=s, ell_min=ell_min, ell_max=ell_max-1)
         with pytest.raises(ValueError):
-            m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max+1)
+            m = sf.Modes(a, spin_weight=s, ell_min=ell_min, ell_max=ell_max+1)
 
         # Test failed creation with complex data of impossible shape
         with pytest.raises(ValueError):
-            m = sf.Modes(a[..., 1:], s=s, ell_min=ell_min)
+            m = sf.Modes(a[..., 1:], spin_weight=s, ell_min=ell_min)
 
         # Test successful creation with complex data containing extraneous data at ell<abs(s)
         a = np.random.rand(3, 7, sf.LM_total_size(0, ell_max)*2)
         a = a.view(complex)
-        m = sf.Modes(a, s=s)
+        m = sf.Modes(a, spin_weight=s)
         assert m.s == s
         assert m.ell_min == 0  # NOTE: This is hard coded!!!
         assert m.ell_max == ell_max
@@ -108,7 +108,7 @@ def test_modes_copying_and_pickling(copier):
         ell_min = abs(s)
         ell_max = 8
         a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2).view(complex)
-        m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+        m = sf.Modes(a, spin_weight=s, ell_min=ell_min, ell_max=ell_max)
         c = copier(m)
         assert m is not c
         assert np.array_equal(c, m)
@@ -123,7 +123,7 @@ def test_modes_grid():
         ell_min = abs(s)
         ell_max = 8
         a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2).view(complex)
-        m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+        m = sf.Modes(a, spin_weight=s, ell_min=ell_min, ell_max=ell_max)
         n = 2*ell_max+1
         for n_theta, n_phi in [[None, None], [n, None], [None, n], [n, n], [n+1, n], [n, n+1], [n+1, n+1]]:
             g = m.grid(n_theta=n_theta, n_phi=n_phi)
@@ -146,8 +146,8 @@ def test_modes_addition():
         a2 = np.random.rand(*a1.shape)
         a1 = a1.view(complex)
         a2 = a2.view(complex)
-        m1 = sf.Modes(a1, s=s1, ell_min=ell_min1, ell_max=ell_max1)
-        m2 = sf.Modes(a2, s=s1, ell_min=ell_min1, ell_max=ell_max1)
+        m1 = sf.Modes(a1, spin_weight=s1, ell_min=ell_min1, ell_max=ell_max1)
+        m2 = sf.Modes(a2, spin_weight=s1, ell_min=ell_min1, ell_max=ell_max1)
         m1m2 = m1+m2
         assert m1m2.s == s1
         assert m1m2.ell_max == m1.ell_max
@@ -157,7 +157,7 @@ def test_modes_addition():
             ell_min2 = ell_min1+1
             ell_max2 = ell_max1-1
             a2 = np.random.rand(3, 7, sf.LM_total_size(ell_min2, ell_max2)*2).view(complex)
-            m2 = sf.Modes(a2, s=s2, ell_min=ell_min2, ell_max=ell_max2)
+            m2 = sf.Modes(a2, spin_weight=s2, ell_min=ell_min2, ell_max=ell_max2)
             if s1 != s2:
                 # Don't allow addition of non-zero data
                 with pytest.raises(ValueError):
@@ -202,8 +202,8 @@ def test_modes_subtraction():
         a2 = np.random.rand(*a1.shape)
         a1 = a1.view(complex)
         a2 = a2.view(complex)
-        m1 = sf.Modes(a1, s=s1, ell_min=ell_min1, ell_max=ell_max1)
-        m2 = sf.Modes(a2, s=s1, ell_min=ell_min1, ell_max=ell_max1)
+        m1 = sf.Modes(a1, spin_weight=s1, ell_min=ell_min1, ell_max=ell_max1)
+        m2 = sf.Modes(a2, spin_weight=s1, ell_min=ell_min1, ell_max=ell_max1)
         m1m2 = m1-m2
         assert m1m2.s == s1
         assert m1m2.ell_max == m1.ell_max
@@ -213,7 +213,7 @@ def test_modes_subtraction():
             ell_min2 = ell_min1+1
             ell_max2 = ell_max1-1
             a2 = np.random.rand(3, 7, sf.LM_total_size(ell_min2, ell_max2)*2).view(complex)
-            m2 = sf.Modes(a2, s=s2, ell_min=ell_min2, ell_max=ell_max2)
+            m2 = sf.Modes(a2, spin_weight=s2, ell_min=ell_min2, ell_max=ell_max2)
             if s1 != s2:
                 # Don't allow addition of non-zero data
                 with pytest.raises(ValueError):
@@ -264,7 +264,7 @@ def test_modes_multiplication():
             ell_min1 = abs(s1)
             ell_max1 = 8
             a1 = np.random.rand(3, 7, sf.LM_total_size(ell_min1, ell_max1)*2).view(complex)
-            m1 = sf.Modes(a1, s=s1, ell_min=ell_min1, ell_max=ell_max1)
+            m1 = sf.Modes(a1, spin_weight=s1, ell_min=ell_min1, ell_max=ell_max1)
             # Check scalar multiplications
             s = np.random.rand()
             m1s = mul(m1, s)
@@ -304,7 +304,7 @@ def test_modes_multiplication():
                 ell_min2 = ell_min1+1
                 ell_max2 = ell_max1-1
                 a2 = np.random.rand(3, 7, sf.LM_total_size(ell_min2, ell_max2)*2).view(complex)
-                m2 = sf.Modes(a2, s=s2, ell_min=ell_min2, ell_max=ell_max2)
+                m2 = sf.Modes(a2, spin_weight=s2, ell_min=ell_min2, ell_max=ell_max2)
                 m1m2 = mul(m1, m2)
                 assert m1m2.s == s1 + s2
                 if i_mul == 2:
@@ -326,7 +326,7 @@ def test_modes_conjugate():
             ell_min = abs(s)
             ell_max = 8
             a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2).view(complex)
-            m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+            m = sf.Modes(a, spin_weight=s, ell_min=ell_min, ell_max=ell_max)
             g = m.grid()
             s = m.s
             ell_min = m.ell_min
@@ -349,8 +349,8 @@ def test_modes_real():
         ell_min = abs(s)
         ell_max = 8
         a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2).view(complex)
-        # Test success with s==0
-        m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+        # Test success with spin_weight==0
+        m = sf.Modes(a, spin_weight=s, ell_min=ell_min, ell_max=ell_max)
         g = m.grid()
         s = m.s
         ell_min = m.ell_min
@@ -367,7 +367,7 @@ def test_modes_real():
         assert np.allclose(np.zeros_like(g, dtype=float), np.imag(greal), rtol=tolerance, atol=tolerance)
         # Test failure with s!=0
         for s in [-3, -2, -1, 1, 2, 3]:
-            m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+            m = sf.Modes(a, spin_weight=s, ell_min=ell_min, ell_max=ell_max)
             with pytest.raises(ValueError):
                 mreal = m.real(inplace)
 
@@ -380,8 +380,8 @@ def test_modes_imag():
         ell_min = abs(s)
         ell_max = 8
         a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2).view(complex)
-        # Test success with s==0
-        m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+        # Test success with spin_weight==0
+        m = sf.Modes(a, spin_weight=s, ell_min=ell_min, ell_max=ell_max)
         g = m.grid()
         s = m.s
         ell_min = m.ell_min
@@ -398,7 +398,7 @@ def test_modes_imag():
         assert np.allclose(np.zeros_like(g, dtype=float), np.real(gimag), rtol=tolerance, atol=tolerance)
         # Test failure with s!=0
         for s in [-3, -2, -1, 1, 2, 3]:
-            m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+            m = sf.Modes(a, spin_weight=s, ell_min=ell_min, ell_max=ell_max)
             with pytest.raises(ValueError):
                 mimag = m.imag(inplace)
 
@@ -418,7 +418,7 @@ def test_modes_squared_angular_momenta():
         ell_min = abs(s)
         ell_max = 8
         a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2).view(complex)
-        m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+        m = sf.Modes(a, spin_weight=s, ell_min=ell_min, ell_max=ell_max)
 
         # Test L^2 = 0.5(L+L- + L-L+) + LzLz
         m1 = L2(m)
@@ -457,7 +457,7 @@ def test_modes_derivative_commutators():
         ell_min = abs(s)
         ell_max = 8
         a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2).view(complex)
-        m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+        m = sf.Modes(a, spin_weight=s, ell_min=ell_min, ell_max=ell_max)
         # Test [Ri, Lj] = 0
         for R in [Rz, Rp, Rm]:
             for L in [Lz, Lp, Lm]:
@@ -494,7 +494,7 @@ def test_modes_derivatives_on_grids():
         zeros = lambda: np.zeros(sf.LM_total_size(ell_min, ell_max), dtype=complex)
         for ell in range(abs(s), ell_max+1):
             for m in range(-ell, ell+1):
-                sYlm = sf.Modes(zeros(), s=s, ell_min=ell_min, ell_max=ell_max)
+                sYlm = sf.Modes(zeros(), spin_weight=s, ell_min=ell_min, ell_max=ell_max)
                 sYlm[sYlm.index(ell, m)] = 1.0
                 g_sYlm = sYlm.grid()
                 n_theta, n_phi = g_sYlm.shape[-2:]
@@ -513,7 +513,7 @@ def test_modes_derivatives_on_grids():
 
                 # Test Lplus {s}Y{l,m} = sqrt((l-m)*(l+m+1)) {s}Y{l,m+1}
                 invalid = abs(m+1) > ell
-                sYlmp1 = sf.Modes(zeros(), s=s, ell_min=ell_min, ell_max=ell_max)
+                sYlmp1 = sf.Modes(zeros(), spin_weight=s, ell_min=ell_min, ell_max=ell_max)
                 if invalid:
                     with pytest.raises(ValueError):
                         sYlmp1.index(ell, m+1)
@@ -527,7 +527,7 @@ def test_modes_derivatives_on_grids():
 
                 # Test Lminus {s}Y{l,m} = sqrt((l+m)*(l-m+1)) * {s}Y{l,m-1}
                 invalid = abs(m-1) > ell
-                sYlmm1 = sf.Modes(zeros(), s=s, ell_min=ell_min, ell_max=ell_max)
+                sYlmm1 = sf.Modes(zeros(), spin_weight=s, ell_min=ell_min, ell_max=ell_max)
                 if invalid:
                     with pytest.raises(ValueError):
                         sYlmm1.index(ell, m-1)
@@ -553,7 +553,7 @@ def test_modes_derivatives_on_grids():
 
                 # Test Rplus {s}Y{l,m} = sqrt((l+s)(l-s+1)) {s-1}Y{l,m}
                 invalid = abs(s-1) > ell
-                sm1Ylm = sf.Modes(zeros(), s=s-1, ell_min=ell_min, ell_max=ell_max)
+                sm1Ylm = sf.Modes(zeros(), spin_weight=s-1, ell_min=ell_min, ell_max=ell_max)
                 if invalid:
                     with pytest.raises(ValueError):
                         sm1Ylm.index(ell, m)
@@ -567,7 +567,7 @@ def test_modes_derivatives_on_grids():
 
                 # Test Rminus {s}Y{l,m} = sqrt((l-s)(l+s+1)) {s+1}Y{l,m}
                 invalid = abs(s+1) > ell
-                sp1Ylm = sf.Modes(zeros(), s=s+1, ell_min=ell_min, ell_max=ell_max)
+                sp1Ylm = sf.Modes(zeros(), spin_weight=s+1, ell_min=ell_min, ell_max=ell_max)
                 if invalid:
                     with pytest.raises(ValueError):
                         sp1Ylm.index(ell, m)
@@ -581,7 +581,7 @@ def test_modes_derivatives_on_grids():
 
                 # Test eth {s}Y{l,m} = sqrt((l-s)(l+s+1)) {s+1}Y{l,m}
                 invalid = abs(s+1) > ell
-                sp1Ylm = sf.Modes(zeros(), s=s+1, ell_min=ell_min, ell_max=ell_max)
+                sp1Ylm = sf.Modes(zeros(), spin_weight=s+1, ell_min=ell_min, ell_max=ell_max)
                 if invalid:
                     with pytest.raises(ValueError):
                         sp1Ylm.index(ell, m)
@@ -595,7 +595,7 @@ def test_modes_derivatives_on_grids():
 
                 # Test ethbar {s}Y{l,m} = -sqrt((l+s)(l-s+1)) {s-1}Y{l,m}
                 invalid = abs(s-1) > ell
-                sm1Ylm = sf.Modes(zeros(), s=s-1, ell_min=ell_min, ell_max=ell_max)
+                sm1Ylm = sf.Modes(zeros(), spin_weight=s-1, ell_min=ell_min, ell_max=ell_max)
                 if invalid:
                     with pytest.raises(ValueError):
                         sm1Ylm.index(ell, m)
@@ -621,7 +621,7 @@ def test_modes_norm():
         ell_min = abs(s)
         ell_max = 8
         a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2).view(complex)
-        m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+        m = sf.Modes(a, spin_weight=s, ell_min=ell_min, ell_max=ell_max)
         mmbar = m.multiply(m.conjugate())
         norm = np.sqrt(2*math.sqrt(np.pi) * mmbar[..., 0].view(np.ndarray).real)
         assert np.allclose(norm, m.norm(), rtol=tolerance, atol=tolerance)
@@ -632,7 +632,7 @@ def test_modes_ufuncs():
         ell_min1 = abs(s1)
         ell_max1 = 8
         a1 = np.random.rand(11, sf.LM_total_size(ell_min1, ell_max1)*2).view(complex)
-        m1 = sf.Modes(a1, s=s1, ell_min=ell_min1, ell_max=ell_max1)
+        m1 = sf.Modes(a1, spin_weight=s1, ell_min=ell_min1, ell_max=ell_max1)
         positivem1 = +m1
         assert np.array_equal(m1.view(np.ndarray), positivem1.view(np.ndarray))
         negativem1 = -m1
@@ -641,4 +641,4 @@ def test_modes_ufuncs():
         #     ell_min2 = abs(s2)
         #     ell_max2 = 8
         #     a2 = np.random.rand(3, 7, sf.LM_total_size(ell_min2, ell_max2)*2).view(complex)
-        #     m2 = sf.Modes(a2, s=s2, ell_min=ell_min2, ell_max=ell_max2)
+        #     m2 = sf.Modes(a2, spin_weight=s2, ell_min=ell_min2, ell_max=ell_max2)

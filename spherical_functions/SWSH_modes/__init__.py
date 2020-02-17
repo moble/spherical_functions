@@ -20,10 +20,10 @@ class Modes(np.ndarray):
     this information, use `modes.copy()`.  Also note that pickling works as expected, as do
     copy.copy and copy.deepcopy.
 
-    Note that the number of dimensions is arbitrary (as long as it is greater than 0), but the modes
-    must be stored in the last axis.  For example, a SWSH function of time may be stored as a 2-d
-    array where the first axis represents different times, and the second axis represents the mode
-    weights at each instant of time.
+    The number of dimensions is arbitrary (as long as it is greater than 0), but the modes must be
+    stored in the last axis.  For example, a SWSH function of time may be stored as a 2-d array
+    where the first axis represents different times, and the second axis represents the mode weights
+    at each instant of time.
 
     This class also does three important things that are unlike numpy arrays:
 
@@ -70,21 +70,49 @@ class Modes(np.ndarray):
     easily, such as max, copysign, etc.  If you try to use these functions -- even indirectly --
     things will likely break.
 
+    Constructor parameters
+    ======================
+    input_array: array_like
+        This may be a numpy ndarray, or any subclass.  It must be able to be viewed as complex.  If
+        it has a `_metadata` attribute, that field will be copied to the new array; if the following
+        parameters are not passed to the constructor, they will be searched for in the metadata.
+    spin_weight: int [optional if present in `input_array._metadata`]
+        The spin weight of the function that this Modes object describes.  This must be specified
+        somehow, whether via a `_metadata` attribute of the input array, or as a keyword argument,
+        or as the second positional argument (where the latter will override the former values).
+    ell_min: int [defaults to 0]
+        The smallest ell value present in the *input* data.  Note that the data will be stored in
+        this object with all modes present, starting from ell=0.  This parameter just determines how
+        the input data will be copied into the internal representation.
+    ell_max: int [optional if ell_min is not passed as positional argument]
+        The largest ell value present in the input data.  If this is not passed explicitly, it will
+        be inferred from the size of the data.
+
     """
 
     # https://numpy.org/doc/1.18/user/basics.subclassing.html
-    def __new__(cls, input_array, s=None, ell_min=0, ell_max=None):
+    def __new__(cls, input_array, *args, **kwargs):
+        if len(args) == 2 or len(args) > 3:
+            raise ValueError("Only one, two, or four positional arguments may be passed")
+        if len(args) >= 1:
+            kwargs['spin_weight'] = args[0]
+        if len(args) == 3:
+            kwargs['ell_min'] = args[1]
+            kwargs['ell_max'] = args[2]
+        ell_min = kwargs.pop('ell_min', 0)
+        ell_max = kwargs.get('ell_max', None)
         metadata = copy.deepcopy(getattr(input_array, '_metadata', {}))
         input_array = np.asarray(input_array).view(complex)
-        if isinstance(s, dict):
-            metadata.update(s)
-            s = metadata.get('spin_weight', None)
-        else:
-            s = metadata.get('spin_weight', s)
-        ell_max = metadata.get('ell_max', ell_max)
+        metadata.update(**kwargs)
+        s = metadata.get('spin_weight', None)
         if s is None:
             raise ValueError("Spin weight must be specified")
-        ell_max = ell_max or LM_deduce_ell_max(input_array.shape[-1], ell_min)
+        if ell_max is None:
+            if np.ndim(input_array) == 0:
+                ell_max = 0
+            else:
+                ell_max = LM_deduce_ell_max(input_array.shape[-1], ell_min)
+            metadata['ell_max'] = ell_max
         if input_array.shape[-1] != LM_total_size(ell_min, ell_max):
             raise ValueError(f"Input array has shape {input_array.shape} when viewed as a complex array.\n            "
                              +f"Its last dimension should have size {LM_total_size(ell_min, ell_max)}, "
@@ -95,10 +123,7 @@ class Modes(np.ndarray):
             insertion_indices = [0,]*LM_total_size(0, ell_min-1)
             obj = np.insert(input_array, insertion_indices, 0.0, axis=-1).view(cls)
         obj[..., :LM_total_size(0, abs(s)-1)] = 0.0
-        obj._metadata = metadata or {
-            'spin_weight': s,
-            'ell_max': ell_max,
-        }
+        obj._metadata = metadata
         return obj
 
     # https://numpy.org/doc/1.18/user/basics.subclassing.html
@@ -121,6 +146,8 @@ class Modes(np.ndarray):
     def s(self):
         """Spin weight of this Modes object"""
         return self._metadata['spin_weight']
+
+    spin_weight = s
 
     @property
     def ell_min(self):

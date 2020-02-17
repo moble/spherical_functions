@@ -208,7 +208,7 @@ def Rz(self):
     #    = -s f{s',l',m'}
     # {Rzf}{s, l, m} = -s f{s,l,m}
     import numpy as np
-    return type(self)(-self.s * self.view(np.ndarray), s=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
+    return type(self)(-self.s * self.view(np.ndarray), spin_weight=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
 
 
 def Rplus(self):
@@ -246,7 +246,7 @@ def Rplus(self):
     # {R+f}{s, l, m} = sqrt((l-s)(l+s+1)) f{s+1,l,m}
     import math
     import numpy as np
-    d = type(self)(np.zeros_like(self.view(np.ndarray)), s=self.s-1, ell_min=min(abs(self.s-1), self.ell_min), ell_max=self.ell_max)
+    d = type(self)(np.zeros_like(self.view(np.ndarray)), spin_weight=self.s-1, ell_min=min(abs(self.s-1), self.ell_min), ell_max=self.ell_max)
     s = self.view(np.ndarray)
     for ell in range(max(abs(d.s), abs(self.s)), d.ell_max+1):
         if ell >= self.ell_min:
@@ -294,7 +294,7 @@ def Rminus(self):
     # {R- f}{s, l, m} = sqrt((l+s)(l-s+1)) f{s-1,l,m}
     import math
     import numpy as np
-    d = type(self)(np.zeros_like(self.view(np.ndarray)), s=self.s+1, ell_min=min(abs(self.s+1), self.ell_min), ell_max=self.ell_max)
+    d = type(self)(np.zeros_like(self.view(np.ndarray)), spin_weight=self.s+1, ell_min=min(abs(self.s+1), self.ell_min), ell_max=self.ell_max)
     s = self.view(np.ndarray)
     for ell in range(max(abs(d.s), abs(self.s)), d.ell_max+1):
         if ell >= self.ell_min:
