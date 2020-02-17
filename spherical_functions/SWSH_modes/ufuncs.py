@@ -36,9 +36,9 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             result = result.view(np.ndarray)
         ufunc(self.view(np.ndarray), out=result)
         if out is None:
-            result = type(self)(result, spin_weight=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
+            result = type(self)(result, **self._metadata)
         elif isinstance(out[0], type(self)):
-            out[0]._metadata = copy.deepcopy(self._metadata)
+            out[0]._metadata = copy.copy(self._metadata)
 
     elif ufunc in [np.add, np.subtract]:
         if isinstance(args[0], type(self)) and isinstance(args[1], type(self)):
@@ -63,10 +63,15 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
                 result[..., i_o1:i_o2] -= m2.view(np.ndarray)
             else:
                 result[..., i_o1:i_o2] += m2.view(np.ndarray)
+            metadata = copy.copy(self._metadata)
+            metadata['spin_weight'] = s
+            metadata['ell_min'] = ell_min
+            metadata['ell_max'] = ell_max
             if out is None:
-                result = type(self)(result, spin_weight=s, ell_min=ell_min, ell_max=ell_max)
+                result = type(self)(result, **metadata)
             elif isinstance(out[0], type(self)):
-                out[0]._metadata = copy.deepcopy(self._metadata)
+                metadata.pop('ell_min')
+                out[0]._metadata = metadata
         elif isinstance(args[0], type(self)):
             modes = args[0]
             scalars = np.asanyarray(args[1])
@@ -74,7 +79,9 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
                 return NotImplemented
             result = ufunc(modes.view(np.ndarray), scalars[..., np.newaxis], out=out)
             if out is None:
-                result = type(self)(result, self.s, self.ell_min, self.ell_max)
+                result = type(self)(result, **self._metadata)
+            elif isinstance(out[0], type(self)):
+                out[0]._metadata = copy.copy(self._metadata)
         elif isinstance(args[1], type(self)):
             scalars = np.asanyarray(args[0])
             modes = args[1]
@@ -82,7 +89,9 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
                 return NotImplemented
             result = ufunc(scalars[..., np.newaxis], modes.view(np.ndarray), out=out)
             if out is None:
-                result = type(self)(result, self.s, self.ell_min, self.ell_max)
+                result = type(self)(result, **self._metadata)
+            elif isinstance(out[0], type(self)):
+                out[0]._metadata = copy.copy(self._metadata)
         else:
             return NotImplemented
 
@@ -102,10 +111,15 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             _multiplication_helper(s, args[0].ell_min, args[0].ell_max, args[0].s,
                                    o, args[1].ell_min, args[1].ell_max, args[1].s,
                                    result, result_ell_min, result_ell_max, result_s)
+            metadata = copy.copy(self._metadata)
+            metadata['spin_weight'] = result_s
+            metadata['ell_min'] = result_ell_min
+            metadata['ell_max'] = result_ell_max
             if out is None:
-                result = type(self)(result, spin_weight=result_s, ell_min=result_ell_min, ell_max=result_ell_max)
+                result = type(self)(result, **metadata)
             elif isinstance(out[0], type(self)):
-                out[0]._metadata = copy.deepcopy(self._metadata)
+                metadata.pop('ell_min')
+                out[0]._metadata = metadata
         elif isinstance(args[0], type(self)):
             modes = args[0]
             scalars = np.asanyarray(args[1])
@@ -113,7 +127,9 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
                 return NotImplemented
             result = ufunc(modes.view(np.ndarray), scalars[..., np.newaxis], out=out)
             if out is None:
-                result = type(self)(result, self.s, self.ell_min, self.ell_max)
+                result = type(self)(result, **self._metadata)
+            elif isinstance(out[0], type(self)):
+                out[0]._metadata = copy.copy(self._metadata)
         elif isinstance(args[1], type(self)):
             scalars = np.asanyarray(args[0])
             modes = args[1]
@@ -121,7 +137,9 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
                 return NotImplemented
             result = ufunc(scalars[..., np.newaxis], modes.view(np.ndarray), out=out)
             if out is None:
-                result = type(self)(result, self.s, self.ell_min, self.ell_max)
+                result = type(self)(result, **self._metadata)
+            elif isinstance(out[0], type(self)):
+                out[0]._metadata = copy.copy(self._metadata)
         else:
             return NotImplemented
 
@@ -134,7 +152,9 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             return NotImplemented
         result = ufunc(modes.view(np.ndarray), scalars[..., np.newaxis], out=out)
         if out is None:
-            result = type(self)(result, self.s, self.ell_min, self.ell_max)
+            result = type(self)(result, **self._metadata)
+        elif isinstance(out[0], type(self)):
+            out[0]._metadata = copy.copy(self._metadata)
 
     elif ufunc in [np.conj, np.conjugate]:
         raise NotImplementedError()

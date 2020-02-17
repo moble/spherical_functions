@@ -67,8 +67,9 @@ class Modes(np.ndarray):
     please feel free to open an issue in this project's github page to discuss it.
 
     Also, be aware that ndarrays also have various built-in methods that cannot be overridden very
-    easily, such as max, copysign, etc.  If you try to use these functions -- even indirectly --
-    things will likely break.
+    easily, such as max, copysign, etc.  If you try to use -- even indirectly -- those functions
+    that don't have any clear interpretation for spin-weighted functions, things will likely break.
+
 
     Constructor parameters
     ======================
@@ -100,13 +101,13 @@ class Modes(np.ndarray):
             kwargs['ell_min'] = args[1]
             kwargs['ell_max'] = args[2]
         ell_min = kwargs.pop('ell_min', 0)
-        ell_max = kwargs.get('ell_max', None)
-        metadata = copy.deepcopy(getattr(input_array, '_metadata', {}))
-        input_array = np.asarray(input_array).view(complex)
+        metadata = copy.copy(getattr(input_array, '_metadata', {}))
         metadata.update(**kwargs)
-        s = metadata.get('spin_weight', None)
-        if s is None:
+        input_array = np.asanyarray(input_array).view(complex)
+        spin_weight = metadata.get('spin_weight', None)
+        if spin_weight is None:
             raise ValueError("Spin weight must be specified")
+        ell_max = metadata.get('ell_max', None)
         if ell_max is None:
             if np.ndim(input_array) == 0:
                 ell_max = 0
@@ -122,14 +123,18 @@ class Modes(np.ndarray):
         else:
             insertion_indices = [0,]*LM_total_size(0, ell_min-1)
             obj = np.insert(input_array, insertion_indices, 0.0, axis=-1).view(cls)
-        obj[..., :LM_total_size(0, abs(s)-1)] = 0.0
+        obj[..., :LM_total_size(0, abs(spin_weight)-1)] = 0.0
         obj._metadata = metadata
         return obj
 
     # https://numpy.org/doc/1.18/user/basics.subclassing.html
     def __array_finalize__(self, obj):
         if obj is None: return
-        self._metadata = copy.deepcopy(getattr(obj, '_metadata', {'spin_weight': None, 'ell_max': None}))
+        self._metadata = copy.copy(getattr(obj, '_metadata', {}))
+        if not 'spin_weight' in self._metadata:
+            self._metadata['spin_weight'] = None
+        if not 'ell_max' in self._metadata:
+            self._metadata['ell_max'] = None
 
     # For pickling
     def __reduce__(self):
@@ -165,9 +170,11 @@ class Modes(np.ndarray):
         return self.shape[-1]
 
     from .algebra import (
-        conj, conjugate, bar, real, imag, norm,
+        conjugate, bar, real, imag, norm,
         add, subtract, multiply, divide
     )
+
+    conj = conjugate
 
     from .derivatives import (
         Lsquared, Lz, Lplus, Lminus,

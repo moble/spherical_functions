@@ -5,13 +5,10 @@
 ### particular, they assume that the first argument, `self` is an instance of Modes.  They should
 ### probably not be used outside of that class.
 
+import copy
 import numpy as np
 from .. import LM_total_size, LM_index
 from ..multiplication import _multiplication_helper
-
-
-def conj(self, inplace=False):
-    return self.conjugate(inplace=inplace)
 
 
 def conjugate(self, inplace=False):
@@ -62,9 +59,9 @@ def conjugate(self, inplace=False):
     if inplace:
         self._metadata['spin_weight'] = -self.s
         return self
-    return type(self)(c, spin_weight=-self.s, ell_min=self.ell_min, ell_max=self.ell_max)
-
-conj.__doc__ = conjugate.__doc__
+    metadata = copy.copy(self._metadata)
+    metadata['spin_weight'] = -self.s
+    return type(self)(c, **metadata)
 
 
 @property
@@ -107,7 +104,7 @@ def real(self, inplace=False):
                 c[..., i_n] = -np.conjugate(c[..., i_p])
     if inplace:
         return self
-    return type(self)(c, spin_weight=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
+    return type(self)(c, **self._metadata)
 
 
 def imag(self, inplace=False):
@@ -144,7 +141,7 @@ def imag(self, inplace=False):
                 c[..., i_n] = np.conjugate(c[..., i_p])
     if inplace:
         return self
-    return type(self)(c, spin_weight=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
+    return type(self)(c, **self._metadata)
 
 
 def norm(self):
@@ -169,7 +166,11 @@ def add(self, other, subtraction=False):
             result[..., i_o1:i_o2] -= other.view(np.ndarray)
         else:
             result[..., i_o1:i_o2] += other.view(np.ndarray)
-        return type(self)(result, spin_weight=s, ell_min=ell_min, ell_max=ell_max)
+        metadata = copy.copy(self._metadata)
+        metadata['spin_weight'] = s
+        metadata['ell_min'] = ell_min
+        metadata['ell_max'] = ell_max
+        return type(self)(result, **metadata)
     elif subtraction:
         return np.subtract(self, other)
     else:
@@ -199,7 +200,10 @@ def multiply(self, other, truncate=False):
         new = _multiplication_helper(s, self.ell_min, self.ell_max, self.s,
                                      o, other.ell_min, other.ell_max, other.s,
                                      new, new_ell_min, new_ell_max, new_s)
-        return type(self)(new, spin_weight=new_s, ell_min=new_ell_min, ell_max=new_ell_max)
+        metadata = copy.copy(self._metadata)
+        metadata['spin_weight'] = new_s
+        metadata['ell_max'] = new_ell_max
+        return type(self)(new, **metadata)
     else:
         return self * other
 
