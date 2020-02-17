@@ -13,10 +13,10 @@ from ..multiplication import _multiplication_helper
 
 def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
     # These are required for basic support, but can be more-or-less passed through because they return bools
-    if ufunc in [np.not_equal, np.equal, np.isfinite, np.isinf, np.isnan]:
+    if ufunc in [np.not_equal, np.equal, np.logical_and, np.logical_or, np.isfinite, np.isinf, np.isnan]:
         args = [arg.view(np.ndarray) if isinstance(arg, type(self)) else arg for arg in args]
         kwargs['out'] = out
-        return ufunc(*args, **kwargs)
+        return super(type(self), self).__array_ufunc__(ufunc, method, *args, **kwargs)
 
     # Here are all the functions we will support directly; all other ufuncs are probably meaningless
     elif ufunc not in [np.positive, np.negative, np.add, np.subtract,
