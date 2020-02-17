@@ -27,6 +27,13 @@ def index(self, ell, m):
     return LM_index(ell, m, self.ell_min)
 
 
+def truncate_ell(self, new_ell_max):
+    """Slice array so that new ell max is the given value"""
+    truncated = self[..., :self.index(new_ell_max, new_ell_max)+1]
+    truncated._metadata['ell_max'] = new_ell_max
+    return truncated
+
+
 def grid(self, n_theta=None, n_phi=None):
     """Return values of function on an equi-angular grid
 
