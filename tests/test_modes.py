@@ -372,6 +372,37 @@ def test_modes_real():
                 mreal = m.real(inplace)
 
 
+def test_modes_imag():
+    tolerance = 1e-14
+    np.random.seed(1234)
+    for inplace in [False, True]:
+        s = 0
+        ell_min = abs(s)
+        ell_max = 8
+        a = np.random.rand(3, 7, sf.LM_total_size(ell_min, ell_max)*2).view(complex)
+        # Test success with s==0
+        m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+        g = m.grid()
+        s = m.s
+        ell_min = m.ell_min
+        ell_max = m.ell_max
+        shape = m.shape
+        mimag = m.imag(inplace)
+        gimag = mimag.grid()
+        assert s == mimag.s
+        assert ell_min == mimag.ell_min
+        assert ell_max == mimag.ell_max
+        assert shape == mimag.shape
+        assert np.allclose(np.imag(g), np.imag(gimag), rtol=tolerance, atol=tolerance)
+        assert np.allclose(gimag, 1j * np.imag(gimag), rtol=tolerance, atol=tolerance)
+        assert np.allclose(np.zeros_like(g, dtype=float), np.real(gimag), rtol=tolerance, atol=tolerance)
+        # Test failure with s!=0
+        for s in [-3, -2, -1, 1, 2, 3]:
+            m = sf.Modes(a, s=s, ell_min=ell_min, ell_max=ell_max)
+            with pytest.raises(ValueError):
+                mimag = m.imag(inplace)
+
+
 def test_modes_squared_angular_momenta():
     tolerance = 1e-13
     np.random.seed(1234)

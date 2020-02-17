@@ -110,6 +110,43 @@ def real(self, inplace=False):
     return type(self)(c, s=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
 
 
+def imag(self, inplace=False):
+    """Return Modes object corresponding to imaginary-valued function
+
+    Note that this only makes sense for functions of spin weight zero; other spins will raise
+    ValueErrors.
+
+    The condition that a function `f` be imaginary is given by
+
+        f{l, m} = -conjugate(f){l, m} = (-1)**(m+1) * conjugate(f{l, -m})
+
+    [Note that conj(f){l, m} != conj(f{l, m}).  See Modes.conjugate docstring.]
+
+    We enforce that condition by essentially averaging the two modes:
+
+        f{l, m} = (f{l, m} - (-1)**m * conjugate(f{l, -m})) / 2
+
+    """
+    if self.s != 0:
+        raise ValueError("The imaginary part of a function with non-zero spin weight is meaningless")
+    s = self.view(np.ndarray)
+    c = s if inplace else np.zeros_like(s)
+    for ell in range(abs(self.s), self.ell_max+1):
+        i = LM_index(ell, 0, self.ell_min)
+        c[..., i] = 1j * np.imag(s[..., i])
+        for m in range(1, ell+1):
+            i_p, i_n = LM_index(ell, m, self.ell_min), LM_index(ell, -m, self.ell_min)
+            if m%2 == 0:
+                c[..., i_p] = (s[..., i_p] - np.conjugate(s[..., i_n])) / 2
+                c[..., i_n] = -np.conjugate(c[..., i_p])
+            else:
+                c[..., i_p] = (s[..., i_p] + np.conjugate(s[..., i_n])) / 2
+                c[..., i_n] = np.conjugate(c[..., i_p])
+    if inplace:
+        return self
+    return type(self)(c, s=self.s, ell_min=self.ell_min, ell_max=self.ell_max)
+
+
 def norm(self):
     return np.linalg.norm(self.view(np.ndarray), axis=-1)
 

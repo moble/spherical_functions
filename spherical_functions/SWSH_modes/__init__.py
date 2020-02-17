@@ -137,7 +137,7 @@ class Modes(np.ndarray):
         return self.shape[-1]
 
     from .algebra import (
-        conj, conjugate, bar, real, norm,
+        conj, conjugate, bar, real, imag, norm,
         add, subtract, multiply, divide
     )
 
