@@ -29,6 +29,8 @@ def index(self, ell, m):
 
 def truncate_ell(self, new_ell_max):
     """Slice array so that new ell max is the given value"""
+    if new_ell_max >= self.ell_max:
+        return self
     truncated = self[..., :self.index(new_ell_max, new_ell_max)+1]
     truncated._metadata['ell_max'] = new_ell_max
     return truncated
