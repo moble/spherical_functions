@@ -150,11 +150,13 @@ def subtract(self, other):
 
 def multiply(self, other, truncate=False):
     if isinstance(other, type(self)):
+        if truncate is True:  # Note that we really do want this here; it's usually bad to test "is True"
+            truncate = max(self.ell_max, other.ell_max)
         s = self.view(np.ndarray)
         o = other.view(np.ndarray)
         new_s = self.s + other.s
         new_ell_min = 0
-        new_ell_max = max(self.ell_max, other.ell_max) if truncate else self.ell_max + other.ell_max
+        new_ell_max = truncate or self.ell_max + other.ell_max
         new_shape = np.broadcast(s[..., 0], o[..., 0]).shape + (LM_total_size(new_ell_min, new_ell_max),)
         new = np.zeros(new_shape, dtype=np.complex_)
         new = _multiplication_helper(s, self.ell_min, self.ell_max, self.s,
