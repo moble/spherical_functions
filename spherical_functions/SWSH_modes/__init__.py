@@ -66,23 +66,24 @@ class Modes(np.ndarray):
     reasonable operations.  If you find a missing feature that requires you to resort to this,
     please feel free to open an issue in this project's github page to discuss it.
 
-    Also, be aware that ndarrays also have various built-in methods that cannot be overridden very easily, such as max
+    Also, be aware that ndarrays also have various built-in methods that cannot be overridden very
+    easily, such as max, copysign, etc.  If you try to use these functions -- even indirectly --
+    things will likely break.
 
     """
 
     # https://numpy.org/doc/1.18/user/basics.subclassing.html
-    def __new__(cls, input_array, s, ell_min=0, ell_max=None):
+    def __new__(cls, input_array, s=None, ell_min=0, ell_max=None):
+        metadata = copy.deepcopy(getattr(input_array, '_metadata', {}))
         input_array = np.asarray(input_array).view(complex)
         if isinstance(s, dict):
-            metadata = copy.deepcopy(s)
-            if 'spin_weight' not in metadata:
-                raise ValueError("When second argument is a dict, it must contain the key 'spin_weight'")
-            if ell_max is not None and 'ell_max' in metadata and ell_max != metadata['ell_max']:
-                raise ValueError("The 'ell_max' value should only be specified once; it is specified in the second argument and as a keyword argument")
-            s = metadata['spin_weight']
-            ell_max = metadata.get('ell_max', ell_max)
+            metadata.update(s)
+            s = metadata.get('spin_weight', None)
         else:
-            metadata = None
+            s = metadata.get('spin_weight', s)
+        ell_max = metadata.get('ell_max', ell_max)
+        if s is None:
+            raise ValueError("Spin weight must be specified")
         ell_max = ell_max or LM_deduce_ell_max(input_array.shape[-1], ell_min)
         if input_array.shape[-1] != LM_total_size(ell_min, ell_max):
             raise ValueError(f"Input array has shape {input_array.shape} when viewed as a complex array.\n            "
