@@ -356,7 +356,7 @@ def test_modes_real():
         ell_min = m.ell_min
         ell_max = m.ell_max
         shape = m.shape
-        mreal = m.real(inplace)
+        mreal = m._real_func(inplace)
         greal = mreal.grid()
         assert s == mreal.s
         assert ell_min == mreal.ell_min
@@ -369,7 +369,7 @@ def test_modes_real():
         for s in [-3, -2, -1, 1, 2, 3]:
             m = sf.Modes(a, spin_weight=s, ell_min=ell_min, ell_max=ell_max)
             with pytest.raises(ValueError):
-                mreal = m.real(inplace)
+                mreal = m._real_func(inplace)
 
 
 def test_modes_imag():
@@ -387,7 +387,7 @@ def test_modes_imag():
         ell_min = m.ell_min
         ell_max = m.ell_max
         shape = m.shape
-        mimag = m.imag(inplace)
+        mimag = m._imag_func(inplace)
         gimag = mimag.grid()
         assert s == mimag.s
         assert ell_min == mimag.ell_min
@@ -400,7 +400,7 @@ def test_modes_imag():
         for s in [-3, -2, -1, 1, 2, 3]:
             m = sf.Modes(a, spin_weight=s, ell_min=ell_min, ell_max=ell_max)
             with pytest.raises(ValueError):
-                mimag = m.imag(inplace)
+                mimag = m._imag_func(inplace)
 
 
 def test_modes_squared_angular_momenta():

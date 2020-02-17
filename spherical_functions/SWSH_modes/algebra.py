@@ -70,7 +70,7 @@ def bar(self):
 bar.__doc__ = conjugate.__doc__
 
 
-def real(self, inplace=False):
+def _real_func(self, inplace=False):
     """Return Modes object corresponding to real-valued function
 
     Note that this only makes sense for functions of spin weight zero; other spins will raise
@@ -107,7 +107,12 @@ def real(self, inplace=False):
     return type(self)(c, **self._metadata)
 
 
-def imag(self, inplace=False):
+@property
+def real(self):
+    return self._real_func(False)
+
+
+def _imag_func(self, inplace=False):
     """Return Modes object corresponding to imaginary-valued function
 
     Note that this only makes sense for functions of spin weight zero; other spins will raise
@@ -142,6 +147,11 @@ def imag(self, inplace=False):
     if inplace:
         return self
     return type(self)(c, **self._metadata)
+
+
+@property
+def imag(self):
+    return self._imag_func(False)
 
 
 def norm(self):
