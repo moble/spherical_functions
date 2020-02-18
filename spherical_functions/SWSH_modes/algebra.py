@@ -181,8 +181,8 @@ def add(self, other, subtraction=False):
         metadata['ell_min'] = ell_min
         metadata['ell_max'] = ell_max
         return type(self)(result, **metadata)
-    elif subtraction:
-        return np.subtract(self, other)
+    elif np.any(other):
+        raise ValueError(f"It is not permitted to add nonzero scalars to a {type(self)} object")
     else:
         return np.add(self, other)
 
@@ -192,6 +192,8 @@ def subtract(self, other):
         if self.s != other.s:
             raise ValueError(f"Cannot subtract modes with different spin weights ({self.s} and {other.s})")
         return self.add(other, True)
+    elif np.any(other):
+        raise ValueError(f"It is not permitted to add nonzero scalars to a {type(self)} object")
     else:
         return np.subtract(self, other)
 
