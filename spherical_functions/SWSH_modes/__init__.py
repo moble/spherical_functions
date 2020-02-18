@@ -4,7 +4,6 @@
 import copy
 import math
 import numpy as np
-import spinsfast
 from .. import LM_total_size, Wigner3j, LM_index, LM_deduce_ell_max
 from ..multiplication import _multiplication_helper
 
