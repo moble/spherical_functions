@@ -196,26 +196,68 @@ def subtract(self, other):
         return np.subtract(self, other)
 
 
-def multiply(self, other, truncate=False):
+def multiply(self, other, truncator=None):
+    """Multiply by another spin-weighted function by a scalar
+
+    For spin-weighted functions, the spin weight of their product is the sum of the spin weights of
+    the input.
+
+    If those functions are band limited to maximum ell values, their product has maximum ell value
+    given by the sum of the input maximum ell values.  Note that this output ell_max can be
+    controlled by the `truncator` argument to this function; if the result is smaller than the sum
+    of the input maximum ell values, this is equivalent to performing the full multiplication and
+    then setting higher ell modes to zero.  The benefit of this type of truncation is that the
+    higher modes don't even need to be computed, and no aliasing will result.
+
+    Parameters
+    ==========
+    other: Modes, array_like, complex, or float
+        Modes objects representing the spin-weighted functions, or an array or float which is
+        equivalent to a spin-0 function.
+    truncator: None or callable [defaults to None]
+        Function to be applied to the tuple (self.ell_max, other.ell_max) to produce the ell_max for
+        the resulting function.  Sensible values of the truncator include the built-in python
+        functions `min`, `max`, and `sum` -- the latter giving the full "correct" answer.  If None,
+        this function falls back on the `multiplication_truncator` metadata fields of the input
+        Modes objects, and uses the greater of the values that they return.  If either input object
+        is missing the `multiplication_truncator` metadata field, it defaults to `sum`.
+
+    """
     if isinstance(other, type(self)):
-        if truncate is True:  # Note that we really do want this here; it's usually bad to test "is True"
-            truncate = max(self.ell_max, other.ell_max)
         s = self.view(np.ndarray)
         o = other.view(np.ndarray)
         new_s = self.s + other.s
         new_ell_min = 0
-        new_ell_max = truncate or self.ell_max + other.ell_max
+        if truncator is not None:
+            new_ell_max = truncator((self.ell_max, other.ell_max))
+        else:
+            new_ell_max = max(
+                truncator((self.ell_max, other.ell_max))
+                for truncator in [
+                    self._metadata.get('multiplication_truncator', sum),
+                    other._metadata.get('multiplication_truncator', sum)
+                ]
+            )
         new_shape = np.broadcast(s[..., 0], o[..., 0]).shape + (LM_total_size(new_ell_min, new_ell_max),)
         new = np.zeros(new_shape, dtype=np.complex_)
-        new = _multiplication_helper(s, self.ell_min, self.ell_max, self.s,
-                                     o, other.ell_min, other.ell_max, other.s,
-                                     new, new_ell_min, new_ell_max, new_s)
+        _multiplication_helper(s, self.ell_min, self.ell_max, self.s,
+                               o, other.ell_min, other.ell_max, other.s,
+                               new, new_ell_min, new_ell_max, new_s)
         metadata = copy.copy(self._metadata)
         metadata['spin_weight'] = new_s
+        metadata['ell_min'] = new_ell_min
         metadata['ell_max'] = new_ell_max
         return type(self)(new, **metadata)
     else:
-        return self * other
+        if self._check_broadcasting(other):
+            return self * other
+        elif self._check_broadcasting(other, reverse=True):
+            return other * self
+        else:
+            raise ValueError("Cannot broadcast input array to this Modes object.  Note that the input array\n           "
+                             "must broadcast to all but last dimension of this object; it is not allowed to\n           "
+                             "multiply each mode weight individually.  If you really want to hack this, view\n           "
+                             "this Modes object as an ndarray, and don't complain when your results are wrong.")
 
 
 def divide(self, other):

@@ -101,7 +101,13 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             o = args[1].view(np.ndarray)
             result_s = args[0].s + args[1].s
             result_ell_min = 0
-            result_ell_max = args[0].ell_max + args[1].ell_max
+            result_ell_max = max(
+                truncator((args[0].ell_max, args[1].ell_max))
+                for truncator in [
+                    args[0]._metadata.get('multiplication_truncator', sum),
+                    args[1]._metadata.get('multiplication_truncator', sum)
+                ]
+            )
             result_shape = np.broadcast(s[..., 0], o[..., 0]).shape + (LM_total_size(result_ell_min, result_ell_max),)
             result = out or np.zeros(result_shape, dtype=np.complex_)
             if isinstance(result, tuple):

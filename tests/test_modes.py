@@ -259,7 +259,7 @@ def test_modes_multiplication():
     tolerance = 1e-13
     np.random.seed(1234)
     # Test without truncation
-    for i_mul, mul in enumerate([np.multiply, lambda a, b: a.multiply(b), lambda a, b: a.multiply(b, truncate=True)]):
+    for i_mul, mul in enumerate([np.multiply, lambda a, b: a.multiply(b), lambda a, b: a.multiply(b, truncator=max)]):
         for s1 in range(-2, 2 + 1):
             ell_min1 = abs(s1)
             ell_max1 = 8
