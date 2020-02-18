@@ -16,7 +16,7 @@ def _multiplication_helper(f, ellmin_f, ellmax_f, s_f,
                 for m2 in range(-ell2, ell2+1):
                     sum2 = math.sqrt(2*ell2+1)*g[..., LM_index(ell2, m2, ellmin_g)]   # Calculate g contribution
                     m3 = m1+m2
-                    for ell3 in range(abs(ell1-ell2), min(ell1+ell2, ellmax_fg)+1):
+                    for ell3 in range(max(abs(m3), abs(ell1-ell2)), min(ell1+ell2, ellmax_fg)+1):
                         # Could loop over same (ell3, m3) more than once, so add all contributions together
                         fg[..., LM_index(ell3, m3, ellmin_fg)] += (
                             math.pow(-1, ell1 + ell2 + ell3 + s_fg + m3)
