@@ -217,10 +217,11 @@ def multiply(self, other, truncator=None):
     truncator: None or callable [defaults to None]
         Function to be applied to the tuple (self.ell_max, other.ell_max) to produce the ell_max for
         the resulting function.  Sensible values of the truncator include the built-in python
-        functions `min`, `max`, and `sum` -- the latter giving the full "correct" answer.  If None,
-        this function falls back on the `multiplication_truncator` metadata fields of the input
-        Modes objects, and uses the greater of the values that they return.  If either input object
-        is missing the `multiplication_truncator` metadata field, it defaults to `sum`.
+        functions `min`, `max`, and `sum` -- the latter giving the full "correct" answer.  If you
+        want a specific ell value, you can use `lambda tup: max_ell`.  If None, this function falls
+        back on the `multiplication_truncator` metadata fields of the input Modes objects, and uses
+        the greater of the values that they return.  If either input object is missing the
+        `multiplication_truncator` metadata field, it defaults to `sum`.
 
     """
     if isinstance(other, type(self)):
