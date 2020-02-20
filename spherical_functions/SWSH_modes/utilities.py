@@ -48,6 +48,18 @@ def grid(self, n_theta=None, n_phi=None):
     The output array has one more dimension than this object; rather than the last axis giving the
     mode weights, the last two axes give the values on the two-dimensional grid.
 
+    Parameters
+    ==========
+    n_theta: None or int [defaults to None]
+        Number of points to use in theta direction.  None is equivalent to 2*self.ell_max+1, which
+        is the minimum number that can capture behavior up to and including ell_max.  If you need to
+        multiply the result with some `other` spin-weighted function, you should use an n_theta
+        value of 2 * (self.ell_max + other.ell_max) + 1 to avoid aliasing.
+    n_phi: None or int [defaults to None]
+        Number of points to use in the phi direction.  Here, None is equivalent to n_phi=n_theta,
+        after calculation of the default value for n_theta.  Note that the same comments apply about
+        avoiding aliasing.
+
     """
     import numpy as np
     import spinsfast

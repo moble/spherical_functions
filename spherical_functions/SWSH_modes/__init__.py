@@ -19,10 +19,10 @@ class Modes(np.ndarray):
     this information, use `modes.copy()`.  Also note that pickling works as expected, as do
     copy.copy and copy.deepcopy.
 
-    The number of dimensions is arbitrary (as long as it is greater than 0), but the modes must be
-    stored in the last axis.  For example, a SWSH function of time may be stored as a 2-d array
-    where the first axis represents different times, and the second axis represents the mode weights
-    at each instant of time.
+    The number of dimensions is arbitrary as long as it is at least 1, but the modes must be stored
+    in the last axis.  For example, a SWSH function of time may be stored as a 2-d array where the
+    first axis represents different times, and the second axis represents the mode weights at each
+    instant of time.
 
     This class also does three important things that are unlike numpy arrays:
 
@@ -36,7 +36,7 @@ class Modes(np.ndarray):
     3) It overrides most of numpy's "universal functions" (ufuncs) to work appropriately for
        spin-weighted functions.  Specifically, these ufuncs are interpreted as acting on the
        spin-weighted function itself, rather than just the mode weights.  Most importantly, we have
-       these
+       these overriden methods:
 
        a) Conjugating a Modes object will result in a new Modes object that represents the
           conjugated spin-weighted function, rather than simply conjugating the mode-weights of the
@@ -87,6 +87,12 @@ class Modes(np.ndarray):
     ell_max: int [optional if ell_min is not passed as positional argument]
         The largest ell value present in the input data.  If this is not passed explicitly, it will
         be inferred from the size of the data.
+    multiplication_truncator: None or callable [optional]
+        Function to be used by default when multiplying Modes objects together.  See the
+        documentation for spherical_functions.Modes.multiply for more details.  The default behavior
+        with `sum` is the most correct one -- keeping all ell values that result -- but also the
+        most wasteful, and very likely to be overkill.  The user may prefer to use `max`, which will
+        just return a product with ell_max equal to the larger of the two input ell_max values.
 
     """
 
