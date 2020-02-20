@@ -163,7 +163,29 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             out[0]._metadata = copy.copy(self._metadata)
 
     elif ufunc in [np.conj, np.conjugate]:
-        raise NotImplementedError()
+        if isinstance(args[0], type(self)):
+            s = args[0].view(np.ndarray)
+            c = np.zeros_like(s) if out is None else out[0]
+            for ell in range(abs(args[0].s), args[0].ell_max+1):
+                i = LM_index(ell, 0, args[0].ell_min)
+                if args[0].s%2 == 0:
+                    c[..., i] = np.conjugate(s[..., i])
+                else:
+                    c[..., i] = -np.conjugate(s[..., i])
+                for m in range(1, ell+1):
+                    i_p, i_n = LM_index(ell, m, args[0].ell_min), LM_index(ell, -m, args[0].ell_min)
+                    if (args[0].s+m)%2 == 0:
+                        c[..., i_p], c[..., i_n] = np.conjugate(s[..., i_n]), np.conjugate(s[..., i_p])
+                    else:
+                        c[..., i_p], c[..., i_n] = -np.conjugate(s[..., i_n]), -np.conjugate(s[..., i_p])
+            metadata = copy.copy(args[0]._metadata)
+            metadata['spin_weight'] = -args[0].s
+            if out is None:
+                result = type(self)(c, **metadata)
+            elif isinstance(out[0], type(self)):
+                out[0]._metadata = metadata
+        else:
+            return NotImplemented
 
     elif ufunc is np.absolute:
         return args[0].norm()
