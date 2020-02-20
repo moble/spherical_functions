@@ -199,7 +199,7 @@ def subtract(self, other):
 
 
 def multiply(self, other, truncator=None):
-    """Multiply by another spin-weighted function by a scalar
+    """Multiply by another spin-weighted function or a scalar
 
     For spin-weighted functions, the spin weight of their product is the sum of the spin weights of
     the input.
