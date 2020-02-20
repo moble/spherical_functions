@@ -36,7 +36,7 @@ def truncate_ell(self, new_ell_max):
     return truncated
 
 
-def grid(self, n_theta=None, n_phi=None):
+def grid(self, n_theta=None, n_phi=None, **kwargs):
     """Return values of function on an equi-angular grid
 
     This method uses `spinsfast` to convert mode weights of spin-weighted function to values on a
@@ -59,13 +59,20 @@ def grid(self, n_theta=None, n_phi=None):
         Number of points to use in the phi direction.  Here, None is equivalent to n_phi=n_theta,
         after calculation of the default value for n_theta.  Note that the same comments apply about
         avoiding aliasing.
+    **kwargs: any types
+        Additional keyword arguments are passed through to the Grid constructor on output
 
     """
+    import copy
     import numpy as np
     import spinsfast
+    from .. import Grid
     n_theta = n_theta or 2*self.ell_max+1
     n_phi = n_phi or n_theta
-    return spinsfast.salm2map(self.view(np.ndarray), self.s, self.ell_max, n_theta, n_phi)
+    metadata = copy.copy(self._metadata)
+    metadata.pop('ell_max', None)
+    metadata.update(**kwargs)
+    return Grid(spinsfast.salm2map(self.view(np.ndarray), self.s, self.ell_max, n_theta, n_phi), **metadata)
 
 
 def _check_broadcasting(self, array, reverse=False):
