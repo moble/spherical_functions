@@ -78,7 +78,7 @@ class Grid(np.ndarray):
             kwargs['spin_weight'] = args[0]
         metadata = copy.copy(getattr(input_array, '_metadata', {}))
         metadata.update(**kwargs)
-        input_array = np.asanyarray(input_array).view(complex)
+        input_array = np.asanyarray(input_array)
         if np.ndim(input_array) < 2:
             raise ValueError(f"Input array must have at least two dimensions; it has shape {input_array.shape}")
         n_theta, n_phi = input_array.shape[-2:]

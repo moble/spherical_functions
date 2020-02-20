@@ -1,8 +1,8 @@
 # Copyright (c) 2020, Michael Boyle
 # See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
 
-### NOTE: The functions in this file are intended purely for inclusion in the Modes class.  In
-### particular, they assume that the first argument, `self` is an instance of Modes.  They should
+### NOTE: The functions in this file are intended purely for inclusion in the Grid class.  In
+### particular, they assume that the first argument, `self` is an instance of Grid.  They should
 ### probably not be used outside of that class.
 
 import copy
@@ -106,8 +106,8 @@ def multiply(self, other, truncator=None):
 
     Parameters
     ==========
-    other: Modes, array_like, complex, or float
-        Modes objects representing the spin-weighted functions, or an array or float which is
+    other: Grid, array_like, complex, or float
+        Grid object representing the spin-weighted functions, or an array or float which is
         equivalent to a spin-0 function.
 
     """
@@ -139,8 +139,8 @@ def divide(self, other):
 
     Parameters
     ==========
-    other: Modes, array_like, complex, or float
-        Modes objects representing the spin-weighted functions, or an array or float which is
+    other: Grid, array_like, complex, or float
+        Grid object representing the spin-weighted functions, or an array or float which is
         equivalent to a spin-0 function.
 
     """

@@ -1,8 +1,8 @@
 # Copyright (c) 2020, Michael Boyle
 # See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
 
-### NOTE: The functions in this file are intended purely for inclusion in the Modes class.  In
-### particular, they assume that the first argument, `self` is an instance of Modes.  They should
+### NOTE: The functions in this file are intended purely for inclusion in the Grid class.  In
+### particular, they assume that the first argument, `self` is an instance of Grid.  They should
 ### probably not be used outside of that class.
 
 import copy
@@ -11,7 +11,8 @@ import numpy as np
 
 def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
     # These are required for basic support, but can be more-or-less passed through because they return bools
-    if ufunc in [np.not_equal, np.equal, np.logical_and, np.logical_or, np.isfinite, np.isinf, np.isnan]:
+    if ufunc in [np.greater, np.greater_equal, np.less, np.less_equal, np.not_equal, np.equal,
+                 np.logical_and, np.logical_or, np.isfinite, np.isinf, np.isnan]:
         args = [arg.view(np.ndarray) if isinstance(arg, type(self)) else arg for arg in args]
         kwargs['out'] = out
         return super(type(self), self).__array_ufunc__(ufunc, method, *args, **kwargs)
@@ -43,7 +44,7 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
         if isinstance(args[0], type(self)) and isinstance(args[1], type(self)):
             g1, g2 = args[:2]
             if g1.s != g2.s:
-                return NotImplemented
+                raise ValueError(f"Cannot {ufunc.__name__} grids with different spin weights ({g1.s}, {g2.s})")
             if g1.n_theta != g2.n_theta or g1.n_phi != g2.n_phi:
                 raise ValueError(f"Shape mismatch: grid1.shape={g1.shape}; grid2.shape={g2.shape}")
             if out is None:
@@ -56,9 +57,9 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
         elif isinstance(args[0], type(self)) or isinstance(args[1], type(self)):
             grid = args[0] if isinstance(args[0], type(self)) else args[1]
             scalars = np.asanyarray(args[1]) if isinstance(args[0], type(self)) else np.asanyarray(args[0])
-            if (grid.s!=0 and np.any(scalars)) or not modes._check_broadcasting(scalars):
+            if (grid.s!=0 and np.any(scalars)) or not grid._check_broadcasting(scalars):
                 return NotImplemented
-            result = ufunc(modes.view(np.ndarray), scalars[..., np.newaxis, np.newaxis], out=out)
+            result = ufunc(grid.view(np.ndarray), scalars[..., np.newaxis, np.newaxis], out=out)
             if out is None:
                 result = type(self)(result, **self._metadata)
             elif isinstance(out[0], type(self)):
@@ -76,9 +77,9 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             result_metadata = copy.copy(g1._metadata)
             result_metadata['spin_weight'] = result_s
             if out is None:
-                result = type(self)(result, result_metadata)
+                result = type(self)(result, **result_metadata)
             elif isinstance(out[0], type(self)):
-                    out[0]._metadata = result_metadata
+                out[0]._metadata = result_metadata
         elif isinstance(args[0], type(self)):
             grid = args[0]
             scalars = np.asanyarray(args[1])
@@ -89,22 +90,22 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             result_metadata = copy.copy(grid._metadata)
             result_metadata['spin_weight'] = result_s
             if out is None:
-                result = type(self)(result, result_metadata)
+                result = type(self)(result, **result_metadata)
             elif isinstance(out[0], type(self)):
-                    out[0]._metadata = result_metadata
+                out[0]._metadata = result_metadata
         elif isinstance(args[1], type(self)):
             grid = args[1]
             scalars = np.asanyarray(args[0])
             if not grid._check_broadcasting(scalars, reverse=True):
                 return NotImplemented
             result = ufunc(scalars, grid.view(np.ndarray), out=out)
-            result_s = -grid.s
+            result_s = grid.s if ufunc is np.multiply else - grid.s
             result_metadata = copy.copy(grid._metadata)
             result_metadata['spin_weight'] = result_s
             if out is None:
-                result = type(self)(result, result_metadata)
+                result = type(self)(result, **result_metadata)
             elif isinstance(out[0], type(self)):
-                    out[0]._metadata = result_metadata
+                out[0]._metadata = result_metadata
         else:
             return NotImplemented
 
@@ -114,7 +115,7 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             metadata = copy.copy(args[0]._metadata)
             metadata['spin_weight'] = -args[0].s
             if out is None:
-                result = type(self)(c, **metadata)
+                result = type(self)(result, **metadata)
             elif isinstance(out[0], type(self)):
                 out[0]._metadata = metadata
         else:
@@ -126,7 +127,7 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             metadata = copy.copy(args[0]._metadata)
             metadata['spin_weight'] = 0
             if out is None:
-                result = type(self)(c, **metadata)
+                result = type(self)(result, **metadata)
             elif isinstance(out[0], type(self)):
                 out[0]._metadata = metadata
         else:
@@ -142,7 +143,7 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             metadata = copy.copy(args[0]._metadata)
             metadata['spin_weight'] = exponent * args[0].s
             if out is None:
-                result = type(self)(c, **metadata)
+                result = type(self)(result, **metadata)
             elif isinstance(out[0], type(self)):
                 out[0]._metadata = metadata
         else:
@@ -162,7 +163,7 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             metadata = copy.copy(args[0]._metadata)
             metadata['spin_weight'] = new_spin
             if out is None:
-                result = type(self)(c, **metadata)
+                result = type(self)(result, **metadata)
             elif isinstance(out[0], type(self)):
                 out[0]._metadata = metadata
         else:
