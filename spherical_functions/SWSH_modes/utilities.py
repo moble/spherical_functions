@@ -75,11 +75,20 @@ def grid(self, n_theta=None, n_phi=None, **kwargs):
     return Grid(spinsfast.salm2map(self.view(np.ndarray), self.s, self.ell_max, n_theta, n_phi), **metadata)
 
 
-def _check_broadcasting(self, array, reverse=False):
-    """Test whether or not the given array can broadcast against this object
+def evaluate(self, rotors, **kwargs):
+    """Return values of function on input rotors"""
+    import numpy as np
+    import spherical_functions as sf
+    SWSHs = sf.SWSH_grid(rotors, self.spin_weight, self.ell_max)
+    return np.tensordot(
+        self.view(np.ndarray),
+        SWSHs[..., sf.LM_index(self.ell_min, -self.ell_min, 0):sf.LM_index(self.ell_max, self.ell_max, 0)+1],
+        axes=([-1], [-1])
+    )
 
-    
-    """
+
+def _check_broadcasting(self, array, reverse=False):
+    """Test whether or not the given array can broadcast against this object"""
     import numpy as np
 
     if isinstance(array, type(self)):
