@@ -74,7 +74,7 @@ if __name__ == "__main__":
               'spherical_functions.WignerD',
               'spherical_functions.SWSH',
               'spherical_functions.SWSH_modes',
-              'spherical_functions.SWSH_grid',
+              'spherical_functions.SWSH_grids',
           ],
           package_data={'spherical_functions': ['*.npy']},
           version=version,

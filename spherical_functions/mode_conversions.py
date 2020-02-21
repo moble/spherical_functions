@@ -47,9 +47,9 @@ def vector_as_ell_1_modes(vector):
        The returned object contains the (1,-1), (1,0), and (1,1) modes in that order
 
     """
-    return np.array([(vector[0] + 1j * vector[1]) * sqrt(2 * pi / 3.),
-                     vector[2] * sqrt(4 * pi / 3.),
-                     (-vector[0] + 1j * vector[1]) * sqrt(2 * pi / 3.)])
+    return np.stack((np.asarray((vector[..., 0] + 1j * vector[..., 1]) * sqrt(2 * pi / 3.)),
+                     np.asarray(vector[..., 2] * sqrt(4 * pi / 3.)),
+                     np.asarray((-vector[..., 0] + 1j * vector[..., 1]) * sqrt(2 * pi / 3.))), axis=-1)
 
 
 @jit
@@ -60,9 +60,9 @@ def vector_from_ell_1_modes(modes):
     should be real-valued.  If you want it to be, you must call the `.real` method of the output array manually.
 
     """
-    return np.array([(modes[0] - modes[2]) / (2 * sqrt(2 * pi / 3.)),
-                     (modes[0] + modes[2]) / (2j * sqrt(2 * pi / 3.)),
-                     modes[1] / sqrt(4 * pi / 3.)])
+    return np.stack((np.asarray((modes[..., 0] - modes[..., 2]) / (2 * sqrt(2 * pi / 3.))),
+                     np.asarray((modes[..., 0] + modes[..., 2]) / (2j * sqrt(2 * pi / 3.))),
+                     np.asarray(modes[..., 1] / sqrt(4 * pi / 3.))), axis=-1)
 
 
 @jit
