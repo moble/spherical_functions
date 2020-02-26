@@ -29,15 +29,9 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
         raise NotImplementedError(f"Unrecognized arguments to {type(self).__name__}.__array_ufunc__: {kwargs}")
 
     if ufunc in [np.positive, np.negative]:
-        result = out or np.zeros(self.shape, dtype=np.complex_)
-        if isinstance(result, tuple):
-            result = result[0]
-        if isinstance(result, type(self)):
-            result = result.view(np.ndarray)
-        ufunc(self.view(np.ndarray), out=result)
-        if out is None:
-            result = type(self)(result, **self._metadata)
-        elif isinstance(out[0], type(self)):
+        out_view = out if out is None else out[0].view(np.ndarray)
+        result = type(self)(ufunc(self.view(np.ndarray), out=out_view), **self._metadata)
+        if out is not None and isinstance(out[0], type(self)):
             out[0]._metadata = copy.copy(self._metadata)
 
     elif ufunc in [np.add, np.subtract]:
@@ -67,9 +61,8 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             metadata['spin_weight'] = s
             metadata['ell_min'] = ell_min
             metadata['ell_max'] = ell_max
-            if out is None:
-                result = type(self)(result, **metadata)
-            elif isinstance(out[0], type(self)):
+            result = type(self)(result, **metadata)
+            if out is not None and isinstance(out[0], type(self)):
                 metadata.pop('ell_min')
                 out[0]._metadata = metadata
         elif isinstance(args[0], type(self)):
@@ -77,20 +70,16 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             scalars = np.asanyarray(args[1])
             if np.any(scalars) or not modes._check_broadcasting(scalars):
                 return NotImplemented
-            result = ufunc(modes.view(np.ndarray), scalars[..., np.newaxis], out=out)
-            if out is None:
-                result = type(self)(result, **self._metadata)
-            elif isinstance(out[0], type(self)):
+            result = type(self)(ufunc(modes.view(np.ndarray), scalars[..., np.newaxis], out=out), **self._metadata)
+            if out is not None and isinstance(out[0], type(self)):
                 out[0]._metadata = copy.copy(self._metadata)
         elif isinstance(args[1], type(self)):
             scalars = np.asanyarray(args[0])
             modes = args[1]
             if np.any(scalars) or not modes._check_broadcasting(scalars, reverse=True):
                 return NotImplemented
-            result = ufunc(scalars[..., np.newaxis], modes.view(np.ndarray), out=out)
-            if out is None:
-                result = type(self)(result, **self._metadata)
-            elif isinstance(out[0], type(self)):
+            result = type(self)(ufunc(scalars[..., np.newaxis], modes.view(np.ndarray), out=out), **self._metadata)
+            if out is not None and isinstance(out[0], type(self)):
                 out[0]._metadata = copy.copy(self._metadata)
         else:
             return NotImplemented
@@ -121,9 +110,8 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             metadata['spin_weight'] = result_s
             metadata['ell_min'] = result_ell_min
             metadata['ell_max'] = result_ell_max
-            if out is None:
-                result = type(self)(result, **metadata)
-            elif isinstance(out[0], type(self)):
+            result = type(self)(result, **metadata)
+            if out is not None and isinstance(out[0], type(self)):
                 metadata.pop('ell_min')
                 out[0]._metadata = metadata
         elif isinstance(args[0], type(self)):
@@ -131,20 +119,16 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             scalars = np.asanyarray(args[1])
             if not modes._check_broadcasting(scalars):
                 return NotImplemented
-            result = ufunc(modes.view(np.ndarray), scalars[..., np.newaxis], out=out)
-            if out is None:
-                result = type(self)(result, **self._metadata)
-            elif isinstance(out[0], type(self)):
+            result = type(self)(ufunc(modes.view(np.ndarray), scalars[..., np.newaxis], out=out), **self._metadata)
+            if out is not None and isinstance(out[0], type(self)):
                 out[0]._metadata = copy.copy(self._metadata)
         elif isinstance(args[1], type(self)):
             scalars = np.asanyarray(args[0])
             modes = args[1]
             if not modes._check_broadcasting(scalars, reverse=True):
                 return NotImplemented
-            result = ufunc(scalars[..., np.newaxis], modes.view(np.ndarray), out=out)
-            if out is None:
-                result = type(self)(result, **self._metadata)
-            elif isinstance(out[0], type(self)):
+            result = type(self)(ufunc(scalars[..., np.newaxis], modes.view(np.ndarray), out=out), **self._metadata)
+            if out is not None and isinstance(out[0], type(self)):
                 out[0]._metadata = copy.copy(self._metadata)
         else:
             return NotImplemented
@@ -156,10 +140,8 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
         scalars = np.asanyarray(args[1])
         if not modes._check_broadcasting(scalars):
             return NotImplemented
-        result = ufunc(modes.view(np.ndarray), scalars[..., np.newaxis], out=out)
-        if out is None:
-            result = type(self)(result, **self._metadata)
-        elif isinstance(out[0], type(self)):
+        result = type(self)(ufunc(modes.view(np.ndarray), scalars[..., np.newaxis], out=out), **self._metadata)
+        if out is not None and isinstance(out[0], type(self)):
             out[0]._metadata = copy.copy(self._metadata)
 
     elif ufunc in [np.conj, np.conjugate]:
@@ -180,9 +162,8 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
                         c[..., i_p], c[..., i_n] = -np.conjugate(s[..., i_n]), -np.conjugate(s[..., i_p])
             metadata = copy.copy(args[0]._metadata)
             metadata['spin_weight'] = -args[0].s
-            if out is None:
-                result = type(self)(c, **metadata)
-            elif isinstance(out[0], type(self)):
+            result = type(self)(c, **metadata)
+            if out is not None and isinstance(out[0], type(self)):
                 out[0]._metadata = metadata
         else:
             return NotImplemented

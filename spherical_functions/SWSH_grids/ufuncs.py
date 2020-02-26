@@ -29,15 +29,9 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
         raise NotImplementedError(f"Unrecognized arguments to {type(self).__name__}.__array_ufunc__: {kwargs}")
 
     if ufunc in [np.positive, np.negative]:
-        result = out or np.zeros(self.shape, dtype=np.complex_)
-        if isinstance(result, tuple):
-            result = result[0]
-        if isinstance(result, type(self)):
-            result = result.view(np.ndarray)
-        ufunc(self.view(np.ndarray), out=result)
-        if out is None:
-            result = type(self)(result, **self._metadata)
-        elif isinstance(out[0], type(self)):
+        out_view = out if out is None else out[0].view(np.ndarray)
+        result = type(self)(ufunc(self.view(np.ndarray), out=out_view), **self._metadata)
+        if out is not None and isinstance(out[0], type(self)):
             out[0]._metadata = copy.copy(self._metadata)
 
     elif ufunc in [np.add, np.subtract]:
@@ -47,32 +41,28 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
                 raise ValueError(f"Cannot {ufunc.__name__} grids with different spin weights ({g1.s}, {g2.s})")
             if g1.n_theta != g2.n_theta or g1.n_phi != g2.n_phi:
                 raise ValueError(f"Shape mismatch: grid1.shape={g1.shape}; grid2.shape={g2.shape}")
-            if out is None:
-                result = type(self)(ufunc(g1.view(np.ndarray), g2.view(np.ndarray)), **self._metadata)
-            else:
-                ufunc(g1.view(np.ndarray), g2.view(np.ndarray), out=out)
-                if isinstance(out[0], type(self)):
-                    metadata = copy.copy(self._metadata)
-                    out[0]._metadata = metadata
+            out_view = out if out is None else out[0].view(np.ndarray)
+            result = type(self)(ufunc(g1.view(np.ndarray), g2.view(np.ndarray), out=out_view), **self._metadata)
+            if out is not None and isinstance(out[0], type(self)):
+                metadata = copy.copy(self._metadata)
+                out[0]._metadata = metadata
         elif isinstance(args[0], type(self)):
             grid = args[0]
             scalars = np.asanyarray(args[1])
             if (grid.s!=0 and np.any(scalars)) or not grid._check_broadcasting(scalars):
                 return NotImplemented
-            result = ufunc(grid.view(np.ndarray), scalars[..., np.newaxis, np.newaxis], out=out)
-            if out is None:
-                result = type(self)(result, **self._metadata)
-            elif isinstance(out[0], type(self)):
+            out_view = out if out is None else out[0].view(np.ndarray)
+            result = type(self)(ufunc(grid.view(np.ndarray), scalars[..., np.newaxis, np.newaxis], out=out_view), **self._metadata)
+            if out is not None and isinstance(out[0], type(self)):
                 out[0]._metadata = copy.copy(self._metadata)
         elif isinstance(args[1], type(self)):
             grid = args[1]
             scalars = np.asanyarray(args[0])
             if (grid.s!=0 and np.any(scalars)) or not grid._check_broadcasting(scalars, reverse=True):
                 return NotImplemented
-            result = ufunc(scalars[..., np.newaxis, np.newaxis], grid.view(np.ndarray), out=out)
-            if out is None:
-                result = type(self)(result, **self._metadata)
-            elif isinstance(out[0], type(self)):
+            out_view = out if out is None else out[0].view(np.ndarray)
+            result = type(self)(ufunc(scalars[..., np.newaxis, np.newaxis], grid.view(np.ndarray), out=out_view), **self._metadata)
+            if out is not None and isinstance(out[0], type(self)):
                 out[0]._metadata = copy.copy(self._metadata)
         else:
             return NotImplemented
@@ -82,63 +72,58 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             g1, g2 = args[:2]
             if g1.n_theta != g2.n_theta or g1.n_phi != g2.n_phi:
                 raise ValueError(f"Shape mismatch: grid1.shape={g1.shape}; grid2.shape={g2.shape}")
-            result = ufunc(g1.view(np.ndarray), g2.view(np.ndarray), out=out)
             result_s = g1.s + g2.s if ufunc is np.multiply else g1.s - g2.s
             result_metadata = copy.copy(g1._metadata)
             result_metadata['spin_weight'] = result_s
-            if out is None:
-                result = type(self)(result, **result_metadata)
-            elif isinstance(out[0], type(self)):
+            out_view = out if out is None else out[0].view(np.ndarray)
+            result = type(self)(ufunc(g1.view(np.ndarray), g2.view(np.ndarray), out=out_view), **result_metadata)
+            if out is not None and isinstance(out[0], type(self)):
                 out[0]._metadata = result_metadata
         elif isinstance(args[0], type(self)):
             grid = args[0]
             scalars = np.asanyarray(args[1])
             if not grid._check_broadcasting(scalars):
                 return NotImplemented
-            result = ufunc(grid.view(np.ndarray), scalars[..., np.newaxis, np.newaxis], out=out)
             result_s = grid.s
             result_metadata = copy.copy(grid._metadata)
             result_metadata['spin_weight'] = result_s
-            if out is None:
-                result = type(self)(result, **result_metadata)
-            elif isinstance(out[0], type(self)):
+            out_view = out if out is None else out[0].view(np.ndarray)
+            result = type(self)(ufunc(grid.view(np.ndarray), scalars[..., np.newaxis, np.newaxis], out=out_view), **result_metadata)
+            if out is not None and isinstance(out[0], type(self)):
                 out[0]._metadata = result_metadata
         elif isinstance(args[1], type(self)):
             grid = args[1]
             scalars = np.asanyarray(args[0])
             if not grid._check_broadcasting(scalars, reverse=True):
                 return NotImplemented
-            result = ufunc(scalars[..., np.newaxis, np.newaxis], grid.view(np.ndarray), out=out)
             result_s = grid.s if ufunc is np.multiply else - grid.s
             result_metadata = copy.copy(grid._metadata)
             result_metadata['spin_weight'] = result_s
-            if out is None:
-                result = type(self)(result, **result_metadata)
-            elif isinstance(out[0], type(self)):
+            out_view = out if out is None else out[0].view(np.ndarray)
+            result = type(self)(ufunc(scalars[..., np.newaxis, np.newaxis], grid.view(np.ndarray), out=out_view), **result_metadata)
+            if out is not None and isinstance(out[0], type(self)):
                 out[0]._metadata = result_metadata
         else:
             return NotImplemented
 
     elif ufunc in [np.conj, np.conjugate]:
         if isinstance(args[0], type(self)):
-            result = np.conjugate(args[0].view(np.ndarray), out=out)
             metadata = copy.copy(args[0]._metadata)
             metadata['spin_weight'] = -args[0].s
-            if out is None:
-                result = type(self)(result, **metadata)
-            elif isinstance(out[0], type(self)):
+            out_view = out if out is None else out[0].view(np.ndarray)
+            result = type(self)(np.conjugate(args[0].view(np.ndarray), out=out_view), **metadata)
+            if out is not None and isinstance(out[0], type(self)):
                 out[0]._metadata = metadata
         else:
             return NotImplemented
 
     elif ufunc is np.absolute:
         if isinstance(args[0], type(self)):
-            result = np.absolute(args[0].view(np.ndarray), out=out)
             metadata = copy.copy(args[0]._metadata)
             metadata['spin_weight'] = 0
-            if out is None:
-                result = type(self)(result, **metadata)
-            elif isinstance(out[0], type(self)):
+            out_view = out if out is None else out[0].view(np.ndarray)
+            result = type(self)(np.absolute(args[0].view(np.ndarray), out=out_view), **metadata)
+            if out is not None and isinstance(out[0], type(self)):
                 out[0]._metadata = metadata
         else:
             return NotImplemented
@@ -149,12 +134,11 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
                 exponent = int(args[1])
             except:
                 return NotImplemented
-            result = np.power(args[0].view(np.ndarray), exponent, out=out)
             metadata = copy.copy(args[0]._metadata)
             metadata['spin_weight'] = exponent * args[0].s
-            if out is None:
-                result = type(self)(result, **metadata)
-            elif isinstance(out[0], type(self)):
+            out_view = out if out is None else out[0].view(np.ndarray)
+            result = type(self)(np.power(args[0].view(np.ndarray), exponent, out=out_view), **metadata)
+            if out is not None and isinstance(out[0], type(self)):
                 out[0]._metadata = metadata
         else:
             return NotImplemented
@@ -169,12 +153,11 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
                 new_spin = args[0].s * 2
             elif ufunc is np.reciprocal:
                 new_spin = -args[0].s
-            result = ufunc(args[0].view(np.ndarray), out=out)
             metadata = copy.copy(args[0]._metadata)
             metadata['spin_weight'] = new_spin
-            if out is None:
-                result = type(self)(result, **metadata)
-            elif isinstance(out[0], type(self)):
+            out_view = out if out is None else out[0].view(np.ndarray)
+            result = type(self)(ufunc(args[0].view(np.ndarray), out=out_view), **metadata)
+            if out is not None and isinstance(out[0], type(self)):
                 out[0]._metadata = metadata
         else:
             return NotImplemented
