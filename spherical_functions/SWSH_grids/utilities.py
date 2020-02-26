@@ -50,7 +50,11 @@ def _check_broadcasting(self, array, reverse=False):
     else:
         if np.ndim(array) > np.ndim(self)-2:
             raise ValueError(f"Cannot broadcast array of {np.ndim(array)} dimensions against {type(self)} "
-                             f"object of fewer ({np.ndim(self)-2}) non-grid dimensions")
+                             f"object of fewer ({np.ndim(self)-2}) non-grid dimensions.\n"
+                             "This is to ensure that scalars do not operate on individual "
+                             "grid values; they must operate on all simultaneously.\n"
+                             "If that is the case and you still want to broadcast, add more "
+                             "dimensions before this object's first dimension.")
         try:
             if reverse:
                 np.broadcast(array, self[..., 0, 0])
