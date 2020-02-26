@@ -54,12 +54,22 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
                 if isinstance(out[0], type(self)):
                     metadata = copy.copy(self._metadata)
                     out[0]._metadata = metadata
-        elif isinstance(args[0], type(self)) or isinstance(args[1], type(self)):
-            grid = args[0] if isinstance(args[0], type(self)) else args[1]
-            scalars = np.asanyarray(args[1]) if isinstance(args[0], type(self)) else np.asanyarray(args[0])
+        elif isinstance(args[0], type(self)):
+            grid = args[0]
+            scalars = np.asanyarray(args[1])
             if (grid.s!=0 and np.any(scalars)) or not grid._check_broadcasting(scalars):
                 return NotImplemented
             result = ufunc(grid.view(np.ndarray), scalars[..., np.newaxis, np.newaxis], out=out)
+            if out is None:
+                result = type(self)(result, **self._metadata)
+            elif isinstance(out[0], type(self)):
+                out[0]._metadata = copy.copy(self._metadata)
+        elif isinstance(args[1], type(self)):
+            grid = args[1]
+            scalars = np.asanyarray(args[0])
+            if (grid.s!=0 and np.any(scalars)) or not grid._check_broadcasting(scalars, reverse=True):
+                return NotImplemented
+            result = ufunc(scalars[..., np.newaxis, np.newaxis], grid.view(np.ndarray), out=out)
             if out is None:
                 result = type(self)(result, **self._metadata)
             elif isinstance(out[0], type(self)):
@@ -85,7 +95,7 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             scalars = np.asanyarray(args[1])
             if not grid._check_broadcasting(scalars):
                 return NotImplemented
-            result = ufunc(grid.view(np.ndarray), scalars, out=out)
+            result = ufunc(grid.view(np.ndarray), scalars[..., np.newaxis, np.newaxis], out=out)
             result_s = grid.s
             result_metadata = copy.copy(grid._metadata)
             result_metadata['spin_weight'] = result_s
@@ -98,7 +108,7 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             scalars = np.asanyarray(args[0])
             if not grid._check_broadcasting(scalars, reverse=True):
                 return NotImplemented
-            result = ufunc(scalars, grid.view(np.ndarray), out=out)
+            result = ufunc(scalars[..., np.newaxis, np.newaxis], grid.view(np.ndarray), out=out)
             result_s = grid.s if ufunc is np.multiply else - grid.s
             result_metadata = copy.copy(grid._metadata)
             result_metadata['spin_weight'] = result_s

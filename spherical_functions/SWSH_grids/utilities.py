@@ -48,6 +48,9 @@ def _check_broadcasting(self, array, reverse=False):
         else:
             return True
     else:
+        if np.ndim(array) > np.ndim(self)-2:
+            raise ValueError(f"Cannot broadcast array of {np.ndim(array)} dimensions against {type(self)} "
+                             f"object of fewer ({np.ndim(self)-2}) non-grid dimensions")
         try:
             if reverse:
                 np.broadcast(array, self[..., 0, 0])

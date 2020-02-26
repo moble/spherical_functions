@@ -290,7 +290,7 @@ def test_modes_multiplication():
             g1s = m1s.grid()
             n_theta, n_phi = g1s.shape[-2:]
             g1 = m1.grid(n_theta, n_phi)
-            assert np.allclose(g1*s[..., np.newaxis, np.newaxis], g1s, rtol=tolerance, atol=tolerance)
+            assert np.allclose(g1*s, g1s, rtol=tolerance, atol=tolerance)
             if mul is np.multiply:
                 sm1 = mul(s, m1)
                 assert sm1.s == s1
@@ -298,7 +298,7 @@ def test_modes_multiplication():
                 sg1 = sm1.grid()
                 n_theta, n_phi = sg1.shape[-2:]
                 g1 = m1.grid(n_theta, n_phi)
-                assert np.allclose(s[..., np.newaxis, np.newaxis]*g1, sg1, rtol=tolerance, atol=tolerance)
+                assert np.allclose(s*g1, sg1, rtol=tolerance, atol=tolerance)
             # Check spin-weighted multiplications
             for s2 in range(-s1, s1 + 1):
                 ell_min2 = ell_min1+1
