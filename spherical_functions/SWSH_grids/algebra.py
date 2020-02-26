@@ -77,7 +77,7 @@ def add(self, other):
         result = self.view(np.ndarray) + other.view(np.ndarray)
         return type(self)(result, **self._metadata)
     elif self.s != 0 and np.any(other):
-        raise ValueError(f"It is not permitted to add non-zero scalars to a {type(self)} object of non-zero spin weight")
+        raise ValueError(f"It is not permitted to add non-zero scalars to a {type(self).__name__} object of non-zero spin weight")
     else:
         result = self.view(np.ndarray) + other
         return type(self)(result, **self._metadata)
@@ -92,7 +92,7 @@ def subtract(self, other):
         result = self.view(np.ndarray) - other.view(np.ndarray)
         return type(self)(result, **self._metadata)
     elif self.s != 0 and np.any(other):
-        raise ValueError(f"It is not permitted to subtract non-zero scalars from a {type(self)} object of non-zero spin weight")
+        raise ValueError(f"It is not permitted to subtract non-zero scalars from a {type(self).__name__} object of non-zero spin weight")
     else:
         result = self.view(np.ndarray) - other
         return type(self)(result, **self._metadata)
@@ -125,7 +125,7 @@ def multiply(self, other, truncator=None):
         elif self._check_broadcasting(other, reverse=True):
             return type(self)(other * self.view(np.ndarray), **self._metadata)
         else:
-            raise ValueError(f"Cannot broadcast input array to this {type(self)} object.  Note that the input array\n           "
+            raise ValueError(f"Cannot broadcast input array to this {type(self).__name__} object.  Note that the input array\n           "
                              "must broadcast to all but last two dimensions of this object; it is not allowed to\n           "
                              "multiply each grid value individually.  If you really want to hack this, view this\n           "
                              "object as an ndarray, and don't complain if your results are wrong.")
@@ -156,7 +156,7 @@ def divide(self, other):
         if self._check_broadcasting(other):
             return type(self)(self.view(np.ndarray) / other, **self._metadata)
         else:
-            raise ValueError(f"Cannot broadcast input array to this {type(self)} object.  Note that the input array\n           "
+            raise ValueError(f"Cannot broadcast input array to this {type(self).__name__} object.  Note that the input array\n           "
                              "must broadcast to all but last two dimensions of this object; it is not allowed to\n           "
                              "multiply each grid value individually.  If you really want to hack this, view this\n           "
                              "object as an ndarray, and don't complain if your results are wrong.")

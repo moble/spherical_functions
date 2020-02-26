@@ -26,7 +26,7 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
 
     # We will not be supporting any more ufunc keywords
     if kwargs:
-        raise NotImplementedError(f"Unrecognized arguments to {type(self)}.__array_ufunc__: {kwargs}")
+        raise NotImplementedError(f"Unrecognized arguments to {type(self).__name__}.__array_ufunc__: {kwargs}")
 
     if ufunc in [np.positive, np.negative]:
         result = out or np.zeros(self.shape, dtype=np.complex_)
@@ -181,7 +181,7 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
 
     else:
         # I thought we filtered everything else out...
-        raise NotImplementedError(f"{type(self)}.__array_ufunc__ has reached a point it should not have for ufunc {ufunc}")
+        raise NotImplementedError(f"{type(self).__name__}.__array_ufunc__ has reached a point it should not have for ufunc {ufunc}")
 
     if result is NotImplemented:
         return NotImplemented
