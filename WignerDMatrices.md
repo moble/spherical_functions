@@ -81,7 +81,7 @@ $\mathfrak{D}$ matrix is
   \label{eq:D\_RaApprox0}
   \mathfrak{D}^{(\ell)}\_{m',m}(\quat{R})
   = (-1)^{\ell+m'}\, \quat{R}\_b^{-2m'} \delta\_{-m',m}
-  = (-1)^{\ell+m}\, \quat{R}\_b^{2m} \delta\_{-m',m}.
+  = (-1)^{\ell-m}\, \quat{R}\_b^{2m} \delta\_{-m',m}.
 \end{equation}
 In the same way, we can calculate this for $\lvert \quat{R}_b \rvert
 \lesssim 10^{-15}$:
