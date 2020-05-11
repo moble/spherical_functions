@@ -14,8 +14,9 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
     if ufunc in [np.greater, np.greater_equal, np.less, np.less_equal, np.not_equal, np.equal,
                  np.logical_and, np.logical_or, np.isfinite, np.isinf, np.isnan]:
         args = [arg.view(np.ndarray) if isinstance(arg, type(self)) else arg for arg in args]
-        kwargs['out'] = out
-        return super(type(self), self).__array_ufunc__(ufunc, method, *args, **kwargs)
+        if out is not None:
+            kwargs['out'] = tuple(o.view(np.ndarray) if isinstance(o, type(self)) else o for o in out)
+        return self.view(np.ndarray).__array_ufunc__(ufunc, method, *args, **kwargs)
 
     # Here are all the functions we will support directly; all other ufuncs are probably meaningless
     elif ufunc not in [np.positive, np.negative, np.add, np.subtract,
