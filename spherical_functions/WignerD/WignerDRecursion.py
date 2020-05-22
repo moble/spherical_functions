@@ -147,6 +147,10 @@ def _step_1(Hnmpm):
     Hnmpm[0, :] = 1.0
 
 
+sqrt3 = np.sqrt(3)
+sqrt2 = np.sqrt(2)
+
+
 @njit
 def _step_2(g, h, n_max, Hnmpm, cosβ, sinβ):
     """Compute values H^{0,m}_{n}(β)for m=0,...,n and H^{0,m}_{n+1}(β) for m=0,...,n+1 using Eq. (32):
@@ -163,19 +167,18 @@ def _step_2(g, h, n_max, Hnmpm, cosβ, sinβ):
     depends on setting H^{0, -1}_{n} from its symmetric equivalent H^{0, 1}_{n} in this step.
 
     """
-    sin2β = sinβ**2
-
+    prefactor = np.empty_like(sinβ)
     # n = 1
     n0n_index = nmpm_index(1, 0, 1)
     nn_index = nm_index(1, 1)
-    Hnmpm[n0n_index, :] = np.sqrt(3)  # Un-normalized
-    Hnmpm[n0n_index-1, :] = (g[nn_index-1] * cosβ) / np.sqrt(2)  # Normalized
+    Hnmpm[n0n_index, :] = sqrt3  # Un-normalized
+    Hnmpm[n0n_index-1, :] = (g[nn_index-1] * cosβ) / sqrt2  # Normalized
     # n = 2, ..., n_max+1
     for n in range(2, n_max+2):
         n0n_index = nmpm_index(n, 0, n)
         nm10nm1_index = nmpm_index(n-1, 0, n-1)
         nn_index = nm_index(n, n)
-        const = np.sqrt((2*n+1) / (2*n))
+        const = np.sqrt(1.0 + 0.5/n)
         gi = g[nn_index-1]
         for j in range(Hnmpm.shape[1]):
             # m = n
@@ -187,15 +190,15 @@ def _step_2(g, h, n_max, Hnmpm, cosβ, sinβ):
             gi = g[nn_index-i]
             hi = h[nn_index-i]
             for j in range(Hnmpm.shape[1]):
-                Hnmpm[n0n_index-i, j] = gi * cosβ[j] * Hnmpm[n0n_index-i+1, j] - hi * sin2β[j] * Hnmpm[n0n_index-i+2, j]
+                Hnmpm[n0n_index-i, j] = gi * cosβ[j] * Hnmpm[n0n_index-i+1, j] - hi * sinβ[j]**2 * Hnmpm[n0n_index-i+2, j]
         # m = 0, with normalization
-        const = np.sqrt(2*(2*n+1))
+        const = np.sqrt(4*n+2)
         gi = g[nn_index-n]
         hi = h[nn_index-n]
         for j in range(Hnmpm.shape[1]):
-            Hnmpm[n0n_index-n, j] = (gi * cosβ[j] * Hnmpm[n0n_index-n+1, j] - hi * sin2β[j] * Hnmpm[n0n_index-n+2, j]) / const
+            Hnmpm[n0n_index-n, j] = (gi * cosβ[j] * Hnmpm[n0n_index-n+1, j] - hi * sinβ[j]**2 * Hnmpm[n0n_index-n+2, j]) / const
         # Now, loop back through, correcting the normalization for this row, except for n=n element
-        prefactor = np.full_like(sinβ, 1/const)
+        prefactor[:] = 1/const
         for i in range(1, n):
             prefactor *= sinβ
             Hnmpm[n0n_index-n+i, :] *= prefactor
@@ -203,10 +206,10 @@ def _step_2(g, h, n_max, Hnmpm, cosβ, sinβ):
         Hnmpm[nmpm_index(n, 1, 0), :] = Hnmpm[nmpm_index(n, 0, 1)]
         Hnmpm[nmpm_index(n, 0, -1), :] = Hnmpm[nmpm_index(n, 0, 1)]
     # Correct normalization of m=n elements
-    prefactor = np.ones_like(sinβ)
+    prefactor[:] = 1.0
     for n in range(1, n_max+2):
         prefactor *= sinβ
-        Hnmpm[nmpm_index(n, 0, n), :] *= prefactor / np.sqrt(2*(2*n+1))
+        Hnmpm[nmpm_index(n, 0, n), :] *= prefactor / np.sqrt(4*n+2)
     # Supply extra edge cases as noted in docstring
     Hnmpm[nmpm_index(1, 1, 0), :] = Hnmpm[nmpm_index(1, 0, 1)]
     Hnmpm[nmpm_index(1, 0, -1), :] = Hnmpm[nmpm_index(1, 0, 1)]
@@ -220,29 +223,24 @@ def _step_3(a, b, n_max, Hnmpm, cosβ, sinβ):
                                    − \frac{b^{ m−1}_{n+1} (1+cosβ)}{2} H^{0, m−1}_{n+1}
                                    − a^{m}_{n} sinβ H^{0, m}_{n+1}
     """
-    # a = self.a.reshape(self.a.shape + (1,)*(Hnmpm.ndim-1))
     for n in range(1, n_max+1):
         # m = 1, ..., n
         i1 = nmpm_index(n, 1, 1)
-        i2 = nmpm_index(n+1, 0, 2)
-        i3 = nmpm_index(n+1, 0, 0)
-        i4 = nmpm_index(n+1, 0, 1)
-        i5 = nm_index(n+1, 0)
-        i6 = nm_index(n+1, -2)
-        i7 = nm_index(n+1, 0)
-        i8 = nabsm_index(n, 1)
-        b5 = b[i5]
+        i2 = nmpm_index(n+1, 0, 0)
+        i3 = nm_index(n+1, 0)
+        i4 = nabsm_index(n, 1)
+        b5 = b[i3]
         for i in range(n):
-            b6 = b[-i+i6]
-            b7 = b[i+i7]
-            a8 = a[i+i8]
+            b6 = b[-i+i3-2]
+            b7 = b[i+i3]
+            a8 = a[i+i4]
             for j in range(Hnmpm.shape[1]):
                 Hnmpm[i+i1, j] = (1 / b5) * (
                     0.5 * (
-                          b6 * (1-cosβ[j]) * Hnmpm[i+i2, j]
-                        - b7 * (1+cosβ[j]) * Hnmpm[i+i3, j]
+                          b6 * (1-cosβ[j]) * Hnmpm[i+i2+2, j]
+                        - b7 * (1+cosβ[j]) * Hnmpm[i+i2, j]
                     )
-                    - a8 * sinβ[j] * Hnmpm[i+i4, j]
+                    - a8 * sinβ[j] * Hnmpm[i+i2+1, j]
                 )
 
 
@@ -383,14 +381,21 @@ class HCalculator(object):
         """Return a new workspace sized for cosβ."""
         return np.zeros((self.nmpm_total_size_plus1,) + cosβ.shape, dtype=float)
 
-    def __call__(self, cosβ, workspace=None):
+    def __call__(self, cosβ, sinβ=None, workspace=None):
         cosβ = np.asarray(cosβ, dtype=float)
         if np.max(cosβ) > 1.0 or np.min(cosβ) < -1.0:
             raise ValueError('Nonsensical value for range of cosβ: [{0}, {1}]'.format(np.min(cosβ), np.max(cosβ)))
         cosβshape = cosβ.shape
         Hnmpm = workspace if workspace is not None else self.workspace(cosβ)
         cosβ = cosβ.ravel(order='K')
-        sinβ = np.sqrt(1 - cosβ**2)
+        if sinβ is None:
+            sinβ = np.sqrt(1 - cosβ**2)
+        else:
+            if sinβ.shape != cosβshape:
+                raise ValueError(
+                    f"Input cosβ and sinβ must be the same shape; their shapes are {cosβshape} and {sinβ.shape}."
+                )
+            sinβ = sinβ.ravel(order='K')
         Hnmpm = Hnmpm.reshape((-1, cosβ.size))
         _step_1(Hnmpm)
         _step_2(self.g, self.h, self.n_max, Hnmpm, cosβ, sinβ)
