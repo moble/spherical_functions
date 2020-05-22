@@ -32,14 +32,13 @@ def test_Wigner_D_linear_indices(ell_max):
 
             for ell in range(l_min, l_max + 1):
                 for mp in range(-ell, ell + 1):
-                    assert list(
-                        LMpM[sf._linear_matrix_diagonal_index(ell, mp) + sf._linear_matrix_offset(ell, l_min)]) == [ell,
-                                                                                                                    mp,
-                                                                                                                    mp]
+                    i = sf._linear_matrix_diagonal_index(ell, mp)
+                    o = sf._linear_matrix_offset(ell, l_min)
+                    assert list(LMpM[i + o]) == [ell, mp, mp]
                     for m in range(-ell, ell + 1):
-                        assert list(
-                            LMpM[sf._linear_matrix_index(ell, mp, m) + sf._linear_matrix_offset(ell, l_min)]) == [ell,
-                                                                                                                  mp, m]
+                        i = sf._linear_matrix_index(ell, mp, m)
+                        o = sf._linear_matrix_offset(ell, l_min)
+                        assert list(LMpM[i + o]) == [ell, mp, m]
 
 
 def test_Wigner_D_matrices_negative_argument(Rs, ell_max):

@@ -11,14 +11,22 @@ import spherical_functions as sf
 import pytest
 
 slow = pytest.mark.slow
-
 eps = np.finfo(float).eps
 
-precision_Wigner_D_element = 4.e-14
-
 def test_complex_powers():
+    from spherical_functions import complex_powers
     M = 10_000
-    θs = np.concatenate((np.random.rand(100)*6.3,
-                         [np.pi * i for i in [0, 1/8, 1/4, 1/3, 1/2, 3/4, 1, 5/4, 3/2, 7/4, 2, 9/4]]))
+    np.random.seed(12345)
+    # Test 1000 random values roughly less than 2π, and a bunch of fractions of exactly π
+    θs = np.concatenate((np.random.rand(1000)*6.3,
+                         np.pi * np.array([0, 1/8, 1/4, 1/3, 1/2, 2/3, 3/4, 1, 5/4, 3/2, 7/4, 2, 9/4])))
     zs = np.exp(1j * θs)
-    complex_powers(z, M)
+    zpowers1 = complex_powers(zs, M)
+    assert zpowers1.shape == zs.shape+(M+1,)
+    mbroadcaster = np.arange(M+1).reshape((1,)*zs.ndim + (M+1,))
+    zbroadcaster = zs.reshape(zs.shape+(1,))
+    zpowers2 = zbroadcaster**mbroadcaster
+    assert np.allclose(zpowers1, zpowers2, atol=3 * eps * M, rtol=0)
+    assert np.all(np.abs(zpowers1 - zpowers2)[:, 1:] < 4 * eps * np.arange(M+1)[np.newaxis, 1:])
+
+

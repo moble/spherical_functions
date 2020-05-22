@@ -1,61 +1,9 @@
 import numpy as np
+from functools import lru_cache
 from scipy.special import factorial
 from numba import njit
 import spherical_functions as sf
 
-
-"""Calculating cos(β) and sin(β) from quaternions
-
-Assuming the Euler angle convention from the quaternions package, we can easily compute
-
-    R.w²+R.z² = cos(½β)²
-    R.x²+R.y² = sin(½β)²
-
-Thus we have
-
-    cos(β) = 2(R.w²+R.z²)-1 = 1-2(R.x²+R.y²) = (R.w²+R.z²) - (R.x²+R.y²)
-
-This assumes the quaternion is properly normalized.  I think the most efficient and numerically
-stable way to get a result guaranteed to be between -1 and 1 is to use the last form and divide by
-the squared norm:
-
-    a = R.w**2 + R.z**2
-    b = R.x**2 + R.y**2
-    cosβ = (a - b) / (a + b)
-
-There doesn't seem to be quite such a simple way to get sin(β), but with just one square root, we
-can get
-
-    sinβ = 2 * sqrt(a * b) / (a + b)
-
-But once we commit to using the square root, we can get other terms for free:
-
-    cos((α + γ)/2) = R.w / sqrt(a)
-    sin((α - γ)/2) = -R.x / sqrt(b)
-    cos((α - γ)/2) = R.y / sqrt(b)
-    sin((α + γ)/2) = R.z / sqrt(a)
-
-Putting these all together, we can write
-
-    a = R.w**2 + R.z**2
-    b = R.x**2 + R.y**2
-    sqrta = np.sqrt(a)
-    sqrtb = np.sqrt(b)
-    expiβ = ((a - b) + 2j * sqrta * sqrtb) / (a + b)  # exp[iβ]
-    expiαpγo2 = (R.w + 1j * R.z) / sqrta  # exp[i(α+γ)/2]
-    expiαmγo2 = (R.y - 1j * R.x) / sqrtb  # exp[i(α-γ)/2]
-
-"""
-
-
-"""Compute the Wigner D matrices by recursion
-
-My approach here assumes that the user can provide any number of values of cos(β) [which, unlike β
-is an algebraic combination of the quaternion components], and that values are needed from ℓ=0 up to
-some maximum ℓ, and all values of m from -ℓ to ℓ, but only values of m' from some minimum value (at
-most 0) up to some maximum value (at least 0).
-
-"""
 
 """Algorithm for computing H, as given by arxiv:1403.7698
 
@@ -101,6 +49,25 @@ H^{m', m}_n(\beta) = (-1)^{m+m'} H^{m', m}_n(-\beta)
 
 """
 
+
+@njit
+def wedge_index(ℓ, mp, m):
+    """Index to "wedge" arrays
+
+    Here, it is assumed that only data with m≥0 and |m'|≤m are stored, but all values are accepted.
+    Note that we assume |m|≤ℓ and |m'|≤ℓ, but do not check that this is true.
+
+    """
+    if abs(mp) > abs(m):
+        if mp < 0:
+            return (ℓ * (ℓ+1) * (2*ℓ+1) // 6) + (mp * (mp-1)) - m
+        else:
+            return (ℓ * (ℓ+1) * (2*ℓ+1) // 6) + (mp * (mp+1)) + m
+    else:
+        if m < 0:
+            return (ℓ * (ℓ+1) * (2*ℓ+1) // 6) + (m * (m-1)) - mp
+        else:
+            return (ℓ * (ℓ+1) * (2*ℓ+1) // 6) + (m * (m+1)) + mp
 
 
 @njit

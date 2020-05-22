@@ -321,3 +321,4 @@ from .mode_conversions import (constant_as_ell_0_mode, constant_from_ell_0_mode,
                                eth_GHP, ethbar_GHP, eth_NP, ethbar_NP,
                                ethbar_inverse_NP)
 from .multiplication import multiply
+from .recursions.complex_powers import complex_powers

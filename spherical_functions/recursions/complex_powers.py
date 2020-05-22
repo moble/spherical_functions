@@ -1,8 +1,10 @@
+# Copyright (c) 2020, Michael Boyle
+# See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
+
 import numpy as np
 import numba
 
-@numba.njit
-def complex_powers(z, M):
+def complex_powers(z, M, zpowers=None):
     """Compute integer powers of z=exp(iθ) recursively
 
     This algorithm is due to Stoer and Bulirsch in "Introduction to Numerical Analysis" (page 24) —
@@ -14,38 +16,51 @@ def complex_powers(z, M):
     exp(iθ)ⁿ or exp(inθ) explicitly.  However, if you need all powers from 0 to M, this function is
     about 10 or 5 times faster than those options, respectively.  Like those options, this function
     is numerically stable, in the sense that its errors are usually smaller than the error from
-    machine-precision errors in the input argument — or at worst about 30% larger around π/2.
+    machine-precision errors in the input argument — or at worst about 30% larger, around π/2.
 
     Parameters
     ==========
     z: complex
-        Complex number to take integer powers of, normalized
+        Complex number to take integer powers of.  Note that this is assumed to be normalized, but
+        can be an array of such numbers.
     M: int
         Highest power to compute
+    zpowers: array of complex or None (defaults to None)
+        If present, the output will be written into this array, which must have shape z.shape+(M+1,).
+        Pre-allocating this argument can reduce the time spent in this function by up to 60%.
 
     Returns
     =======
     zpowers: array of complex
-        Powers ẑ⁰, ẑ¹, ..., ẑᴹ (with ẑ = z / |z|)
+        Powers z⁰, z¹, ..., zᴹ.  The last dimension has size M+1, any preceding dimensions are the
+        same as the input `z` array.
 
     """
-    z /= np.abs(z)
-    θ = 1
-    while z.real<0 or z.imag<0:
-        θ *= 1j
-        z /= 1j
-    clock = θ
-    zpowers = np.empty(M+1, dtype=np.complex128)
-    zpowers[0] = 1.0 + 0.0j
-    zpowers[1] = z
-    dc = -2 * np.sqrt(z).imag ** 2
-    dz = dc + 1j * np.sqrt(-dc * (2 + dc))
-    t = 2 * dc
-    dz += t * zpowers[1]
-    for m in range(2, M+1):
-        zpowers[m] = zpowers[m-1] + dz
-        dz += t * zpowers[m]
-        zpowers[m-1] *= clock
-        clock *= θ
-    zpowers[M] *= clock
-    return zpowers
+    z = np.asarray(z, dtype=complex)
+    zravel = z.ravel()
+    zpowers = zpowers if zpowers is not None else np.empty((z.size, M+1), dtype=np.complex128)
+    _complex_powers(zravel, M, zpowers)
+    return zpowers.reshape(z.shape+(M+1,))
+
+
+@numba.njit
+def _complex_powers(zravel, M, zpowers):
+    """Helper function for complex_powers(z, M)"""
+    for i in range(zravel.size):
+        z = zravel[i]
+        θ = 1
+        while z.real<0 or z.imag<0:
+            θ *= 1j
+            z /= 1j
+        zpowers[i, 0] = 1.0 + 0.0j
+        zpowers[i, 1] = z
+        clock = θ
+        dc = -2 * np.sqrt(z).imag ** 2
+        t = 2 * dc
+        dz = dc * (1 + 2 * zpowers[i, 1]) + 1j * np.sqrt(-dc * (2 + dc))
+        for m in range(2, M+1):
+            zpowers[i, m] = zpowers[i, m-1] + dz
+            dz += t * zpowers[i, m]
+            zpowers[i, m-1] *= clock
+            clock *= θ
+        zpowers[i, M] *= clock
