@@ -152,7 +152,7 @@ sqrt2 = np.sqrt(2)
 
 
 @njit
-def _step_2(g, h, n_max, Hnmpm, Hextra, cosβ, sinβ):
+def _step_2(g, h, n_max, Hnmpm, Hextra, Hv, cosβ, sinβ):
     """Compute values H^{0,m}_{n}(β)for m=0,...,n and H^{0,m}_{n+1}(β) for m=0,...,n+1 using Eq. (32):
         H^{0,m}_{n}(β) = (-1)^m \sqrt{(n-|m|)! / (n+|m|)!} P^{|m|}_{n}(cos β)
                        = (-1)^m (sin β)^m \hat{P}^{|m|}_{n}(cos β) / \sqrt{k (2n+1)}
@@ -209,8 +209,10 @@ def _step_2(g, h, n_max, Hnmpm, Hextra, cosβ, sinβ):
             H[n0n_index-n+i, :] *= prefactor
         # Supply extra edge cases as noted in docstring
         if n <= n_max:
-            Hnmpm[nmpm_index(n, 1, 0), :] = Hnmpm[nmpm_index(n, 0, 1)]
-            Hnmpm[nmpm_index(n, 0, -1), :] = Hnmpm[nmpm_index(n, 0, 1)]
+            # Hnmpm[nmpm_index(n, 1, 0), :] = Hnmpm[nmpm_index(n, 0, 1)]
+            # Hnmpm[nmpm_index(n, 0, -1), :] = Hnmpm[nmpm_index(n, 0, 1)]
+            Hv[nm_index(n, 1), :] = Hnmpm[nmpm_index(n, 0, 1)]
+            Hv[nm_index(n, 0), :] = Hnmpm[nmpm_index(n, 0, 1)]
     # Correct normalization of m=n elements
     prefactor[:] = 1.0
     for n in range(1, n_max+1):
@@ -220,8 +222,10 @@ def _step_2(g, h, n_max, Hnmpm, Hextra, cosβ, sinβ):
         prefactor *= sinβ
         Hextra[n, :] *= prefactor / np.sqrt(4*n+2)
     # Supply extra edge cases as noted in docstring
-    Hnmpm[nmpm_index(1, 1, 0), :] = Hnmpm[nmpm_index(1, 0, 1)]
-    Hnmpm[nmpm_index(1, 0, -1), :] = Hnmpm[nmpm_index(1, 0, 1)]
+    # Hnmpm[nmpm_index(1, 1, 0), :] = Hnmpm[nmpm_index(1, 0, 1)]
+    # Hnmpm[nmpm_index(1, 0, -1), :] = Hnmpm[nmpm_index(1, 0, 1)]
+    Hv[nm_index(1, 1), :] = Hnmpm[nmpm_index(1, 0, 1)]
+    Hv[nm_index(1, 0), :] = Hnmpm[nmpm_index(1, 0, 1)]
 
 
 @njit
@@ -259,7 +263,7 @@ def _step_3(a, b, n_max, Hnmpm, Hextra, cosβ, sinβ):
 
 
 @njit
-def _step_4(d, n_max, Hnmpm):
+def _step_4(d, n_max, Hnmpm, Hv):
     """Recursively compute H^{m'+1, m}_{n}(β) for m'=1,...,n−1, m=m',...,n using relation (50) resolved
     with respect to H^{m'+1, m}_{n}:
       d^{m'}_{n} H^{m'+1, m}_{n} =   d^{m'−1}_{n} H^{m'−1, m}_{n}
@@ -279,7 +283,16 @@ def _step_4(d, n_max, Hnmpm):
             i6 = nm_index(n, mp-1)
             d5 = d[i5]
             d6 = d[i6]
-            for i in range(n-mp):
+            for i in [0]:
+                d7 = d[i+i6]
+                d8 = d[i+i5]
+                for j in range(Hnmpm.shape[1]):
+                    Hv[i+nm_index(n, mp+1), j] = (1 / d5) * (
+                          d6 * Hnmpm[i+i2, j]
+                        - d7 * Hv[i+nm_index(n, mp), j]
+                        + d8 * Hnmpm[i+i4, j]
+                    )
+            for i in range(1, n-mp):
                 d7 = d[i+i6]
                 d8 = d[i+i5]
                 for j in range(Hnmpm.shape[1]):
@@ -289,16 +302,16 @@ def _step_4(d, n_max, Hnmpm):
                         + d8 * Hnmpm[i+i4, j]
                     )
             # m = n
-            i = n-mp
-            for j in range(Hnmpm.shape[1]):
-                Hnmpm[i+i1, j] = (1 / d5) * (
-                      d6 * Hnmpm[i+i2, j]
-                    - d[i+i6] * Hnmpm[i+i3, j]
-                )
+            for i in [n-mp]:
+                for j in range(Hnmpm.shape[1]):
+                    Hnmpm[i+i1, j] = (1 / d5) * (
+                          d6 * Hnmpm[i+i2, j]
+                        - d[i+i6] * Hnmpm[i+i3, j]
+                    )
 
 
 @njit
-def _step_5(d, n_max, Hnmpm):
+def _step_5(d, n_max, Hnmpm, Hv):
     """Recursively compute H^{m'−1, m}_{n}(β) for m'=−1,...,−n+1, m=−m',...,n using relation (50)
     resolved with respect to H^{m'−1, m}_{n}:
       d^{m'−1}_{n} H^{m'−1, m}_{n} = d^{m'}_{n} H^{m'+1, m}_{n}
@@ -324,7 +337,24 @@ def _step_5(d, n_max, Hnmpm):
             i8 = nm_index(n, -mp)
             d5 = d[i5]
             d6 = d[i6]
-            for i in range(n+mp):
+            for i in [0]:
+                d7 = d[i+i7]
+                d8 = d[i+i8]
+                if mp == 0:
+                    for j in range(Hnmpm.shape[1]):
+                        Hv[i+nm_index(n, mp-1), j] = (1 / d5) * (
+                              d6 * Hv[i+nm_index(n, mp+1), j]
+                            + d7 * Hv[i+nm_index(n, mp), j]
+                            - d8 * Hnmpm[i+i4, j]
+                        )
+                else:
+                    for j in range(Hnmpm.shape[1]):
+                        Hv[i+nm_index(n, mp-1), j] = (1 / d5) * (
+                              d6 * Hnmpm[i+i2, j]
+                            + d7 * Hv[i+nm_index(n, mp), j]
+                            - d8 * Hnmpm[i+i4, j]
+                        )
+            for i in range(1, n+mp):
                 d7 = d[i+i7]
                 d8 = d[i+i8]
                 for j in range(Hnmpm.shape[1]):
@@ -351,11 +381,12 @@ def _step_6(n_max, Hnmpm):
     """
     for n in range(1, n_max+1):
         for mp in range(1, n+1):
-            for m in range(max(-mp-1, -n), mp-1):
+            for m in range(max(-mp, -n), mp):
                 for j in range(Hnmpm.shape[1]):
                     Hnmpm[nmpm_index(n, mp, m), j] = Hnmpm[nmpm_index(n, m, mp), j]
-        for mp in range(-n, n+1):
-            for m in range(-n, -mp-1):
+    for n in range(1, n_max+1):
+        for mp in range(-n, n):
+            for m in range(-n, -mp):
                 for j in range(Hnmpm.shape[1]):
                     Hnmpm[nmpm_index(n, mp, m), j] = Hnmpm[nmpm_index(n, -mp, -m), j]
 
@@ -402,6 +433,7 @@ class HCalculator(object):
         cosβshape = cosβ.shape
         Hnmpm = workspace if workspace is not None else self.workspace(cosβ)
         Hextra = np.zeros((self.n_max+2,) + cosβ.shape, dtype=float)
+        Hv = np.zeros(((self.n_max+1)**2,) + cosβ.shape, dtype=float)
         cosβ = cosβ.ravel(order='K')
         if sinβ is None:
             sinβ = np.sqrt(1 - cosβ**2)
@@ -413,11 +445,12 @@ class HCalculator(object):
             sinβ = sinβ.ravel(order='K')
         Hnmpm = Hnmpm.reshape((-1, cosβ.size))
         Hextra = Hextra.reshape((-1, cosβ.size))
+        Hv = Hv.reshape((-1, cosβ.size))
         _step_1(Hnmpm)
-        _step_2(self.g, self.h, self.n_max, Hnmpm, Hextra, cosβ, sinβ)
+        _step_2(self.g, self.h, self.n_max, Hnmpm, Hextra, Hv, cosβ, sinβ)
         _step_3(self.a, self.b, self.n_max, Hnmpm, Hextra, cosβ, sinβ)
-        _step_4(self.d, self.n_max, Hnmpm)
-        _step_5(self.d, self.n_max, Hnmpm)
+        _step_4(self.d, self.n_max, Hnmpm, Hv)
+        _step_5(self.d, self.n_max, Hnmpm, Hv)
         _step_6(self.n_max, Hnmpm)
         Hnmpm.reshape((-1,)+cosβshape)
         return Hnmpm[:self.nmpm_total_size]  # Remove n_max+1 scratch space
