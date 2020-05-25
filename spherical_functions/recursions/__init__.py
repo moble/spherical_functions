@@ -1,3 +1,9 @@
+# Copyright (c) 2020, Michael Boyle
+# See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
+
+import numpy as np
+import numba
+
 
 @numba.njit
 def quaternion_angles(R):
@@ -62,7 +68,8 @@ def rotate(modes, R):
     rotors = quaternion.as_float_array(R).reshape((-1, 4))
 
 #unfinished:
-    first_slice = slice(None) if rotors.shape[0]==1 else ?
+    raise NotImplementedError()
+    #first_slice = slice(None) if rotors.shape[0]==1 else ?
 
     for iᵣ in range(rotors.shape[0]):
         zᵦ, zₚ, zₘ = quaternion_angles(rotors[i])
