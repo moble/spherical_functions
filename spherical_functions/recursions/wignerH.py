@@ -191,19 +191,19 @@ def _step_2(g, h, n_max, Hwedge, Hextra, Hv, cosβ, sinβ):
     """
     prefactor = np.empty_like(sinβ)
     # n = 1
-    n0n_index = nmpm_index(1, 0, 1)
+    n0n_index = wedge_index(1, 0, 1)
     nn_index = nm_index(1, 1)
     Hwedge[n0n_index, :] = sqrt3  # Un-normalized
     Hwedge[n0n_index-1, :] = (g[nn_index-1] * cosβ) / sqrt2  # Normalized
     # n = 2, ..., n_max+1
     for n in range(2, n_max+2):
         if n <= n_max:
-            n0n_index = nmpm_index(n, 0, n)
+            n0n_index = wedge_index(n, 0, n)
             H = Hwedge
         else:
             n0n_index = n
             H = Hextra
-        nm10nm1_index = nmpm_index(n-1, 0, n-1)
+        nm10nm1_index = wedge_index(n-1, 0, n-1)
         nn_index = nm_index(n, n)
         const = np.sqrt(1.0 + 0.5/n)
         gi = g[nn_index-1]
@@ -231,19 +231,19 @@ def _step_2(g, h, n_max, Hwedge, Hextra, Hv, cosβ, sinβ):
             H[n0n_index-n+i, :] *= prefactor
         # Supply extra edge cases as noted in docstring
         if n <= n_max:
-            Hv[nm_index(n, 1), :] = Hwedge[nmpm_index(n, 0, 1)]
-            Hv[nm_index(n, 0), :] = Hwedge[nmpm_index(n, 0, 1)]
+            Hv[nm_index(n, 1), :] = Hwedge[wedge_index(n, 0, 1)]
+            Hv[nm_index(n, 0), :] = Hwedge[wedge_index(n, 0, 1)]
     # Correct normalization of m=n elements
     prefactor[:] = 1.0
     for n in range(1, n_max+1):
         prefactor *= sinβ
-        Hwedge[nmpm_index(n, 0, n), :] *= prefactor / np.sqrt(4*n+2)
+        Hwedge[wedge_index(n, 0, n), :] *= prefactor / np.sqrt(4*n+2)
     for n in [n_max+1]:
         prefactor *= sinβ
         Hextra[n, :] *= prefactor / np.sqrt(4*n+2)
     # Supply extra edge cases as noted in docstring
-    Hv[nm_index(1, 1), :] = Hwedge[nmpm_index(1, 0, 1)]
-    Hv[nm_index(1, 0), :] = Hwedge[nmpm_index(1, 0, 1)]
+    Hv[nm_index(1, 1), :] = Hwedge[wedge_index(1, 0, 1)]
+    Hv[nm_index(1, 0), :] = Hwedge[wedge_index(1, 0, 1)]
 
 
 @njit
@@ -256,9 +256,9 @@ def _step_3(a, b, n_max, Hwedge, Hextra, cosβ, sinβ):
     """
     for n in range(1, n_max+1):
         # m = 1, ..., n
-        i1 = nmpm_index(n, 1, 1)
+        i1 = wedge_index(n, 1, 1)
         if n+1 <= n_max:
-            i2 = nmpm_index(n+1, 0, 0)
+            i2 = wedge_index(n+1, 0, 0)
             H2 = Hwedge
         else:
             i2 = 0
@@ -293,10 +293,10 @@ def _step_4(d, n_max, Hwedge, Hv):
     for n in range(2, n_max+1):
         for mp in range(1, n):
             # m = m', ..., n-1
-            i1 = nmpm_index(n, mp+1, mp)
-            i2 = nmpm_index(n, mp-1, mp)
-            i3 = nmpm_index(n, mp, mp-1)
-            i4 = nmpm_index(n, mp, mp+1)
+            i1 = wedge_index(n, mp+1, mp)
+            i2 = wedge_index(n, mp-1, mp)
+            i3 = wedge_index(n, mp, mp-1)
+            i4 = wedge_index(n, mp, mp+1)
             i5 = nm_index(n, mp)
             i6 = nm_index(n, mp-1)
             d5 = d[i5]
@@ -345,10 +345,10 @@ def _step_5(d, n_max, Hwedge, Hv):
     for n in range(0, n_max+1):
         for mp in range(0, -n, -1):
             # m = -m', ..., n-1
-            i1 = nmpm_index(n, mp-1, -mp)
-            i2 = nmpm_index(n, mp+1, -mp)
-            i3 = nmpm_index(n, mp, -mp-1)
-            i4 = nmpm_index(n, mp, -mp+1)
+            i1 = wedge_index(n, mp-1, -mp)
+            i2 = wedge_index(n, mp+1, -mp)
+            i3 = wedge_index(n, mp, -mp-1)
+            i4 = wedge_index(n, mp, -mp+1)
             i5 = nm_index(n, mp-1)
             i6 = nm_index(n, mp)
             i7 = nm_index(n, -mp-1)
@@ -411,9 +411,7 @@ class HCalculator(object):
         if not (
             np.all(np.isfinite(self.a)) and
             np.all(np.isfinite(self.b)) and
-            np.all(np.isfinite(self.d)) and
-            np.all(np.isfinite(self.g)) and
-            np.all(np.isfinite(self.h))
+            np.all(np.isfinite(self.d))
         ):
             raise ValueError("Found a non-finite value inside this object")
 
