@@ -4,37 +4,40 @@ import numba
 
 
 @numba.njit("float64(int32, int32, int32, int32)")
-def a(j, j2, j3, m1):
+def A(j, j2, j3, m1):
     return math.sqrt((j**2 - (j2 - j3)**2) * ((j2 + j3 + 1)**2 - j**2) * (j**2 - m1**2))
 
 
-@numba.njit("int32(int32, int32, int32, int32, int32, int32)")
-def y(j, j2, j3, m1, m2, m3):
-    return -(2 * j + 1) * (m1 * (j2 * (j2 + 1)  - j3 * (j3 + 1)) - (m3 - m2) * j * (j + 1))
+@numba.njit("int32(int32, int32, int32, int32, int32)")
+def B(j, j2, j3, m2, m3):
+    return (2 * j + 1) * ((m2 + m3) * (j2 * (j2 + 1) - j3 * (j3 + 1)) - (m2 - m3) * j * (j + 1))
 
 
 @numba.njit("float64(int32, int32, int32, int32)")
-def x(j, j2, j3, m1):
-    return j * a(j+1, j2, j3, m1)
+def Xf(j, j2, j3, m1):
+    return j * A(j+1, j2, j3, m1)
+
+
+Yf = B
 
 
 @numba.njit("float64(int32, int32, int32, int32)")
-def z(j, j2, j3, m1):
-    return (j+1) * a(j, j2, j3, m1)
+def Zf(j, j2, j3, m1):
+    return (j+1) * A(j, j2, j3, m1)
 
 
 @numba.njit("void(float64[:], int32, int32)")
-def normalize(w3j, jmin, jmax):
+def normalize(f, j_min, j_max):
     norm = 0.0
-    for j in range(jmin, jmax+1):
-        norm += (2 * j + 1) * w3j[j]**2
-    w3j[jmin:jmax+1] /= math.sqrt(norm)
+    for j in range(j_min, j_max+1):
+        norm += (2 * j + 1) * f[j] ** 2
+    f[j_min:j_max + 1] /= math.sqrt(norm)
 
 
 @numba.njit("void(float64[:], int32, int32, int32, int32, int32, int32)")
-def fix_signs(w3j, jmin, jmax, j2, j3, m2, m3):
-    if ( (w3j[jmax] < 0.0 and (-1)**(j2-j3+m2+m3) > 0) or (w3j[jmax] > 0.0 and (-1)**(j2-j3+m2+m3) < 0) ):
-        w3j[jmin:jmax+1] *= -1.0
+def determine_signs(f, j_min, j_max, j2, j3, m2, m3):
+    if (f[j_max] < 0.0 and (-1)**(j2-j3+m2+m3) > 0) or (f[j_max] > 0.0 and (-1)**(j2-j3+m2+m3) < 0):
+        f[j_min:j_max+1] *= -1.0
 
 
 @numba.jitclass([
@@ -42,8 +45,8 @@ def fix_signs(w3j, jmin, jmax, j2, j3, m2, m3):
     ('workspace', numba.float64[:]),
 ])
 class Wigner3jCalculator(object):
-    def __init__(self, ell2_max, ell3_max):
-        self._size = ell2_max + ell3_max + 1
+    def __init__(self, j2_max, j3_max):
+        self._size = j2_max + j3_max + 1
         self.workspace = np.empty(4 * self._size, dtype=np.float64)
 
     @property
@@ -51,180 +54,219 @@ class Wigner3jCalculator(object):
         return self._size
 
     def calclulate(self, j2, j3, m2, m3):
+        """Compute Wigner 3-j symbols
+
+        For given values of j₂, j₃, m₂, m₃, this computes all valid values of
+
+            ⎛j₁  j₂  j₃⎞   _   ⎛j₂  j₃  j₁⎞
+            ⎝m₁  m₂  m₃⎠   -   ⎝m₂  m₃  m₁⎠
+
+        The valid values have m₁=-m₂-m₃ and j₁ ranging from max(|j₂-j₃|, |m₁|) to j₂+j₃.
+        The calculation uses the approach described by Luscombe and Luban (1998)
+        <https://doi.org/10.1103/PhysRevE.57.7274>, which is a recurrence method,
+        leading to significant gains in speed and accuracy.
+
+        The returned array is a slice of this object's `workspace` array, and so will not
+        remain the same between calls to this function.  If you want to keep a copy of
+        the results, explicitly call the `numpy.copy` method.
+
+        The returned array is indexed by j₁.  In particular, note that some invalid
+        values are accessible, but have value 0.
+
+        """
         m1 = -(m2 + m3)
-        condition1 = False
-        condition2 = False
+
+        undefined_min = False
+        undefined_max = False
         scale_factor = 1_000.0
 
         # Set up the workspace
         self.workspace[:] = 0.0
-        w3j = self.workspace[:self.size]
-        rs = self.workspace[self.size:2*self.size]
-        wl = self.workspace[2*self.size:3*self.size]
-        wu = self.workspace[3*self.size:4*self.size]
+        f = self.workspace[:self.size]
+        sf = self.workspace[self.size:2*self.size]
+        rf = sf  # An alias for the same memory as `sf`
+        F_minus = self.workspace[2*self.size:3*self.size]
+        F_plus = self.workspace[3*self.size:4*self.size]
 
         # Calculate some useful bounds
-        jmin = max(abs(j2-j3), abs(m1))
-        jmax = j2 + j3
+        j_min = max(abs(j2-j3), abs(m2+m3))
+        j_max = j2 + j3
 
         # Skip all calculations if there are no nonzero elements
         if abs(m2) > j2 or abs(m3) > j3:
-            return w3j
-        if jmax < jmin:
-            return w3j
+            return f
+        if j_max < j_min:
+            return f
 
         # When only one term is present, we have a simple formula
-        if jmax == jmin:
-            w3j[jmin] = 1.0 / math.sqrt(2.0 * jmin + 1.0)
-            if (w3j[jmin] < 0.0 and (-1)**(j2-j3+m2+m3) > 0) or (w3j[jmin] > 0.0 and (-1)**(j2-j3+m2+m3) < 0):
-                w3j[jmin] *= -1.0
-            return w3j
+        if j_max == j_min:
+            f[j_min] = 1.0 / math.sqrt(2.0 * j_min + 1.0)
+            if (f[j_min] < 0.0 and (-1) ** (j2-j3+m2+m3) > 0) or (f[j_min] > 0.0 and (-1) ** (j2-j3+m2+m3) < 0):
+                f[j_min] *= -1.0
+            return f
 
-        ###########
-        # Stage 1 #
-        ###########
-        xjmin = x(jmin, j2, j3, m1)
-        yjmin = y(jmin, j2, j3, m1, m2, m3)
-
-        if m1 == 0 and m2 == 0 and m3 == 0:  # All m's are zero
-            wl[jmin] = 1.0
-            wl[jmin+1] = 0.0
-            jn = jmin + 1
-
-        elif yjmin == 0.0:  # The second term is either zero or undefined
-            if xjmin == 0.0:
-                condition1 = True
-                jn = jmin
-            else:
-                wl[jmin] = 1.0
-                wl[jmin+1] = 0.0
-                jn = jmin + 1
-
-        elif xjmin * yjmin >= 0.0:
-            # The second term is outside of the non-classical region
-            wl[jmin] = 1.0
-            wl[jmin+1] = -yjmin / xjmin
-            jn = jmin + 1
-
-        else:
-            # Calculate terms in the non-classical region
-            rs[jmin] = -xjmin / yjmin
-            jn = jmax
-            for j in range(jmin+1, jmax):
-                denom = y(j, j2, j3, m1, m2, m3) + z(j, j2, j3, m1) * rs[j-1]
-                xj = x(j, j2, j3, m1)
-                if abs(xj) > abs(denom) or xj * denom >= 0.0 or denom == 0.0:
-                    jn = j - 1
-                    break
-                else:
-                    rs[j] = -xj / denom
-            wl[jn] = 1.0
-            for k in range(1, jn - jmin + 1):
-                wl[jn-k] = wl[jn-k+1] * rs[jn-k]
-            if jn == jmin:
-                # Calculate at least two terms so that these can be used in three-term recursion
-                wl[jmin+1] = -yjmin / xjmin
-                jn = jmin + 1
-
-        if jn == jmax:
-            # We're finished!
-            w3j[jmin:jmax+1] = wl[jmin:jmax+1]
-            normalize(w3j, jmin, jmax)
-            fix_signs(w3j, jmin, jmax, j2, j3, m2, m3)
-            return w3j
-
-        ###########
-        # Stage 2 #
-        ###########
-        yjmax = y(jmax, j2, j3, m1, m2, m3)
-        zjmax = z(jmax, j2, j3, m1)
+        ##########################################################################
+        # Forward iteration over first "nonclassical" region j_min ≤ j ≤ j_minus #
+        ##########################################################################
+        Xf_j_min = Xf(j_min, j2, j3, m1)
+        Yf_j_min = Yf(j_min, j2, j3, m2, m3)
 
         if m1 == 0 and m2 == 0 and m3 == 0:
-            wu[jmax] = 1.0
-            wu[jmax-1] = 0.0
-            jp = jmax - 1
+            # Recurrence is undefined, but it's okay because all odd terms must be zero
+            F_minus[j_min] = 1.0
+            F_minus[j_min+1] = 0.0
+            j_minus = j_min + 1
 
-        elif yjmax == 0.0:
-            if zjmax == 0.0:
-                condition2 = True
-                jp = jmax
+        elif Yf_j_min == 0.0:
+            # The second term is either undefined or zero
+            if Xf_j_min == 0.0:
+                undefined_min = True
+                j_minus = j_min
             else:
-                wu[jmax] = 1.0
-                wu[jmax-1] = - yjmax / zjmax
-                jp = jmax-1
+                F_minus[j_min] = 1.0
+                F_minus[j_min+1] = 0.0
+                j_minus = j_min + 1
 
-        elif yjmax * zjmax >= 0.0:
-            wu[jmax] = 1.0
-            wu[jmax-1] = - yjmax / zjmax
-            jp = jmax - 1
+        elif Xf_j_min * Yf_j_min >= 0.0:
+            # The second term is already in the classical region
+            F_minus[j_min] = 1.0
+            F_minus[j_min+1] = -Yf_j_min / Xf_j_min
+            j_minus = j_min + 1
 
         else:
-            rs[jmax] = -zjmax / yjmax
-            jp = jmin
-            for j in range(jmax-1, jn-1, -1):
-                denom = y(j, j2, j3, m1, m2, m3) + x(j, j2, j3, m1) * rs[j+1]
-                zj = z(j, j2, j3, m1)
-                if abs(zj) > abs(denom) or zj * denom >= 0.0 or  denom == 0.0:
-                    jp = j + 1
+            # Use recurrence relation, Eq. (3) from Luscombe and Luban (1998)
+            sf[j_min] = -Xf_j_min / Yf_j_min
+            j_minus = j_max
+            for j in range(j_min+1, j_max):
+                denominator = Yf(j, j2, j3, m2, m3) + Zf(j, j2, j3, m1) * sf[j - 1]
+                Xf_j = Xf(j, j2, j3, m1)
+                if abs(Xf_j) > abs(denominator) or Xf_j * denominator >= 0.0 or denominator == 0.0:
+                    j_minus = j - 1
                     break
                 else:
-                    rs[j] = -zj / denom
-            wu[jp] = 1.0
-            for k in range(1, jmax - jp + 1):
-                wu[jp+k] = wu[jp+k-1] * rs[jp+k]
-            if jp == jmax:
-                wu[jmax-1] = - yjmax / zjmax
-                jp = jmax - 1
+                    sf[j] = -Xf_j / denominator
+            F_minus[j_minus] = 1.0
+            for k in range(1, j_minus - j_min + 1):
+                F_minus[j_minus - k] = F_minus[j_minus - k + 1] * sf[j_minus - k]
+            if j_minus == j_min:
+                # Calculate at least two terms so that these can be used in three-term recursion
+                F_minus[j_min+1] = -Yf_j_min / Xf_j_min
+                j_minus = j_min + 1
 
-        ###########
-        # Stage 3 #
-        ###########
-        if condition1 and condition2:
-            raise ValueError("Invalid input values for Wigner3jCalculator.calclulate")
+        if j_minus == j_max:
+            # We're finished!
+            f[j_min:j_max + 1] = F_minus[j_min:j_max + 1]
+            normalize(f, j_min, j_max)
+            determine_signs(f, j_min, j_max, j2, j3, m2, m3)
+            return f
 
-        if not condition1:
-            jmid = (jn + jp) // 2
-            for j in range(jn, jmid):
-                wl[j+1] = - (z(j, j2, j3, m1) * wl[j-1] + y(j, j2, j3, m1, m2, m3) * wl[j]) / x(j, j2, j3, m1)
-                if abs(wl[j+1]) > 1.0:
-                    wl[jmin:j+1+1] /= scale_factor
-                if abs(wl[j+1] / wl[j-1]) < 1.0 and wl[j+1] != 0.0:
-                    jmid = j + 1
-                    break
-            wnmid = wl[jmid]
-            if wl[jmid-1] != 0.0 and abs(wnmid / wl[jmid-1]) < 1.0e-6:
-                wnmid = wl[jmid-1]
-                jmid -= 1
-            for j in range(jp, jmid, -1):
-                wu[j-1] = - (x(j, j2, j3, m1) * wu[j+1] + y(j, j2, j3, m1, m2, m3) * wu[j] ) / z(j, j2, j3, m1)
-                if abs(wu[j-1]) > 1.0:
-                    wu[j-1:jmax+1] /= scale_factor
-            wpmid = wu[jmid]
-            if jmid == jmax:
-                w3j[jmin:jmax+1] = wl[jmin:jmax+1]
-            elif jmid == jmin:
-                w3j[jmin:jmax+1] = wu[jmin:jmax+1]
+        ##########################################################################
+        # Reverse iteration over second "nonclassical" region j_plus ≤ j ≤ j_max #
+        ##########################################################################
+        Yf_j_max = Yf(j_max, j2, j3, m2, m3)
+        Zf_j_max = Zf(j_max, j2, j3, m1)
+
+        if m1 == 0 and m2 == 0 and m3 == 0:
+            # Recurrence is undefined, but it's okay because all odd terms must be zero
+            F_plus[j_max] = 1.0
+            F_plus[j_max-1] = 0.0
+            j_plus = j_max - 1
+
+        elif Yf_j_max == 0.0:
+            # The second term is either undefined or zero
+            if Zf_j_max == 0.0:
+                undefined_max = True
+                j_plus = j_max
             else:
-                w3j[jmin:jmid+1] = wl[jmin:jmid+1] * wpmid / wnmid
-                w3j[jmid+1:jmax+1] = wu[jmid+1:jmax+1]
+                F_plus[j_max] = 1.0
+                F_plus[j_max-1] = - Yf_j_max / Zf_j_max
+                j_plus = j_max - 1
 
-        elif condition1 and not condition2:
-            for j in range(jp, jmin, -1):
-                wu[j-1] = - (x(j, j2, j3, m1) * wu[j+1] + y(j, j2, j3, m1, m2, m3) * wu[j] ) / z(j, j2, j3, m1)
-                if abs(wu[j-1]) > 1:
-                    wu[j-1:jmax+1] /= scale_factor
-            w3j[jmin:jmax+1] = wu[jmin:jmax+1]
+        elif Yf_j_max * Zf_j_max >= 0.0:
+            # The second term is already in the classical region
+            F_plus[j_max] = 1.0
+            F_plus[j_max-1] = - Yf_j_max / Zf_j_max
+            j_plus = j_max - 1
 
-        elif condition2 and not condition1:
-            for j in range(jn, jp):
-                wl[j+1] = - (z(j, j2, j3, m1) * wl[j-1] + y(j, j2, j3, m1, m2, m3) * wl[j]) / x(j, j2, j3, m1)
-                if abs(wl[j+1]) > 1:
-                    wl[jmin:j+1+1] /= scale_factor
-            w3j[jmin:jmax+1] = wl[jmin:jmax+1]
+        else:
+            # Use recurrence relation, Eq. (2) from Luscombe and Luban (1998)
+            rf[j_max] = -Zf_j_max / Yf_j_max
+            j_plus = j_min
+            for j in range(j_max-1, j_minus - 1, -1):
+                denominator = Yf(j, j2, j3, m2, m3) + Xf(j, j2, j3, m1) * rf[j + 1]
+                Zf_j = Zf(j, j2, j3, m1)
+                if denominator == 0.0 or abs(Zf_j) > abs(denominator) or Zf_j * denominator >= 0.0:
+                    j_plus = j + 1
+                    break
+                else:
+                    rf[j] = -Zf_j / denominator
+            F_plus[j_plus] = 1.0
+            for k in range(1, j_max - j_plus + 1):
+                F_plus[j_plus + k] = F_plus[j_plus + k - 1] * rf[j_plus + k]
+            if j_plus == j_max:
+                F_plus[j_max-1] = - Yf_j_max / Zf_j_max
+                j_plus = j_max - 1
+
+        ######################################################################
+        # Three-term recurrence over "classical" region j_minus ≤ j ≤ j_plus #
+        ######################################################################
+        if undefined_min and undefined_max:
+            raise ValueError("Cannot initialize recurrence in Wigner3jCalculator.calculate")
+
+        if not undefined_min and not undefined_max:
+            # Iterate upwards and downwards, meeting in the middle
+            j_mid = (j_minus + j_plus) // 2
+            for j in range(j_minus, j_mid):
+                F_minus[j+1] = (
+                    - (Yf(j, j2, j3, m2, m3) * F_minus[j] + Zf(j, j2, j3, m1) * F_minus[j-1]) / Xf(j, j2, j3, m1)
+                )
+                if abs(F_minus[j+1]) > 1.0:
+                    F_minus[j_min:j+1+1] /= scale_factor
+                if abs(F_minus[j+1] / F_minus[j-1]) < 1.0 and F_minus[j+1] != 0.0:
+                    j_mid = j + 1
+                    break
+            F_minus_j_mid = F_minus[j_mid]
+            if F_minus[j_mid - 1] != 0.0 and abs(F_minus_j_mid / F_minus[j_mid - 1]) < 1.0e-6:
+                j_mid -= 1
+                F_minus_j_mid = F_minus[j_mid]
+            for j in range(j_plus, j_mid, -1):
+                F_plus[j-1] = (
+                    - (Xf(j, j2, j3, m1) * F_plus[j+1] + Yf(j, j2, j3, m2, m3) * F_plus[j]) / Zf(j, j2, j3, m1)
+                )
+                if abs(F_plus[j-1]) > 1.0:
+                    F_plus[j-1:j_max+1] /= scale_factor
+            F_plus_j_mid = F_plus[j_mid]
+            if j_mid == j_max:
+                f[j_min:j_max + 1] = F_minus[j_min:j_max + 1]
+            elif j_mid == j_min:
+                f[j_min:j_max + 1] = F_plus[j_min:j_max + 1]
+            else:
+                f[j_min:j_mid + 1] = F_minus[j_min:j_mid + 1] * F_plus_j_mid / F_minus_j_mid
+                f[j_mid + 1:j_max + 1] = F_plus[j_mid + 1:j_max + 1]
+
+        elif not undefined_min and undefined_max:
+            # Iterate upwards only
+            for j in range(j_minus, j_plus):
+                F_minus[j + 1] = (
+                    - (Zf(j, j2, j3, m1) * F_minus[j - 1] + Yf(j, j2, j3, m2, m3) * F_minus[j]) / Xf(j, j2, j3, m1)
+                )
+                if abs(F_minus[j + 1]) > 1:
+                    F_minus[j_min:j+1+1] /= scale_factor
+            f[j_min:j_max + 1] = F_minus[j_min:j_max + 1]
+
+        elif undefined_min and not undefined_max:
+            # Iterate downwards only
+            for j in range(j_plus, j_min, -1):
+                F_plus[j-1] = (
+                    - (Xf(j, j2, j3, m1) * F_plus[j+1] + Yf(j, j2, j3, m2, m3) * F_plus[j]) / Zf(j, j2, j3, m1)
+                )
+                if abs(F_plus[j-1]) > 1:
+                    F_plus[j-1:j_max+1] /= scale_factor
+            f[j_min:j_max + 1] = F_plus[j_min:j_max + 1]
 
         #############
         # Finish up #
         #############
-        normalize(w3j, jmin, jmax)
-        fix_signs(w3j, jmin, jmax, j2, j3, m2, m3)
-        return w3j
+        normalize(f, j_min, j_max)
+        determine_signs(f, j_min, j_max, j2, j3, m2, m3)
+        return f
