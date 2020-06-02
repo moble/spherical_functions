@@ -76,6 +76,13 @@ class Wigner3jCalculator(object):
         This function uses several tips gleaned from the Fortran code in SHTOOLS that
         also implements the Luscombe-Luban algorithm.
 
+        To use this, do something like this:
+
+            calculator = Wigner3jCalculator(j2_max, j3_max)
+            w3j = calculator.calculate(j2, j3, m2, m3)
+            
+        The various values of the 3-j symbol are given by `w3j[j1]`.
+
         """
         m1 = -(m2 + m3)
 
