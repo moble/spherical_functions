@@ -4,6 +4,10 @@
 import numpy as np
 import numba
 
+from .complex_powers import complex_powers
+from .wigner3j import Wigner3jCalculator, Wigner3j, clebsch_gordan
+
+
 
 @numba.njit
 def quaternion_angles(R):

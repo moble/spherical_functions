@@ -24,7 +24,7 @@ requires_sympy = pytest.mark.skipif(sympy_not_present, reason="Requires SymPy to
 
 def test_Wigner3j_properties():
     assert abs(sf.Wigner3j(2, 6, 4, 0, 0, 0) - 0.1869893980016914) < precision_Wigner3j
-    ## The following test various symmetries and other properties fo
+    ## The following test various symmetries and other properties of
     ## the Wigner 3-j symbols
     j_max = 8
     for j1 in range(j_max+1):

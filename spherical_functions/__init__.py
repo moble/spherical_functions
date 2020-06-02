@@ -308,7 +308,6 @@ def theta_phi(n_theta, n_phi):
                      for theta in np.linspace(0.0, np.pi, num=n_theta, endpoint=True)])
 
 
-from .Wigner3j import Wigner3j, clebsch_gordan
 from .WignerD import (Wigner_D_element, _Wigner_D_element,
                       Wigner_D_matrices, _Wigner_D_matrices,
                       _linear_matrix_index, _linear_matrix_diagonal_index,
@@ -321,4 +320,4 @@ from .mode_conversions import (constant_as_ell_0_mode, constant_from_ell_0_mode,
                                eth_GHP, ethbar_GHP, eth_NP, ethbar_NP,
                                ethbar_inverse_NP)
 from .multiplication import multiply
-from .recursions.complex_powers import complex_powers
+from .recursions import complex_powers, Wigner3jCalculator, Wigner3j, clebsch_gordan
