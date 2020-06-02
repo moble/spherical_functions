@@ -58,8 +58,8 @@ class Wigner3jCalculator(object):
 
         For given values of j₂, j₃, m₂, m₃, this computes all valid values of
 
-            ⎛j₁  j₂  j₃⎞   _   ⎛j₂  j₃  j₁⎞
-            ⎝m₁  m₂  m₃⎠   -   ⎝m₂  m₃  m₁⎠
+            ⎛j₁  j₂  j₃⎞   _   ⎛j₂  j₃  j₁⎞   _   ⎛j₃  j₁  j₂⎞
+            ⎝m₁  m₂  m₃⎠   -   ⎝m₂  m₃  m₁⎠   -   ⎝m₃  m₁  m₂⎠
 
         The valid values have m₁=-m₂-m₃ and j₁ ranging from max(|j₂-j₃|, |m₁|) to j₂+j₃.
         The calculation uses the approach described by Luscombe and Luban (1998)
@@ -71,17 +71,26 @@ class Wigner3jCalculator(object):
         the results, explicitly call the `numpy.copy` method.
 
         The returned array is indexed by j₁.  In particular, note that some invalid
-        values are accessible, but have value 0.
+        j₁ indices are accessible, but have value 0.0.
 
-        This function uses several tips gleaned from the Fortran code in SHTOOLS that
-        also implements the Luscombe-Luban algorithm.
+        This implementation uses several tricks gleaned from the Fortran code in
+        <https://github.com/SHTOOLS/SHTOOLS>, which also implements the Luscombe-Luban
+        algorithm.  In particular, that code (and now this code) treats several special
+        cases that were not clearly specified by Luscombe-Luban.
 
-        To use this, do something like this:
+        To use this object, do something like this:
 
+            # Try to do this just once because it allocates memory, which is slow
             calculator = Wigner3jCalculator(j2_max, j3_max)
+
+            # Presumably, the following is inside some loop over j2, j3, m2, m3
             w3j = calculator.calculate(j2, j3, m2, m3)
-            
-        The various values of the 3-j symbol are given by `w3j[j1]`.
+            m1 = - m2 - m3
+            for j1 in range(max(abs(j2-j3), abs(m1)), j2+j3+1):
+                w3j[j1]  # This is the value of the 3-j symbol written above
+
+        Again, the array w3j contains accessible memory outside of the bounds of j1 given
+        in the above loop, but those values will all be 0.0.
 
         """
         m1 = -(m2 + m3)
