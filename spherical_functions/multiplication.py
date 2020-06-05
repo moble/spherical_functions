@@ -10,11 +10,13 @@ def _multiplication_helper(f, ellmin_f, ellmax_f, s_f,
                            fg, ellmin_fg, ellmax_fg, s_fg):
     # NOTE: This works in-place on fg, and returns fg for good measure
     for ell1 in range(ellmin_f, ellmax_f+1):
+        sqrt1 = math.sqrt((2*ell1+1)/(4*math.pi))
         for m1 in range(-ell1, ell1+1):
-            sum1 = math.sqrt((2*ell1+1)/(4*math.pi))*f[..., LM_index(ell1, m1, ellmin_f)]  # Calculate f contribution
+            sum1 = sqrt1*f[..., LM_index(ell1, m1, ellmin_f)]  # Calculate f contribution
             for ell2 in range(ellmin_g, ellmax_g+1):
+                sqrt2 = math.sqrt(2*ell2+1)
                 for m2 in range(-ell2, ell2+1):
-                    sum2 = math.sqrt(2*ell2+1)*g[..., LM_index(ell2, m2, ellmin_g)]   # Calculate g contribution
+                    sum2 = sqrt2*g[..., LM_index(ell2, m2, ellmin_g)]   # Calculate g contribution
                     m3 = m1+m2
                     for ell3 in range(max(abs(m3), abs(ell1-ell2)), min(ell1+ell2, ellmax_fg)+1):
                         # Could loop over same (ell3, m3) more than once, so add all contributions together
