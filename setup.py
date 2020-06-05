@@ -70,7 +70,6 @@ if __name__ == "__main__":
           author_email='mob22@cornell.edu',
           packages=[
               'spherical_functions',
-              'spherical_functions.Wigner3j',
               'spherical_functions.WignerD',
               'spherical_functions.SWSH',
               'spherical_functions.SWSH_modes',
