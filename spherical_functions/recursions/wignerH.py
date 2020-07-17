@@ -62,9 +62,9 @@ def wedge_size(ℓₘₐₓ):
 def wedge_index(ℓ, mp, m):
     """Index to "wedge" arrays
 
-    Here, it is assumed that only data with m≥0 and |m'|≤m are stored, and only corresponding values
-    are passed.  We also assume |m|≤ℓ and |m'|≤ℓ.  Neither of these are checked.  The wedge array
-    that this function indexes is ordered as
+    Here, it is assumed that only data with m≥|m'| are stored, and only corresponding values are
+    passed.  We also assume |m|≤ℓ and |m'|≤ℓ.  Neither of these are checked.  The wedge array that
+    this function indexes is ordered as
 
         [(n, mp, m) for n in range(n_max+1) for mp in range(-n, n+1) for m in range(abs(mp), n+1)]
 
@@ -392,6 +392,50 @@ def _step_5(d, n_max, Hwedge, Hv):
 
 class HCalculator(object):
     def __init__(self, n_max):
+        """Object to repeatedly calculate Wigner H values
+
+        The H matrix is related to Wigner's d matrix as given by arxiv:1403.7698 according to
+
+        dₗⁿᵐ = ϵₙ ϵ₋ₘ Hₗⁿᵐ, where
+
+               ⎧ 1 for k≤0
+          ϵₖ = ⎨
+               ⎩ (-1)ᵏ for k>0
+
+        This object has various advantageous features compared to the d matrix.  It obeys these
+        symmetry relations:
+
+            H^{m', m}_n(\beta) = H^{m, m'}_n(\beta)
+            H^{m', m}_n(\beta) = H^{-m', -m}_n(\beta)
+            H^{m', m}_n(\beta) = (-1)^{n+m+m'} H^{-m', m}_n(\pi - \beta)
+            H^{m', m}_n(\beta) = (-1)^{m+m'} H^{m', m}_n(-\beta)
+
+        In particular the simplicity of the first two of these relations implies that we only need
+        to compute one fourth of the total number of elements.  There is also a very accurate and
+        efficient recursion method to compute these values.
+
+        Create this object using the largest value of `n` (also commonly denoted `j` or `ℓ`) you
+        expect to need, optionally create the `workspace` for a given shape of cosβ using that method,
+        and then call this object for a given value or array of cosβ values.
+
+        The returned object is a series of "wedges" of the matrix, for the various values of `n`,
+        comprising just a quarter of the elements of the full matrix; all remaining elements are
+        determined by the first two symmetries above.  This wedge has an initial dimension
+        representing a multi-index for (ℓ, mp, m) values, while following dimensions are just the
+        same as cosβ.  Any required value may be obtained with `wedge_index(*wedgeify_index(ℓ, mp,
+        m))`.  The inner call translates a general index into the equivalent index lying inside the
+        wedge, while the outer call translates that corrected (ℓ, mp, m) tuple into a linear index
+        into the array.
+
+        Example Usage
+        =============
+
+        hcalc = HCalculator(n_max)
+        workspace = hcalc.workspace(cosβ)  # Note that cosβ can be an array of many values
+        # Possibly loop over many values of cosβ here
+        wedge = hcalc(cosβ, sinβ, workspace)
+
+        """
         self.n_max = int(n_max)
         if self.n_max < 0:
             raise ValueError('Nonsensical value for n_max = {0}'.format(self.n_max))
@@ -415,8 +459,9 @@ class HCalculator(object):
         ):
             raise ValueError("Found a non-finite value inside this object")
 
-    def workspace(self, cosβ):
+    def workspace(self, cosβ=1.0):
         """Return a new workspace sized for cosβ."""
+        cosβ = np.asarray(cosβ, dtype=float)
         return np.zeros((self.wedge_size+(self.n_max+1)**2+self.n_max+2,) + cosβ.shape, dtype=float)
 
     def __call__(self, cosβ, sinβ=None, workspace=None):

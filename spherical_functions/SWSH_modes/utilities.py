@@ -28,7 +28,12 @@ def index(self, ell, m):
 
 
 def truncate_ell(self, new_ell_max):
-    """Slice array so that new ell max is the given value"""
+    """Slice array so that new ell max is no more than the given value
+
+    Note that the result's maximum ell value is limited by the current maximum.  If the input is
+    larger than that, the object is returned unchanged.
+
+    """
     if new_ell_max >= self.ell_max:
         return self
     truncated = self[..., :self.index(new_ell_max, new_ell_max)+1]

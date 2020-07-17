@@ -6,6 +6,7 @@ import numba
 
 from .complex_powers import complex_powers
 from .wigner3j import Wigner3jCalculator, Wigner3j, clebsch_gordan
+from .wignerH import HCalculator
 
 
 
@@ -79,8 +80,7 @@ def rotate(modes, R):
         zᵦ, zₚ, zₘ = quaternion_angles(rotors[i])
 
         # Compute H elements (basically Wigner's d functions)
-#unfinished:
-        Hˡₙₘ = H.evaluate(zᵦ)
+        Hˡₙₘ = H(zᵦ.real, zᵦ.imag, workspace)
 
         # Pre-compute zₚᵐ=exp[i(ϕₛ+ϕₐ)m] for all values of m
         zₚᵐ = complex_powers(zₚ, ell_max)
