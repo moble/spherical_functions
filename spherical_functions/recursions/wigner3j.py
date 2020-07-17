@@ -40,7 +40,7 @@ def determine_signs(f, j_min, j_max, j2, j3, m2, m3):
         f[j_min:j_max+1] *= -1.0
 
 
-@numba.jitclass([
+@numba.experimental.jitclass([
     ('_size', numba.int32),
     ('workspace', numba.float64[:]),
 ])
