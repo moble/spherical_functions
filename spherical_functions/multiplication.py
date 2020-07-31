@@ -1,11 +1,11 @@
 import math
 import numpy as np
-from . import LM_total_size, LM_index
+import numba as nb
+from . import LM_total_size, LM_index, jit
 from .recursions import Wigner3jCalculator
-from quaternion.numba_wrapper import jit, njit, xrange
 
 
-@njit()
+@jit
 def _multiplication_helper(f, ellmin_f, ellmax_f, s_f,
                            g, ellmin_g, ellmax_g, s_g,
                            fg, ellmin_fg, ellmax_fg, s_fg):

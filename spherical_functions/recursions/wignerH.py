@@ -1,8 +1,8 @@
 import numpy as np
 from functools import lru_cache
 from scipy.special import factorial
-from numba import njit
 import spherical_functions as sf
+from .. import jit
 
 
 sqrt3 = np.sqrt(3)
@@ -54,11 +54,11 @@ H^{m', m}_n(\beta) = (-1)^{m+m'} H^{m', m}_n(-\beta)
 """
 
 
-@njit
+@jit
 def wedge_size(ℓₘₐₓ):
     return (ℓₘₐₓ+1) * (ℓₘₐₓ+2) * (2*ℓₘₐₓ+3) // 6
 
-@njit
+@jit
 def wedge_index(ℓ, mp, m):
     """Index to "wedge" arrays
 
@@ -83,7 +83,7 @@ def wedge_index(ℓ, mp, m):
         return (2*(ℓ)*(ℓ+1)*(ℓ+2) + 3*mp*(2*ℓ+mp+3) + 6*m) // 6
 
 
-@njit
+@jit
 def wedgeify_index(ℓ, mp, m):
     """Convert general (ℓ, m′, m) index into index appropriate for H wedge
 
@@ -127,7 +127,7 @@ def wedgeify_index(ℓ, mp, m):
             return [ℓ, mp, m]
 
 
-@njit
+@jit
 def sign(m):
     if m >= 0:
         return 1
@@ -135,7 +135,7 @@ def sign(m):
         return -1
 
 
-@njit
+@jit
 def nm_index(n, m):
     """Return flat index into arrray of [n, m] pairs.
     
@@ -145,7 +145,7 @@ def nm_index(n, m):
     return m + n * (n + 1)
 
 
-@njit
+@jit
 def nabsm_index(n, absm):
     """Return flat index into arrray of [n, abs(m)] pairs
     
@@ -155,7 +155,7 @@ def nabsm_index(n, absm):
     return absm + (n * (n + 1)) // 2
 
 
-@njit
+@jit
 def nmpm_index(n, mp, m):
     """Return flat index into arrray of [n, mp, m]
     
@@ -167,13 +167,13 @@ def nmpm_index(n, mp, m):
     return (((4 * n + 6) * n + 6 * mp + 5) * n + 3 * (m + mp)) // 3
 
 
-@njit
+@jit
 def _step_1(Hwedge):
     """If n=0 set H_{0}^{0,0}=1."""
     Hwedge[0, :] = 1.0
 
 
-@njit
+@jit
 def _step_2(g, h, n_max, Hwedge, Hextra, Hv, cosβ, sinβ):
     """Compute values H^{0,m}_{n}(β)for m=0,...,n and H^{0,m}_{n+1}(β) for m=0,...,n+1 using Eq. (32):
         H^{0,m}_{n}(β) = (-1)^m \sqrt{(n-|m|)! / (n+|m|)!} P^{|m|}_{n}(cos β)
@@ -246,7 +246,7 @@ def _step_2(g, h, n_max, Hwedge, Hextra, Hv, cosβ, sinβ):
     Hv[nm_index(1, 0), :] = Hwedge[wedge_index(1, 0, 1)]
 
 
-@njit
+@jit
 def _step_3(a, b, n_max, Hwedge, Hextra, cosβ, sinβ):
     """Use relation (41) to compute H^{1,m}_{n}(β) for m=1,...,n.  Using symmetry and shift of the
     indices this relation can be written as
@@ -280,7 +280,7 @@ def _step_3(a, b, n_max, Hwedge, Hextra, cosβ, sinβ):
                 )
 
 
-@njit
+@jit
 def _step_4(d, n_max, Hwedge, Hv):
     """Recursively compute H^{m'+1, m}_{n}(β) for m'=1,...,n−1, m=m',...,n using relation (50) resolved
     with respect to H^{m'+1, m}_{n}:
@@ -328,7 +328,7 @@ def _step_4(d, n_max, Hwedge, Hv):
                     )
 
 
-@njit
+@jit
 def _step_5(d, n_max, Hwedge, Hv):
     """Recursively compute H^{m'−1, m}_{n}(β) for m'=−1,...,−n+1, m=−m',...,n using relation (50)
     resolved with respect to H^{m'−1, m}_{n}:

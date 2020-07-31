@@ -10,20 +10,18 @@ matrices (respectively) of Wigner's D symbols.
 
 """
 
-from __future__ import print_function, division, absolute_import
-
 import numbers
 import cmath
 import numpy as np
+import numba as nb
 import quaternion
-from .. import (_Wigner_coefficient as _coeff,
+from .. import (jit, _Wigner_coefficient as _coeff,
                 Wigner_coefficient as coeff,
                 epsilon, error_on_bad_indices, LMpM_total_size,
                 ell_max as sf_ell_max)
-from quaternion.numba_wrapper import njit, jit, int64, complex128, xrange
 
 
-@njit('b1(i8,i8,i8)')
+@jit('b1(i8,i8,i8)')
 def _check_valid_indices(twoell, twomp, twom):
     if (twoell > 2*sf_ell_max or abs(twomp) > twoell or abs(twom) > twoell):
         return False
@@ -119,16 +117,16 @@ def Wigner_D_element(*args):
             # This was just a single ell value
             twoell = indices[0]  # already multiplied by 2
             indices = np.array([[twoell, twomp, twom]
-                                for twomp in xrange(-twoell, twoell + 1, 2)
-                                for twom in xrange(-twoell, twoell + 1, 2)])
+                                for twomp in range(-twoell, twoell + 1, 2)
+                                for twom in range(-twoell, twoell + 1, 2)])
             if (twoell == 0):
                 return_scalar = True
         elif (indices.ndim == 1 and indices.size > 0):
             # This a list of ell values
             indices = np.array(
                 [[twoell, twomp, twom] for twoell in indices
-                 for twomp in xrange(-twoell, twoell + 1, 2)
-                 for twom in xrange(-twoell, twoell + 1, 2)])
+                 for twomp in range(-twoell, twoell + 1, 2)
+                 for twom in range(-twoell, twoell + 1, 2)])
         elif (indices.ndim == 2):
             # This is an array of [ell,mp,m] values
             if (error_on_bad_indices):
@@ -149,7 +147,7 @@ def Wigner_D_element(*args):
         return elements[0]
     return elements
 
-#@njit('void(complex128, complex128, int64[:,:], complex128[:])')
+@jit('void(complex128, complex128, int64[:,:], complex128[:])')
 def _Wigner_D_element(Ra, Rb, indices, elements):
     """Main work function for computing Wigner D matrix elements
 
@@ -180,7 +178,7 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
     rb, phib = cmath.polar(Rb)
 
     if (ra <= epsilon):
-        for i in xrange(N):
+        for i in range(N):
             twoell, twomp, twom = indices[i, 0:3]
             if (twomp != -twom or abs(twomp) > twoell or abs(twom) > twoell):
                 elements[i] = 0.0j
@@ -191,7 +189,7 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
                     elements[i] = -Rb ** twom
 
     elif (rb <= epsilon):
-        for i in xrange(N):
+        for i in range(N):
             twoell, twomp, twom = indices[i, 0:3]
             if (twomp != twom or abs(twomp) > twoell or abs(twom) > twoell):
                 elements[i] = 0.0j
@@ -202,7 +200,7 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
         # We have to have these two versions (both this ra<rb branch,
         # and ra>=rb below) to avoid overflows and underflows
         absRRatioSquared = -ra * ra / (rb * rb)
-        for i in xrange(N):
+        for i in range(N):
             twoell, twomp, twom = indices[i, 0:3]
             if (abs(twomp) > twoell or abs(twom) > twoell):
                 elements[i] = 0.0j
@@ -232,7 +230,7 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
                     twoN2 = twoell - twom + 2
                     twoM = twom + twomp
                     Sum = 1.0
-                    for tworho in xrange(tworhoMax, tworhoMin, -2):
+                    for tworho in range(tworhoMax, tworhoMin, -2):
                         Sum *= absRRatioSquared * ((twoN1 - tworho) * (twoN2 - tworho)) / (tworho * (twoM + tworho))
                         Sum += 1
                     elements[i] = Prefactor * Sum
@@ -241,7 +239,7 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
         # We have to have these two versions (both this ra>=rb branch,
         # and ra<rb above) to avoid overflows and underflows
         absRRatioSquared = -rb * rb / (ra * ra)
-        for i in xrange(N):
+        for i in range(N):
             twoell, twomp, twom = indices[i, 0:3]
             if (abs(twomp) > twoell or abs(twom) > twoell):
                 elements[i] = 0.0j
@@ -271,13 +269,13 @@ def _Wigner_D_element(Ra, Rb, indices, elements):
                     twoN2 = twoell - twom + 2
                     twoM = twom - twomp
                     Sum = 1.0
-                    for tworho in xrange(tworhoMax, tworhoMin, -2):
+                    for tworho in range(tworhoMax, tworhoMin, -2):
                         Sum *= absRRatioSquared * ((twoN1 - tworho) * (twoN2 - tworho)) / (tworho * (twoM + tworho))
                         Sum += 1
                     elements[i] = Prefactor * Sum
 
 
-@njit('int64(int64, int64, int64)')
+@jit('int64(int64, int64, int64)')
 def _linear_matrix_index(ell, mp, m):
     """Index of array corresponding to matrix element
 
@@ -295,7 +293,7 @@ def _linear_matrix_index(ell, mp, m):
     return (ell + m) + (ell + mp) * (2 * ell + 1)
 
 
-@njit('int64(int64, int64)')
+@jit('int64(int64, int64)')
 def _linear_matrix_diagonal_index(ell, mpm):
     """Index of array corresponding to matrix diagonal element
 
@@ -313,7 +311,7 @@ def _linear_matrix_diagonal_index(ell, mpm):
     return (ell + mpm) * (2 * ell + 2)
 
 
-@njit('int64(int64, int64)')
+@jit('int64(int64, int64)')
 def _linear_matrix_offset(ell, ell_min):
     """Index of initial element in linear array of D matrices
 
@@ -337,12 +335,12 @@ def _linear_matrix_offset(ell, ell_min):
     return ( (4 * ell ** 2 - 1) * ell - (4 * ell_min ** 2 - 1) * ell_min ) // 3
 
 
-@njit('int64(int64,int64)')
+@jit('int64(int64,int64)')
 def _total_size_D_matrices(ell_min, ell_max):
     return ( ((4 * ell_max + 12) * ell_max + 11) * ell_max + 3 - (4 * ell_min ** 2 - 1) * ell_min ) // 3
 
 
-@njit('complex128(complex128)')
+@jit('complex128(complex128)')
 def conjugate(z):
     return z.conjugate()
 
@@ -390,8 +388,8 @@ def Wigner_D_matrices(R, ell_min, ell_max):
     return matrices
 
 
-@njit('void(complex128, complex128, int64, int64, complex128[:])',
-      locals={'Prefactor1': complex128, 'Prefactor2': complex128})
+@jit('void(complex128, complex128, int64, int64, complex128[:])',
+      locals={'Prefactor1': nb.complex128, 'Prefactor2': nb.complex128})
 def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
     """Main work function for `Wigner_D_matrices`
 
@@ -422,11 +420,11 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
     rb, phib = cmath.polar(Rb)
 
     if (ra <= epsilon):
-        for ell in xrange(ell_min, ell_max + 1):
+        for ell in range(ell_min, ell_max + 1):
             i_ell = _linear_matrix_offset(ell, ell_min)
-            for i in xrange((2 * ell + 1) ** 2):
+            for i in range((2 * ell + 1) ** 2):
                 matrices[i_ell + i] = 0j
-            for mpmm in xrange(-ell, ell + 1):
+            for mpmm in range(-ell, ell + 1):
                 i_mpmm = _linear_matrix_index(ell, mpmm, -mpmm)
                 if (ell + mpmm) % 2 == 0:
                     matrices[i_ell + i_mpmm] = Rb ** (-2 * mpmm)
@@ -434,11 +432,11 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                     matrices[i_ell + i_mpmm] = -(Rb ** (-2 * mpmm))
 
     elif (rb <= epsilon):
-        for ell in xrange(ell_min, ell_max + 1):
+        for ell in range(ell_min, ell_max + 1):
             i_ell = _linear_matrix_offset(ell, ell_min)
-            for i in xrange((2 * ell + 1) ** 2):
+            for i in range((2 * ell + 1) ** 2):
                 matrices[i_ell + i] = 0j
-            for mpm in xrange(-ell, ell + 1):
+            for mpm in range(-ell, ell + 1):
                 i_mpm = _linear_matrix_diagonal_index(ell, mpm)
                 matrices[i_ell + i_mpm] = Ra ** (2 * mpm)
 
@@ -446,10 +444,10 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
         # We have to have these two versions (both this ra<rb branch,
         # and ra>=rb below) to avoid overflows and underflows
         absRRatioSquared = -ra * ra / (rb * rb)
-        for ell in xrange(ell_min, ell_max + 1):
+        for ell in range(ell_min, ell_max + 1):
             i_ell = _linear_matrix_offset(ell, ell_min)
-            for mp in xrange(-ell, 1):
-                for m in xrange(mp, -mp + 1):
+            for mp in range(-ell, 1):
+                for m in range(mp, -mp + 1):
                     i_mpm = _linear_matrix_index(ell, mp, m)
                     rhoMin = max(0, -mp - m)
                     # Protect against overflow by decomposing Ra,Rb as
@@ -484,7 +482,7 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                         N2 = ell - m + 1
                         M = m + mp
                         Sum = 1.0
-                        for rho in xrange(rhoMax, rhoMin, -1):
+                        for rho in range(rhoMax, rhoMin, -1):
                             Sum *= absRRatioSquared * ((N1 - rho) * (N2 - rho)) / (rho * (M + rho))
                             Sum += 1
                         # Sum *= absRRatioSquared**rhoMin
@@ -514,10 +512,10 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
         # We have to have these two versions (both this ra>=rb branch,
         # and ra<rb above) to avoid overflows and underflows
         absRRatioSquared = -rb * rb / (ra * ra)
-        for ell in xrange(ell_min, ell_max + 1):
+        for ell in range(ell_min, ell_max + 1):
             i_ell = _linear_matrix_offset(ell, ell_min)
-            for mp in xrange(-ell, 1):
-                for m in xrange(mp, -mp + 1):
+            for mp in range(-ell, 1):
+                for m in range(mp, -mp + 1):
                     i_mpm = _linear_matrix_index(ell, mp, m)
                     rhoMin = max(0, mp - m)
                     # Protect against overflow by decomposing Ra,Rb as
@@ -552,7 +550,7 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                         N2 = ell - m + 1
                         M = m - mp
                         Sum = 1.0
-                        for rho in xrange(rhoMax, rhoMin, -1):
+                        for rho in range(rhoMax, rhoMin, -1):
                             Sum *= absRRatioSquared * ((N1 - rho) * (N2 - rho)) / (rho * (M + rho))
                             Sum += 1
                         # Sum *= absRRatioSquared**rhoMin
@@ -579,8 +577,8 @@ def _Wigner_D_matrices(Ra, Rb, ell_min, ell_max, matrices):
                                 matrices[i_ell + _linear_matrix_index(ell, -mp, -m)] = -Prefactor1.conjugate() * Sum
 
 
-@njit('void(float64[:,:], int64, int64, int64, complex128[:])',
-      locals={'Prefactor1': complex128, 'Prefactor2': complex128})
+@jit('void(float64[:,:], int64, int64, int64, complex128[:])',
+      locals={'Prefactor1': nb.complex128, 'Prefactor2': nb.complex128})
 def _Wigner_D_elements(Rs, ell, mp, m, values):
     """Main work function for computing Wigner D matrix elements
 
@@ -601,7 +599,7 @@ def _Wigner_D_elements(Rs, ell, mp, m, values):
     N = Rs.shape[0]
 
     if (abs(m) > ell or abs(mp) > ell):
-        for i in xrange(N):
+        for i in range(N):
             values[i] = 0.0j
 
     else:
@@ -623,7 +621,7 @@ def _Wigner_D_elements(Rs, ell, mp, m, values):
         N2_b = ell - m + 1
         M_b = m + mp
 
-        for i in xrange(N):
+        for i in range(N):
 
             Ra = complex(Rs[i, 0], Rs[i, 3])
             ra, phia = cmath.polar(Ra)
@@ -654,7 +652,7 @@ def _Wigner_D_elements(Rs, ell, mp, m, values):
                     Prefactor1 = cmath.rect(d, phib * (m - mp) + phia * (m + mp))
                     Prefactor2 = cmath.rect(d, (phib + np.pi) * (m - mp) - phia * (m + mp))
                     Sum = 1.0
-                    for rho in xrange(rhoMax_b, rhoMin_b, -1):
+                    for rho in range(rhoMax_b, rhoMin_b, -1):
                         Sum *= absRRatioSquared * ((N1_b - rho) * (N2_b - rho)) / (rho * (M_b + rho))
                         Sum += 1
                     values[i] = Prefactor1 * Sum
@@ -668,7 +666,7 @@ def _Wigner_D_elements(Rs, ell, mp, m, values):
                     Prefactor1 = cmath.rect(d, phia * (m + mp) + phib * (m - mp))
                     Prefactor2 = cmath.rect(d, -phia * (m + mp) + (phib + np.pi) * (m - mp))
                     Sum = 1.0
-                    for rho in xrange(rhoMax_a, rhoMin_a, -1):
+                    for rho in range(rhoMax_a, rhoMin_a, -1):
                         Sum *= absRRatioSquared * ((N1_a - rho) * (N2_a - rho)) / (rho * (M_a + rho))
                         Sum += 1
                     values[i] = Prefactor1 * Sum

@@ -1,12 +1,9 @@
 # Copyright (c) 2019, Michael Boyle
 # See LICENSE file for details: <https://github.com/moble/waveforms/blob/master/LICENSE>
 
-from __future__ import print_function, division, absolute_import
-
 from math import sqrt, pi
 import numpy as np
-from quaternion.numba_wrapper import jit, xrange
-from . import LM_total_size
+from . import LM_total_size, jit
 
 
 @jit
@@ -99,9 +96,9 @@ def eth_GHP(modes, spin_weight, ell_min=0):
     ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min - 1))) - 1
     eth_modes = np.copy(modes)
     i_mode = 0
-    for ell in xrange(ell_min, ell_max + 1):
+    for ell in range(ell_min, ell_max + 1):
         factor = (0.0 if ell < abs(spin_weight + 1) else sqrt((ell - spin_weight) * (ell + spin_weight + 1.) / 2.))
-        for m in xrange(-ell, ell + 1):
+        for m in range(-ell, ell + 1):
             eth_modes[i_mode] *= factor
             i_mode += 1
     return eth_modes
@@ -134,9 +131,9 @@ def ethbar_GHP(modes, spin_weight, ell_min=0):
     ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min - 1))) - 1
     ethbar_modes = np.copy(modes)
     i_mode = 0
-    for ell in xrange(ell_min, ell_max + 1):
+    for ell in range(ell_min, ell_max + 1):
         factor = (0.0 if ell < abs(spin_weight - 1) else -sqrt((ell + spin_weight) * (ell - spin_weight + 1.) / 2.))
-        for m in xrange(-ell, ell + 1):
+        for m in range(-ell, ell + 1):
             ethbar_modes[i_mode] *= factor
             i_mode += 1
     return ethbar_modes
@@ -169,9 +166,9 @@ def eth_NP(modes, spin_weight, ell_min=0):
     ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min - 1))) - 1
     eth_modes = np.copy(modes)
     i_mode = 0
-    for ell in xrange(ell_min, ell_max + 1):
+    for ell in range(ell_min, ell_max + 1):
         factor = (0.0 if ell < abs(spin_weight + 1) else sqrt((ell - spin_weight) * (ell + spin_weight + 1.)))
-        for m in xrange(-ell, ell + 1):
+        for m in range(-ell, ell + 1):
             eth_modes[i_mode] *= factor
             i_mode += 1
     return eth_modes
@@ -204,9 +201,9 @@ def ethbar_NP(modes, spin_weight, ell_min=0):
     ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min - 1))) - 1
     ethbar_modes = np.copy(modes)
     i_mode = 0
-    for ell in xrange(ell_min, ell_max + 1):
+    for ell in range(ell_min, ell_max + 1):
         factor = (0.0 if ell < abs(spin_weight - 1) else -sqrt((ell + spin_weight) * (ell - spin_weight + 1.)))
-        for m in xrange(-ell, ell + 1):
+        for m in range(-ell, ell + 1):
             ethbar_modes[i_mode] *= factor
             i_mode += 1
     return ethbar_modes
@@ -226,11 +223,11 @@ def ethbar_inverse_NP(modes, spin_weight, ell_min=0):
     ell_max = int(sqrt(len(modes) + LM_total_size(0, ell_min - 1))) - 1
     ethbar_inverse_modes = np.copy(modes)
     i_mode = 0
-    for ell in xrange(ell_min, ell_max + 1):
+    for ell in range(ell_min, ell_max + 1):
         term = (ell + spin_weight + 1.) * (ell - spin_weight)
         if term > 0.0:
             factor = -sqrt(term)
-            for m in xrange(-ell, ell + 1):
+            for m in range(-ell, ell + 1):
                 ethbar_inverse_modes[i_mode] /= factor
                 i_mode += 1
         else:

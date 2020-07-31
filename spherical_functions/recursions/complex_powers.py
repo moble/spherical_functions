@@ -2,7 +2,7 @@
 # See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
 
 import numpy as np
-import numba
+from .. import jit
 
 def complex_powers(z, M, zpowers=None):
     """Compute integer powers of z=exp(iθ) recursively
@@ -43,7 +43,7 @@ def complex_powers(z, M, zpowers=None):
     return zpowers.reshape(z.shape+(M+1,))
 
 
-@numba.njit
+@jit
 def _complex_powers(zravel, M, zpowers):
     """Helper function for complex_powers(z, M)"""
     for i in range(zravel.size):

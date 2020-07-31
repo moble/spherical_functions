@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.special import factorial
-from numba import njit
 import spherical_functions as sf
+from .. import jit, LMpM_total_size
 
 
 """Calculating cos(β) and sin(β) from quaternions
@@ -103,7 +103,7 @@ H^{m', m}_n(\beta) = (-1)^{m+m'} H^{m', m}_n(-\beta)
 
 
 
-@njit
+@jit
 def sign(m):
     if m >= 0:
         return 1
@@ -111,7 +111,7 @@ def sign(m):
         return -1
 
 
-@njit
+@jit
 def nm_index(n, m):
     """Return flat index into arrray of [n, m] pairs.
     
@@ -121,7 +121,7 @@ def nm_index(n, m):
     return m + n * (n + 1)
 
 
-@njit
+@jit
 def nabsm_index(n, absm):
     """Return flat index into arrray of [n, abs(m)] pairs
     
@@ -131,7 +131,7 @@ def nabsm_index(n, absm):
     return absm + (n * (n + 1)) // 2
 
 
-@njit
+@jit
 def nmpm_index(n, mp, m):
     """Return flat index into arrray of [n, mp, m]
     
@@ -141,7 +141,7 @@ def nmpm_index(n, mp, m):
     return (((4 * n + 6) * n + 6 * mp + 5) * n + 3 * (m + mp)) // 3
 
 
-@njit
+@jit
 def _step_1(Hnmpm):
     """If n=0 set H_{0}^{0,0}=1."""
     Hnmpm[0, :] = 1.0
@@ -151,7 +151,7 @@ sqrt3 = np.sqrt(3)
 sqrt2 = np.sqrt(2)
 
 
-@njit
+@jit
 def _step_2(g, h, n_max, Hnmpm, Hextra, Hv, cosβ, sinβ):
     """Compute values H^{0,m}_{n}(β)for m=0,...,n and H^{0,m}_{n+1}(β) for m=0,...,n+1 using Eq. (32):
         H^{0,m}_{n}(β) = (-1)^m \sqrt{(n-|m|)! / (n+|m|)!} P^{|m|}_{n}(cos β)
@@ -228,7 +228,7 @@ def _step_2(g, h, n_max, Hnmpm, Hextra, Hv, cosβ, sinβ):
     Hv[nm_index(1, 0), :] = Hnmpm[nmpm_index(1, 0, 1)]
 
 
-@njit
+@jit
 def _step_3(a, b, n_max, Hnmpm, Hextra, cosβ, sinβ):
     """Use relation (41) to compute H^{1,m}_{n}(β) for m=1,...,n.  Using symmetry and shift of the
     indices this relation can be written as
@@ -262,7 +262,7 @@ def _step_3(a, b, n_max, Hnmpm, Hextra, cosβ, sinβ):
                 )
 
 
-@njit
+@jit
 def _step_4(d, n_max, Hnmpm, Hv):
     """Recursively compute H^{m'+1, m}_{n}(β) for m'=1,...,n−1, m=m',...,n using relation (50) resolved
     with respect to H^{m'+1, m}_{n}:
@@ -310,7 +310,7 @@ def _step_4(d, n_max, Hnmpm, Hv):
                     )
 
 
-@njit
+@jit
 def _step_5(d, n_max, Hnmpm, Hv):
     """Recursively compute H^{m'−1, m}_{n}(β) for m'=−1,...,−n+1, m=−m',...,n using relation (50)
     resolved with respect to H^{m'−1, m}_{n}:
@@ -372,7 +372,7 @@ def _step_5(d, n_max, Hnmpm, Hv):
                 )
 
 
-@njit
+@jit
 def _step_6(n_max, Hnmpm):
     """Apply the symmetry relations below to obtain all other values H^{m',m}_{n}
     outside the computational triangle m=0,...,n, m'=−m,...,m:
@@ -396,8 +396,8 @@ class HCalculator(object):
         self.n_max = int(n_max)
         if self.n_max < 0:
             raise ValueError('Nonsensical value for n_max = {0}'.format(self.n_max))
-        self.nmpm_total_size = sf.LMpM_total_size(0, self.n_max)
-        self.nmpm_total_size_plus1 = sf.LMpM_total_size(0, self.n_max+1)
+        self.nmpm_total_size = LMpM_total_size(0, self.n_max)
+        self.nmpm_total_size_plus1 = LMpM_total_size(0, self.n_max+1)
         n = np.array([n for n in range(self.n_max+2) for m in range(-n, n+1)])
         m = np.array([m for n in range(self.n_max+2) for m in range(-n, n+1)])
         absn = np.array([n for n in range(self.n_max+2) for m in range(n+1)])

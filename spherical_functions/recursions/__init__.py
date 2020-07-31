@@ -2,15 +2,14 @@
 # See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
 
 import numpy as np
-import numba
-
+from .. import jit
 from .complex_powers import complex_powers
 from .wigner3j import Wigner3jCalculator, Wigner3j, clebsch_gordan
 from .wignerH import HCalculator
 
 
 
-@numba.njit
+@jit
 def quaternion_angles(R):
     """Compute complex angles for use in Wigner's 𝔇 matrices
 

@@ -1,19 +1,20 @@
 import math
 import numpy as np
-import numba
+from numba import int32, float64
+from .. import jit, jitclass
 
 
-@numba.njit("float64(int32, int32, int32, int32)")
+@jit("float64(int32, int32, int32, int32)")
 def A(j, j2, j3, m1):
     return math.sqrt((j**2 - (j2 - j3)**2) * ((j2 + j3 + 1)**2 - j**2) * (j**2 - m1**2))
 
 
-@numba.njit("int32(int32, int32, int32, int32, int32)")
+@jit("int32(int32, int32, int32, int32, int32)")
 def B(j, j2, j3, m2, m3):
     return (2 * j + 1) * ((m2 + m3) * (j2 * (j2 + 1) - j3 * (j3 + 1)) - (m2 - m3) * j * (j + 1))
 
 
-@numba.njit("float64(int32, int32, int32, int32)")
+@jit("float64(int32, int32, int32, int32)")
 def Xf(j, j2, j3, m1):
     return j * A(j+1, j2, j3, m1)
 
@@ -21,12 +22,12 @@ def Xf(j, j2, j3, m1):
 Yf = B
 
 
-@numba.njit("float64(int32, int32, int32, int32)")
+@jit("float64(int32, int32, int32, int32)")
 def Zf(j, j2, j3, m1):
     return (j+1) * A(j, j2, j3, m1)
 
 
-@numba.njit("void(float64[:], int32, int32)")
+@jit("void(float64[:], int32, int32)")
 def normalize(f, j_min, j_max):
     norm = 0.0
     for j in range(j_min, j_max+1):
@@ -34,15 +35,15 @@ def normalize(f, j_min, j_max):
     f[j_min:j_max + 1] /= math.sqrt(norm)
 
 
-@numba.njit("void(float64[:], int32, int32, int32, int32, int32, int32)")
+@jit("void(float64[:], int32, int32, int32, int32, int32, int32)")
 def determine_signs(f, j_min, j_max, j2, j3, m2, m3):
     if (f[j_max] < 0.0 and (-1)**(j2-j3+m2+m3) > 0) or (f[j_max] > 0.0 and (-1)**(j2-j3+m2+m3) < 0):
         f[j_min:j_max+1] *= -1.0
 
 
-@numba.experimental.jitclass([
-    ('_size', numba.int32),
-    ('workspace', numba.float64[:]),
+@jitclass([
+    ('_size', int32),
+    ('workspace', float64[:]),
 ])
 class Wigner3jCalculator(object):
     def __init__(self, j2_max, j3_max):
@@ -291,7 +292,7 @@ class Wigner3jCalculator(object):
         return f
 
 
-@numba.njit('f8(i8,i8,i8,i8,i8,i8)')
+@jit('f8(i8,i8,i8,i8,i8,i8)')
 def Wigner3j(j_1, j_2, j_3, m_1, m_2, m_3):
     """Calculate the Wigner 3-j symbol
 
@@ -339,7 +340,7 @@ def Wigner3j(j_1, j_2, j_3, m_1, m_2, m_3):
     return w3j[j_1]
 
 
-@numba.njit('f8(i8,i8,i8,i8,i8,i8)')
+@jit('f8(i8,i8,i8,i8,i8,i8)')
 def clebsch_gordan(j_1, m_1, j_2, m_2, j_3, m_3):
     """Calculate the Clebsch-Gordan coefficient <j1 m1 j2 m2 | j3 m3>
 

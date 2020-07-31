@@ -1,16 +1,11 @@
 # Copyright (c) 2019, Michael Boyle
 # See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
 
-from __future__ import print_function, division, absolute_import
-
 import math
 import cmath
-
 import numpy as np
 import quaternion
-from quaternion.numba_wrapper import njit, jit, int64, xrange
-
-from .. import (Wigner_coefficient as coeff, epsilon, LM_range)
+from .. import (Wigner_coefficient as coeff, epsilon, LM_range, jit)
 
 
 def SWSH(R, s, indices):
@@ -92,7 +87,7 @@ def SWSH_grid(R_grid, s, ell_max):
     return values
 
 
-@njit('void(complex128, complex128, int64, int64[:,:], complex128[:])')
+@jit('void(complex128, complex128, int64, int64[:,:], complex128[:])')
 def _SWSH(Ra, Rb, s, indices, values):
     """Compute spin-weighted spherical harmonics from rotor components
 
@@ -131,7 +126,7 @@ def _SWSH(Ra, Rb, s, indices, values):
     rb, phib = cmath.polar(Rb)
 
     if ra <= epsilon:
-        for i in xrange(N):
+        for i in range(N):
             ell, m = indices[i, 0:2]
             if (m != s or abs(m) > ell or abs(s) > ell):
                 values[i] = 0.0j
@@ -142,7 +137,7 @@ def _SWSH(Ra, Rb, s, indices, values):
                     values[i] = -math.sqrt((2 * ell + 1) / (4 * np.pi)) * Rb ** (-2 * s)
 
     elif rb <= epsilon:
-        for i in xrange(N):
+        for i in range(N):
             ell, m = indices[i, 0:2]
             if (m != -s or abs(m) > ell or abs(s) > ell):
                 values[i] = 0.0j
@@ -156,7 +151,7 @@ def _SWSH(Ra, Rb, s, indices, values):
         # We have to have these two versions (both this ra<rb branch,
         # and ra>=rb below) to avoid overflows and underflows
         absRRatioSquared = -ra * ra / (rb * rb)
-        for i in xrange(N):
+        for i in range(N):
             ell, m = indices[i, 0:2]
             if (abs(m) > ell or abs(s) > ell):
                 values[i] = 0.0j
@@ -184,11 +179,11 @@ def _SWSH(Ra, Rb, s, indices, values):
                     N2 = ell + s + 1
                     M = -s + m
                     Sum = 1.0
-                    for rho in xrange(rhoMax, rhoMin, -1):
+                    for rho in range(rhoMax, rhoMin, -1):
                         Sum *= absRRatioSquared * ((N1 - rho) * (N2 - rho)) / (rho * (M + rho))
                         Sum += 1
                     # Sum = 0.0
-                    # for rho in xrange(rhoMax, rhoMin-1, -1):
+                    # for rho in range(rhoMax, rhoMin-1, -1):
                     # Sum = (  binomial_coefficient(ell-m,rho) * binomial_coefficient(ell+m, ell-rho+s)
                     # + Sum * absRRatioSquared )
                     values[i] = math.sqrt((2 * ell + 1) / (4 * np.pi)) * Prefactor * Sum
@@ -197,7 +192,7 @@ def _SWSH(Ra, Rb, s, indices, values):
         # We have to have these two versions (both this ra>=rb branch,
         # and ra<rb above) to avoid overflows and underflows
         absRRatioSquared = -rb * rb / (ra * ra)
-        for i in xrange(N):
+        for i in range(N):
             ell, m = indices[i, 0:2]
             if (abs(m) > ell or abs(s) > ell):
                 values[i] = 0.0j
@@ -225,17 +220,17 @@ def _SWSH(Ra, Rb, s, indices, values):
                     N2 = ell + s + 1
                     M = -s - m
                     Sum = 1.0
-                    for rho in xrange(rhoMax, rhoMin, -1):
+                    for rho in range(rhoMax, rhoMin, -1):
                         Sum *= absRRatioSquared * ((N1 - rho) * (N2 - rho)) / (rho * (M + rho))
                         Sum += 1
                     # Sum = 0.0
-                    # for rho in xrange(rhoMax, rhoMin-1, -1):
+                    # for rho in range(rhoMax, rhoMin-1, -1):
                     # Sum = (  binomial_coefficient(ell+m,rho) * binomial_coefficient(ell-m, ell-rho+s)
                     # + Sum * absRRatioSquared )
                     values[i] = math.sqrt((2 * ell + 1) / (4 * np.pi)) * Prefactor * Sum
 
 
-@njit('void(float64[:,:], int64, int64, int64, complex128[:])')
+@jit('void(float64[:,:], int64, int64, int64, complex128[:])')
 def _SWSHs(Rs, s, ell, m, values):
     """Compute spin-weighted spherical harmonics from rotor components
 
@@ -267,7 +262,7 @@ def _SWSHs(Rs, s, ell, m, values):
     N = Rs.shape[0]
 
     if (abs(m) > ell or abs(s) > ell):
-        for i in xrange(N):
+        for i in range(N):
             values[i] = 0.0j
 
     else:
@@ -292,7 +287,7 @@ def _SWSHs(Rs, s, ell, m, values):
         N2_b = ell + s + 1
         M_b = -s + m
 
-        for i in xrange(N):
+        for i in range(N):
             Ra = complex(Rs[i, 0], Rs[i, 3])
             ra, phia = cmath.polar(Ra)
 
@@ -324,7 +319,7 @@ def _SWSHs(Rs, s, ell, m, values):
                         coefficient_b * rb ** (2 * ell + s - m - 2 * rhoMin_b) * ra ** (-s + m + 2 * rhoMin_b),
                         phib * (-s - m) + phia * (-s + m))
                     Sum = 1.0
-                    for rho in xrange(rhoMax_b, rhoMin_b, -1):
+                    for rho in range(rhoMax_b, rhoMin_b, -1):
                         Sum *= absRRatioSquared * ((N1_b - rho) * (N2_b - rho)) / (rho * (M_b + rho))
                         Sum += 1
                     values[i] = constant * Prefactor * Sum
@@ -338,7 +333,7 @@ def _SWSHs(Rs, s, ell, m, values):
                         coefficient_a * ra ** (2 * ell + s + m - 2 * rhoMin_a) * rb ** (-s - m + 2 * rhoMin_a),
                         phia * (-s + m) + phib * (-s - m))
                     Sum = 1.0
-                    for rho in xrange(rhoMax_a, rhoMin_a, -1):
+                    for rho in range(rhoMax_a, rhoMin_a, -1):
                         Sum *= absRRatioSquared * ((N1_a - rho) * (N2_a - rho)) / (rho * (M_a + rho))
                         Sum += 1
                     values[i] = constant * Prefactor * Sum

@@ -10,17 +10,19 @@ delivered at speeds approaching or exceeding speeds attained by pure C code.
 
 """
 
-from __future__ import print_function, division, absolute_import
 from ._version import __version__
 
 __all__ = ['Wigner3j', 'Wigner_D_element', 'Wigner_D_matrices', 'SWSH', 'SWSH_grid',
            'factorial', 'binomial_coefficient', 'ladder_operator_coefficient']
 
+import functools
 import numpy as np
+import numba as nb
 from math import factorial
 import os.path
 
-from quaternion.numba_wrapper import njit, xrange
+jit = njit = functools.partial(nb.njit, cache=True)
+jitclass = nb.experimental.jitclass
 
 # Module constants
 ell_max = 32  # More than 29, and you get roundoff building quickly
@@ -103,8 +105,8 @@ def LM_range(ell_min, ell_max):
 @njit('void(i8,i8,i8[:,:])')
 def _LM_range(ell_min, ell_max, LM):
     i = 0
-    for ell in xrange(ell_min, ell_max + 1):
-        for m in xrange(-ell, ell + 1):
+    for ell in range(ell_min, ell_max + 1):
+        for m in range(-ell, ell + 1):
             LM[i, 0] = ell
             LM[i, 1] = m
             i += 1
@@ -191,9 +193,9 @@ def LMpM_range(ell_min, ell_max):
 @njit('void(i8,i8,i8[:,:])')
 def _LMpM_range(ell_min, ell_max, LMpM):
     i = 0
-    for ell in xrange(ell_min, ell_max + 1):
-        for mp in xrange(-ell, ell + 1):
-            for m in xrange(-ell, ell + 1):
+    for ell in range(ell_min, ell_max + 1):
+        for mp in range(-ell, ell + 1):
+            for m in range(-ell, ell + 1):
                 LMpM[i, 0] = ell
                 LMpM[i, 1] = mp
                 LMpM[i, 2] = m
@@ -225,9 +227,9 @@ def LMpM_range_half_integer(ell_min, ell_max):
 @njit('void(i8,i8,f8[:,:])')
 def _LMpM_range_half_integer(twoell_min, twoell_max, LMpM):
     i = 0
-    for twoell in xrange(twoell_min, twoell_max + 1):
-        for twomp in xrange(-twoell, twoell + 1, 2):
-            for twom in xrange(-twoell, twoell + 1, 2):
+    for twoell in range(twoell_min, twoell_max + 1):
+        for twomp in range(-twoell, twoell + 1, 2):
+            for twom in range(-twoell, twoell + 1, 2):
                 LMpM[i, 0] = twoell / 2
                 LMpM[i, 1] = twomp / 2
                 LMpM[i, 2] = twom / 2

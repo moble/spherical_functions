@@ -3,8 +3,6 @@
 # Copyright (c) 2019, Michael Boyle
 # See LICENSE file for details: <https://github.com/moble/spherical_functions/blob/master/LICENSE>
 
-from __future__ import print_function, division, absolute_import
-
 # Try to keep imports to a minimum; from the standard library as much
 # as possible.  We have to conda install all dependencies, and it's
 # not right to make Travis do too much work.
