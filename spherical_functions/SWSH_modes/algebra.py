@@ -118,7 +118,11 @@ def _imag_func(self, inplace=False):
     Note that this only makes sense for functions of spin weight zero; other spins will raise
     ValueErrors.
 
-    The condition that a function `f` be imaginary is given by
+    The condition that a function `f` be purely imaginary is given by
+
+        f = -conjugate(f)
+
+    We take the mode decomposition of each side to find
 
         f{l, m} = -conjugate(f){l, m} = (-1)**(m+1) * conjugate(f{l, -m})
 
@@ -128,6 +132,8 @@ def _imag_func(self, inplace=False):
 
         f{l, m} = (f{l, m} - (-1)**m * conjugate(f{l, -m})) / 2
 
+    Then, we multiply by -1j to ensure that np.imag(f.grid()) equals f.imag.grid().
+
     """
     if self.s != 0:
         raise ValueError("The imaginary part of a function with non-zero spin weight is meaningless")
@@ -135,15 +141,17 @@ def _imag_func(self, inplace=False):
     c = s if inplace else np.zeros_like(s)
     for ell in range(abs(self.s), self.ell_max+1):
         i = LM_index(ell, 0, self.ell_min)
-        c[..., i] = 1j * np.imag(s[..., i])
+        c[..., i] = np.imag(s[..., i])
         for m in range(1, ell+1):
             i_p, i_n = LM_index(ell, m, self.ell_min), LM_index(ell, -m, self.ell_min)
             if m%2 == 0:
-                c[..., i_p] = (s[..., i_p] - np.conjugate(s[..., i_n])) / 2
-                c[..., i_n] = -np.conjugate(c[..., i_p])
-            else:
-                c[..., i_p] = (s[..., i_p] + np.conjugate(s[..., i_n])) / 2
+                c[..., i_p] = -1j * (s[..., i_p] - np.conjugate(s[..., i_n])) / 2
+                #c[..., i_n] = -1j * -np.conjugate((s[..., i_p] - np.conjugate(s[..., i_n])) / 2)
                 c[..., i_n] = np.conjugate(c[..., i_p])
+            else:
+                c[..., i_p] = -1j * (s[..., i_p] + np.conjugate(s[..., i_n])) / 2
+                #c[..., i_n] = -1j * np.conjugate((s[..., i_p] + np.conjugate(s[..., i_n])) / 2)
+                c[..., i_n] = -np.conjugate(c[..., i_p])
     if inplace:
         return self
     return type(self)(c, **self._metadata)

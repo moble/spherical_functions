@@ -393,9 +393,17 @@ def test_modes_imag():
         assert ell_min == mimag.ell_min
         assert ell_max == mimag.ell_max
         assert shape == mimag.shape
-        assert np.allclose(np.imag(g), np.imag(gimag), rtol=tolerance, atol=tolerance)
-        assert np.allclose(gimag, 1j * np.imag(gimag), rtol=tolerance, atol=tolerance)
-        assert np.allclose(np.zeros_like(g, dtype=float), np.real(gimag), rtol=tolerance, atol=tolerance)
+        assert np.allclose(gimag, np.real(gimag), rtol=tolerance, atol=tolerance)  # gimag is purely real
+        assert np.allclose(
+            np.array(np.imag(g.ndarray), dtype=complex),
+            gimag.ndarray,
+            rtol=tolerance, atol=tolerance
+        )  # imag(g) == gimag
+        assert np.allclose(
+            np.imag(gimag.ndarray),
+            np.zeros_like(g.ndarray, dtype=float),
+            rtol=tolerance, atol=tolerance
+        ) # imag(gimag) == 0
         # Test failure with s!=0
         for s in [-3, -2, -1, 1, 2, 3]:
             m = sf.Modes(a, spin_weight=s, ell_min=ell_min, ell_max=ell_max)
