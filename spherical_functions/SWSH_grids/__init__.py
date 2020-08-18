@@ -111,6 +111,11 @@ class Grid(np.ndarray):
         super(Modes, self).__setstate__(state[:-1])
 
     @property
+    def ndarray(self):
+        """View this array as a numpy ndarray"""
+        return self.view(np.ndarray)
+
+    @property
     def s(self):
         """Spin weight of this Modes object"""
         return self._metadata['spin_weight']
