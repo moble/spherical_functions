@@ -1,5 +1,9 @@
 # Spherical Functions <a href="https://travis-ci.org/moble/spherical_functions"><img align="right" hspace="3" alt="Status of automatic build and test suite" src="https://travis-ci.org/moble/spherical_functions.svg?branch=master"></a> <a href="https://github.com/moble/spherical_functions/blob/master/LICENSE"><img align="right" hspace="3" alt="MIT license" src="https://img.shields.io/github/license/moble/out_of_core_fft.svg"></a>
 
+| NOTE: This package will still be maintained, but *active* development has moved to the [`spherical`](https://github.com/moble/spherical) package.  While this package works well for ℓ (aka ell, L, j, or J) values up to around 25, errors start to build rapidly and turn into NaNs around 30.  The `spherical` package can readily handle values up to at least 1000, with accuracy close to ℓ times machine precision.  —Mike |
+| --- |
+
+
 Python/numba package for evaluating and transforming Wigner's 𝔇 matrices,
 Wigner's 3-j symbols, and spin-weighted (and scalar) spherical harmonics.
 These functions are evaluated directly in terms of quaternions, as well as in
