@@ -47,7 +47,7 @@ Assuming you use `conda` to manage your python installation (like any sane
 python user), you can install this package simply as
 
 ```sh
-conda install -c moble spherical_functions
+conda install -c conda-forge spherical_functions
 ```
 
 This should automatically download and install the package
