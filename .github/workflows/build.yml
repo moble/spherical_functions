@@ -1,0 +1,164 @@
+name: tests
+
+on: [push]
+
+jobs:
+
+  build:
+    name: ${{ matrix.os }} python ${{ matrix.python-version }}
+
+    runs-on: ${{ matrix.os }}
+
+    if: >-
+        !contains(github.event.head_commit.message, '[skip ci]')
+        && !contains(github.event.head_commit.message, '[skip tests]')
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['3.8', '3.9', '3.10']
+
+    steps:
+      - name: Skip replicates on main branch
+        env:
+          skip_replicates: ${{ github.ref == 'refs/heads/main' && (matrix.os != 'ubuntu-latest' || matrix.python-version != '3.10') }}
+        shell: bash
+        run: |
+          echo "skipping_build_and_test_replicate=${skip_replicates}" >> $GITHUB_ENV
+
+      - name: Check out code
+        if: ${{ env.skipping_build_and_test_replicate != 'true' }}
+        uses: actions/checkout@v2
+
+      - name: Set up python ${{ matrix.python-version }}
+        if: ${{ env.skipping_build_and_test_replicate != 'true' }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install poetry
+        if: ${{ env.skipping_build_and_test_replicate != 'true' }}
+        shell: bash
+        run: |
+          curl -fsS -o get-poetry.py https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py
+          python get-poetry.py -y
+          echo "$HOME/.poetry/bin" >> $GITHUB_PATH
+
+      - name: Build and install with poetry
+        if: ${{ env.skipping_build_and_test_replicate != 'true' }}
+        shell: bash
+        run: |
+          poetry run python -m pip install --upgrade pip
+          poetry env info
+          rm poetry.lock
+          poetry update
+          poetry build
+          poetry install --no-interaction
+
+      - name: Run tests
+        if: ${{ env.skipping_build_and_test_replicate != 'true' }}
+        shell: bash
+        run: |
+          poetry run pytest -s --cov=spherical_functions --cov-branch --cov-report=xml --durations=0
+
+      - name: Upload coverage
+        if: "matrix.python-version == '3.10' && matrix.os == 'ubuntu-latest'"
+        uses: codecov/codecov-action@v2
+
+
+  release:
+    name: Create release and send to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    if: >-
+        github.ref == 'refs/heads/main'
+        && !contains(github.event.head_commit.message, '[no release]')
+        && (success() || contains(github.event.head_commit.message, '[skip tests]'))
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Install toml
+        if: ${{ env.skipping_build_and_test_replicate != 'true' }}
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip toml
+
+      - name: Install poetry
+        if: ${{ env.skipping_build_and_test_replicate != 'true' }}
+        shell: bash
+        run: |
+          curl -fsS -o get-poetry.py https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py
+          python get-poetry.py -y
+
+      - name: Build and install with poetry
+        if: ${{ env.skipping_build_and_test_replicate != 'true' }}
+        shell: bash
+        run: |
+          $HOME/.poetry/bin/poetry run python -m pip install --upgrade pip
+          $HOME/.poetry/bin/poetry env info
+          rm poetry.lock
+          $HOME/.poetry/bin/poetry update
+          $HOME/.poetry/bin/poetry build
+          $HOME/.poetry/bin/poetry install --no-interaction --no-dev
+
+      - name: Bump version
+        shell: bash
+        env:
+          github_event_head_commit_message: ${{ github.event.head_commit.message }}
+        run: |
+          # Note: The following line reads the HEAD commit message to look for an indication of how
+          # to bump the version number.  Specifically, if `#patch`, `#minor`, or `#major` is present
+          # in the commit message, it bumps the corresponding version number.  Those can also be
+          # prepended as `#premajor`, etc., to add/bump the prerelease modifier.  If none of those
+          # are present, `#patch` is assumed — that is, the lowest-significance number is
+          # incremented.  See the documentation of the `poetry version` command for details.
+          export version_bump_rule=$(python .github/scripts/parse_bump_rule.py)
+          echo "version_bump_rule: '${version_bump_rule}'"
+          $HOME/.poetry/bin/poetry version "${version_bump_rule}"
+          export new_version=$(python .github/scripts/parse_version.py pyproject.toml)
+          echo "new_version: '${new_version}'"
+          echo "new_version=${new_version}" >> $GITHUB_ENV  # Save env variable for later steps
+
+      - name: Tag and push new version
+        shell: bash
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add pyproject.toml
+          git commit -m "Bump version to v${new_version}"
+          git tag -a "v${new_version}" -m "Version ${new_version}"
+          git status
+          git push --follow-tags  # Will not trigger new workflow because it uses GITHUB_TOKEN
+
+      - name: Create release
+        if: "!contains(github.event.head_commit.message, '[no release]')"
+        id: create_release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.new_version }}
+          release_name: Release v${{ env.new_version }}
+          draft: false
+          prerelease: false
+
+      - name: Publish to PyPI
+        if: "!contains(github.event.head_commit.message, '[no pypi]')"
+        env:
+          # 1) Get key from https://pypi.org/manage/account/token/
+          # 2) Copy it to Github > repo > Settings > Secrets
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
+        shell: bash
+        run: |
+          # Do these first two steps again to ensure the version is right
+          $HOME/.poetry/bin/poetry build
+          $HOME/.poetry/bin/poetry install --no-interaction --no-dev
+          $HOME/.poetry/bin/poetry publish
