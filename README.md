@@ -1,4 +1,11 @@
-# Spherical Functions <a href="https://travis-ci.org/moble/spherical_functions"><img align="right" hspace="3" alt="Status of automatic build and test suite" src="https://travis-ci.org/moble/spherical_functions.svg?branch=master"></a> <a href="https://github.com/moble/spherical_functions/blob/master/LICENSE"><img align="right" hspace="3" alt="MIT license" src="https://img.shields.io/github/license/moble/out_of_core_fft.svg"></a>
+[![Test Status](https://github.com/moble/spherical_functions/workflows/tests/badge.svg)](https://github.com/moble/spherical_functions/actions)
+[![PyPI Version](https://img.shields.io/pypi/v/spherical-functions?color=)](https://pypi.org/project/spherical-functions/)
+[![Conda Version](https://img.shields.io/conda/vn/conda-forge/spherical_functions.svg?color=)](https://anaconda.org/conda-forge/spherical_functions)
+[![MIT License](https://img.shields.io/github/license/moble/spherical_functions.svg)](https://github.com/moble/spherical_functions/blob/main/LICENSE)
+[![DOI](https://zenodo.org/badge/25589782.svg)](https://zenodo.org/badge/latestdoi/25589782)
+
+
+# Spherical Functions
 
 | NOTE: This package will still be maintained, but *active* development has moved to the [`spherical`](https://github.com/moble/spherical) package.  While this package works well for ℓ (aka ell, L, j, or J) values up to around 25, errors start to build rapidly and turn into NaNs around 30.  The `spherical` package can readily handle values up to at least 1000, with accuracy close to ℓ times machine precision.  —Mike |
 | --- |
@@ -34,7 +41,7 @@ the main `anaconda` package.
 
 If you prefer the smaller download size of
 [`miniconda`](http://conda.pydata.org/miniconda.html) (which comes with no
-extras beyond python), you'll also have to run this command:
+extras beyond python), you may also have to run this command:
 
 ```sh
 conda install pip numpy numba
@@ -58,28 +65,20 @@ Alternatively, if you prefer to use `pip` (whether or not you use `conda`), you
 can also do
 
 ```sh
-pip install git+git://github.com/moble/quaternion
-pip install git+git://github.com/moble/spherical_functions
-```
-
-Or, if you refuse to use `conda`, you might want to install inside your home
-directory without root privileges.  (Anaconda does this by default anyway.)
-This is done by adding `--user` to the above commands:
-
-```sh
-pip install --user git+git://github.com/moble/quaternion
-pip install --user git+git://github.com/moble/spherical_functions
+python -m pip install spherical-functions
 ```
 
 Finally, there's also the fully manual option of just downloading both code
 repositories, changing to the code directory, and issuing
 
 ```sh
-python setup.py install
+python -m pip install .
 ```
 
 This should work regardless of the installation method, as long as you have a
-compiler hanging around.
+compiler hanging around.  However, this may be more likely to try to compile
+the dependencies, including numpy and/or spinsfast, which can be much more
+complicated.
 
 
 ## Usage
@@ -150,17 +149,8 @@ project, the hosting is free, and all the wonderful features of github are
 available, including free wiki space and web page hosting, pull requests, a
 nice interface to the git logs, etc.
 
-Every change in this code is
-[auomatically tested](https://travis-ci.org/moble/spherical_functions) on
-[Travis-CI](https://travis-ci.org/).  This is a free service (for open-source
-projects like this one), which integrates beautifully with github, detecting
-each commit and automatically re-running the tests.  The code is downloaded and
-installed fresh each time, and then tested, on python 2.7, 3.4, and 3.5.  This
-ensures that no change I make to the code breaks either installation or any of
-the features that I have written tests for.
-
 Finally, the code is automatically compiled, and the binaries hosted for
-download by `conda` on [anaconda.org](https://anaconda.org/moble/quaternion).
+download by `conda` on [anaconda.org](https://anaconda.org/moble/spherical_functions).
 This is also a free service for open-source projects like this one.
 
 The work of creating this code was supported in part by the Sherman Fairchild
