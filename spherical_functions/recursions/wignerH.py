@@ -9,7 +9,7 @@ sqrt3 = np.sqrt(3)
 sqrt2 = np.sqrt(2)
 
 
-"""Algorithm for computing H, as given by arxiv:1403.7698
+r"""Algorithm for computing H, as given by arxiv:1403.7698
 
 dₗⁿᵐ = ϵₙ ϵ₋ₘ Hₗⁿᵐ, where
 
@@ -85,7 +85,7 @@ def wedge_index(ℓ, mp, m):
 
 @jit
 def wedgeify_index(ℓ, mp, m):
-    """Convert general (ℓ, m′, m) index into index appropriate for H wedge
+    r"""Convert general (ℓ, m′, m) index into index appropriate for H wedge
 
     The wedge is stored as
 
@@ -175,7 +175,7 @@ def _step_1(Hwedge):
 
 @jit
 def _step_2(g, h, n_max, Hwedge, Hextra, Hv, cosβ, sinβ):
-    """Compute values H^{0,m}_{n}(β)for m=0,...,n and H^{0,m}_{n+1}(β) for m=0,...,n+1 using Eq. (32):
+    r"""Compute values H^{0,m}_{n}(β)for m=0,...,n and H^{0,m}_{n+1}(β) for m=0,...,n+1 using Eq. (32):
         H^{0,m}_{n}(β) = (-1)^m \sqrt{(n-|m|)! / (n+|m|)!} P^{|m|}_{n}(cos β)
                        = (-1)^m (sin β)^m \hat{P}^{|m|}_{n}(cos β) / \sqrt{k (2n+1)}
 
@@ -248,7 +248,7 @@ def _step_2(g, h, n_max, Hwedge, Hextra, Hv, cosβ, sinβ):
 
 @jit
 def _step_3(a, b, n_max, Hwedge, Hextra, cosβ, sinβ):
-    """Use relation (41) to compute H^{1,m}_{n}(β) for m=1,...,n.  Using symmetry and shift of the
+    r"""Use relation (41) to compute H^{1,m}_{n}(β) for m=1,...,n.  Using symmetry and shift of the
     indices this relation can be written as
         b^{0}_{n+1} H^{1, m}_{n} =   \frac{b^{−m−1}_{n+1} (1−cosβ)}{2} H^{0, m+1}_{n+1}
                                    − \frac{b^{ m−1}_{n+1} (1+cosβ)}{2} H^{0, m−1}_{n+1}
@@ -392,7 +392,7 @@ def _step_5(d, n_max, Hwedge, Hv):
 
 class HCalculator(object):
     def __init__(self, n_max):
-        """Object to repeatedly calculate Wigner H values
+        r"""Object to repeatedly calculate Wigner H values
 
         The H matrix is related to Wigner's d matrix as given by arxiv:1403.7698 according to
 

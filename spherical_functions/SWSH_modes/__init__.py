@@ -8,7 +8,7 @@ from .. import LM_total_size, LM_deduce_ell_max
 
 
 class Modes(np.ndarray):
-    """Object to store SWHS modes
+    r"""Object to store SWHS modes
 
     This class subclasses numpy's ndarray object, so that it should act like a numpy array in many
     respects, even with functions like np.zeros_like.
