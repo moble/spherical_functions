@@ -319,7 +319,7 @@ def test_Wigner_D_signatures(Rs):
     # from spherical_functions.WignerD import _Wigner_D_elements
     ell_max = 6
     ell_mp_m = sf.LMpM_range(0, ell_max)
-    Ds1 = np.zeros((Rs.size, ell_mp_m.shape[0]), dtype=np.complex)
+    Ds1 = np.zeros((Rs.size, ell_mp_m.shape[0]), dtype=complex)
     Ds2 = np.zeros_like(Ds1)
     for i, R in enumerate(Rs):
         Ds1[i, :] = sf.Wigner_D_element(R, ell_mp_m)

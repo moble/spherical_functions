@@ -38,7 +38,7 @@ def complex_powers(z, M, zpowers=None):
     """
     z = np.asarray(z, dtype=complex)
     zravel = z.ravel()
-    zpowers = zpowers if zpowers is not None else np.empty((z.size, M+1), dtype=np.complex128)
+    zpowers = zpowers if zpowers is not None else np.empty((z.size, M+1), dtype=complex)
     _complex_powers(zravel, M, zpowers)
     return zpowers.reshape(z.shape+(M+1,))
 

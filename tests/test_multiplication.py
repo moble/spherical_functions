@@ -55,7 +55,7 @@ def test_trivial_multiplication(multiplication_function):
     rtol = 2e-15
     ellmax_g = 8
     for ellmax_f in range(1, ellmax_g):
-        f = np.zeros(sf.LM_total_size(0, ellmax_f), dtype=np.complex)
+        f = np.zeros(sf.LM_total_size(0, ellmax_f), dtype=complex)
         f[0] = np.sqrt(4*np.pi)
         ellmin_f = 0
         s_f = 0
@@ -106,9 +106,9 @@ def test_SWSH_multiplication_formula(multiplication_function):
                 for ell2 in range(ell_max+1):
                     for s2 in range(-ell2, ell2+1):
                         for m2 in range(-ell2, ell2+1):
-                            swsh1 = np.zeros(sf.LM_total_size(0, ell_max), dtype=np.complex)
+                            swsh1 = np.zeros(sf.LM_total_size(0, ell_max), dtype=complex)
                             swsh1[sf.LM_index(ell1, m1, 0)] = 1.0
-                            swsh2 = np.zeros(sf.LM_total_size(0, ell_max), dtype=np.complex)
+                            swsh2 = np.zeros(sf.LM_total_size(0, ell_max), dtype=complex)
                             swsh2[sf.LM_index(ell2, m2, 0)] = 1.0
                             swsh3, ell_min_3, ell_max_3, s3 = multiplication_function(swsh1, 0, ell_max, s1, swsh2, 0, ell_max, s2)
                             assert s3 == s1 + s2
@@ -140,9 +140,9 @@ def test_SWSH_multiplication_formula(multiplication_function):
                 for ell2 in range(ell_max+1):
                     for s2 in range(-ell2, ell2+1):
                         for m2 in range(-ell2, ell2+1):
-                            swsh1 = np.zeros(sf.LM_total_size(0, ell_max), dtype=np.complex)
+                            swsh1 = np.zeros(sf.LM_total_size(0, ell_max), dtype=complex)
                             swsh1[sf.LM_index(ell1, m1, 0)] = 1.0
-                            swsh2 = np.zeros(sf.LM_total_size(0, ell_max), dtype=np.complex)
+                            swsh2 = np.zeros(sf.LM_total_size(0, ell_max), dtype=complex)
                             swsh2[sf.LM_index(ell2, m2, 0)] = 1.0
                             swsh3, ell_min_3, ell_max_3, s3 = multiplication_function(swsh1, 0, ell_max, s1, swsh2, 0, ell_max, s2)
                             assert s3 == s1 + s2
@@ -192,7 +192,7 @@ def test_first_nontrivial_multiplication(multiplication_function):
         ellmin_fg = 0
         ellmax_fg = ellmax_f + ellmax_g
         s_fg = s_f + s_g
-        fg = np.zeros(sf.LM_total_size(0, ellmax_fg), dtype=np.complex)
+        fg = np.zeros(sf.LM_total_size(0, ellmax_fg), dtype=complex)
         # for ell in range(ellmin_g, ellmax_g+1):
         #     for m in range(-ell, ell+1):
         #         i_g = sf.LM_index(ell, m, ellmin_g)
@@ -453,7 +453,7 @@ def test_first_nontrivial_multiplication(multiplication_function):
     #print()
     for ellmax_f in range(1, ellmax_g+1):
         # print(ellmax_f)
-        f = np.zeros(sf.LM_total_size(0, ellmax_f), dtype=np.complex)
+        f = np.zeros(sf.LM_total_size(0, ellmax_f), dtype=complex)
         f[1:4] = np.random.rand(3) + 1j*np.random.rand(3)
         ellmin_f = 0
         s_f = 0
