@@ -21,6 +21,8 @@ spinsfast = "^104.2022.4"
 pytest = "^7.0"
 pytest-cov = ">=2.10.1"
 black = ">=22.1"
+sympy = ">=1.10"
+line-profiler = ">=3.5.0"
 
 [tool.black]
 line-length = 120
