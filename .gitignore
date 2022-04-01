@@ -61,5 +61,5 @@ Notes
 tests/playground.ipynb
 spheroidal_harmonics.py
 spherical_functions.zip
-MANIFEST
-_version.py
+.envrc
+.venv

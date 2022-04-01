@@ -108,12 +108,14 @@ def _check_broadcasting(self, array, reverse=False):
             return True
     else:
         if np.ndim(array) > np.ndim(self)-1:
-            raise ValueError(f"Cannot broadcast array of {np.ndim(array)} dimensions against {type(self).__name__} "
-                             f"object of fewer ({np.ndim(self)-1}) non-mode dimensions.\n"
-                             "This is to ensure that scalars do not operate on individual "
-                             "mode weights; they must operate on all simultaneously.\n"
-                             "If that is the case and you still want to broadcast, add more "
-                             "dimensions before this object's first dimension.")
+            raise ValueError(
+                f"Cannot broadcast array of {np.ndim(array)} dimensions against {type(self).__name__} "
+                f"object of fewer ({np.ndim(self)-1}) non-mode dimensions.\n"
+                "This is to ensure that scalars do not operate on individual "
+                "mode weights; they must operate on all simultaneously.\n"
+                "If that is the case and you still want to broadcast, add more "
+                "dimensions before this object's first dimension."
+            )
         try:
             if reverse:
                 np.broadcast(array, self[..., 0])
