@@ -1,5 +1,0 @@
-numpy>=1.13
-scipy
-numba>=0.49.1
-quaternion
-spinsfast
