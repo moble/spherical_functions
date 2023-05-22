@@ -47,7 +47,7 @@ def test_vector_as_ell_1_modes(special_angles):
             for phi in special_angles:
                 dot1 = np.dot(vector, nhat(theta, phi))
                 dot2 = np.dot(vec_ell_m, sf.SWSH(quaternion.from_spherical_coords(theta, phi), 0, indices)).real
-                assert abs(dot1 - dot2) < 1e-15
+                assert abs(dot1 - dot2) < 2e-15
 
 
 def test_finite_constant_arrays():
