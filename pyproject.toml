@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "spherical-functions"
 description = "Python/numba implementation of Wigner D Matrices, spin-weighted spherical harmonics, and associated functions"
-version = "2022.4.2"
+version = "2022.4.3"
 readme = "README.md"
 license = "MIT"
 authors = ["Michael Boyle <mob22@cornell.edu>"]
