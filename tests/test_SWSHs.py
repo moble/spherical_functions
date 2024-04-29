@@ -23,10 +23,10 @@ def slow_Wignerd(iota, ell, m, s):
     k_min = max(0, m - s)
     k_max = min(ell + m, ell - s)
     return sum([((-1.) ** (k) * math.sqrt(
-        math.factorial(ell + m) * math.factorial(ell - m) * math.factorial(ell + s) * math.factorial(ell - s))
+        math.factorial(int(ell + m)) * math.factorial(int(ell - m)) * math.factorial(int(ell + s)) * math.factorial(int(ell - s)))
                  * math.cos(iota / 2.) ** (2 * ell + m - s - 2 * k) * math.sin(iota / 2.) ** (2 * k + s - m)
                  / float(
-        math.factorial(ell + m - k) * math.factorial(ell - s - k) * math.factorial(k) * math.factorial(k + s - m)))
+        math.factorial(int(ell + m - k)) * math.factorial(int(ell - s - k)) * math.factorial(int(k)) * math.factorial(int(k + s - m))))
                 for k in range(k_min, k_max + 1)])
 
 

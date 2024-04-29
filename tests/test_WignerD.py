@@ -235,7 +235,7 @@ def test_Wigner_D_element_overflow(Rs, ell_max):
 def slow_Wignerd(beta, ell, mp, m):
     # https://en.wikipedia.org/wiki/Wigner_D-matrix#Wigner_.28small.29_d-matrix
     Prefactor = math.sqrt(
-        math.factorial(ell + mp) * math.factorial(ell - mp) * math.factorial(ell + m) * math.factorial(ell - m))
+        math.factorial(int(ell + mp)) * math.factorial(int(ell - mp)) * math.factorial(int(ell + m)) * math.factorial(int(ell - m)))
     s_min = int(round(max(0, round(m - mp))))
     s_max = int(round(min(round(ell + m), round(ell - mp))))
     assert isinstance(s_max, int), type(s_max)
@@ -243,8 +243,8 @@ def slow_Wignerd(beta, ell, mp, m):
     return Prefactor * sum([((-1.) ** (mp - m + s)
                              * math.cos(beta / 2.) ** (2 * ell + m - mp - 2 * s)
                              * math.sin(beta / 2.) ** (mp - m + 2 * s)
-                             / float(math.factorial(ell + m - s) * math.factorial(s) * math.factorial(mp - m + s)
-                                     * math.factorial(ell - mp - s)))
+                             / float(math.factorial(int(ell + m - s)) * math.factorial(int(s)) * math.factorial(int(mp - m + s))
+                                     * math.factorial(int(ell - mp - s))))
                             for s in range(s_min, s_max + 1)])
 
 
