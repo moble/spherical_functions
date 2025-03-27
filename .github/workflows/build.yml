@@ -46,8 +46,14 @@ jobs:
 
       - name: Upload coverage
         if: "matrix.python-version == '3.13' && matrix.os == 'ubuntu-latest'"
-        uses: codecov/codecov-action@v3
-
+        uses: codecov/codecov-action@v5
+        with:
+          # Copy the token from
+          # https://app.codecov.io/github/moble/spherical_functions/config/general
+          # and add it as a "New repository secret" on
+          # https://github.com/moble/spherical_functions/settings/secrets/actions
+          token: ${{ secrets.CODECOV_TOKEN }}
+  
 
   release:
     name: Create release and send to PyPI
