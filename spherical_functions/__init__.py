@@ -15,7 +15,7 @@ try:
 except ModuleNotFoundError:  # pragma: no cover
     import importlib_metadata
 
-__version__ = "2022.4.5"
+__version__ = "2022.4.6"
 
 
 __all__ = ['Wigner3j', 'Wigner_D_element', 'Wigner_D_matrices', 'SWSH', 'SWSH_grid',
