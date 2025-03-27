@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: ['3.8', '3.11']
+        python-version: ['3.8', '3.12']
 
     steps:
       - name: Skip replicates on main branch
@@ -31,38 +31,21 @@ jobs:
         if: ${{ env.skipping_build_and_test_replicate != 'true' }}
         uses: actions/checkout@v4
 
-      - name: Set up python ${{ matrix.python-version }}
+      - name: Install uv and set the python version
         if: ${{ env.skipping_build_and_test_replicate != 'true' }}
-        uses: actions/setup-python@v5
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install poetry
+      - name: Install hatch and run tests
         if: ${{ env.skipping_build_and_test_replicate != 'true' }}
         shell: bash
         run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Build and install with poetry
-        if: ${{ env.skipping_build_and_test_replicate != 'true' }}
-        shell: bash
-        run: |
-          poetry run python -m pip install --upgrade pip
-          poetry env info
-          rm poetry.lock
-          poetry update
-          poetry build
-          poetry install --no-interaction
-
-      - name: Run tests
-        if: ${{ env.skipping_build_and_test_replicate != 'true' }}
-        shell: bash
-        run: |
-          poetry run pytest -s --cov=spherical_functions --cov-branch --cov-report=xml --durations=0
+          uv pip install hatch
+          hatch run test -s --cov=spherical_functions --cov-branch --cov-report=xml --durations=0
 
       - name: Upload coverage
-        if: "matrix.python-version == '3.11' && matrix.os == 'ubuntu-latest'"
+        if: "matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'"
         uses: codecov/codecov-action@v3
 
 
@@ -79,85 +62,110 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - name: Install uv
+        if: ${{ env.skipping_build_and_test_replicate != 'true' }}
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: '3.11'
+          python-version: "3.12"
 
-      - name: Install toml
+      - name: Install hatch
         if: ${{ env.skipping_build_and_test_replicate != 'true' }}
         shell: bash
         run: |
-          python -m pip install --upgrade pip toml
+          uv pip install hatch
 
-      - name: Install poetry
-        if: ${{ env.skipping_build_and_test_replicate != 'true' }}
-        shell: bash
+      - name: Determine bump type
+        id: version
         run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Build and install with poetry
-        if: ${{ env.skipping_build_and_test_replicate != 'true' }}
-        shell: bash
-        run: |
-          poetry run python -m pip install --upgrade pip
-          poetry env info
-          rm poetry.lock
-          poetry update
-          poetry build
-          poetry install --no-interaction --no-dev
+          OLD_VERSION="$(hatch version)"
+          BUMP_TYPE="patch"
+          if [[ "$OLD_VERSION" == *"a"* ]]; then
+            BUMP_TYPE="a"
+          elif [[ "$OLD_VERSION" == *"b"* ]]; then
+            BUMP_TYPE="b"
+          fi
+          COMMIT_MSG="$(git log -1 --pretty=%B)"
+          if [[ "$COMMIT_MSG" == *"#major"* ]]; then
+            BUMP_TYPE="major"
+          elif [[ "$COMMIT_MSG" == *"#minor"* ]]; then
+            BUMP_TYPE="minor"
+          elif [[ "$COMMIT_MSG" == *"#patch"* ]]; then
+            BUMP_TYPE="patch"
+          elif [[ "$COMMIT_MSG" == *"#alpha"* ]]; then
+            BUMP_TYPE="a"
+          elif [[ "$COMMIT_MSG" == *"#beta"* ]]; then
+            BUMP_TYPE="b"
+          elif [[ "$COMMIT_MSG" == *"#release"* ]]; then
+            BUMP_TYPE="release"
+          fi
+          echo "BUMP_TYPE=$BUMP_TYPE" >> $GITHUB_OUTPUT
 
       - name: Bump version
-        shell: bash
-        env:
-          github_event_head_commit_message: ${{ github.event.head_commit.message }}
+        id: bump_version
         run: |
-          # Note: The following line reads the HEAD commit message to look for an indication of how
-          # to bump the version number.  Specifically, if `#patch`, `#minor`, or `#major` is present
-          # in the commit message, it bumps the corresponding version number.  Those can also be
-          # prepended as `#premajor`, etc., to add/bump the prerelease modifier.  If none of those
-          # are present, `#patch` is assumed — that is, the lowest-significance number is
-          # incremented.  See the documentation of the `poetry version` command for details.
-          export version_bump_rule=$(python .github/scripts/parse_bump_rule.py)
-          echo "version_bump_rule: '${version_bump_rule}'"
-          poetry version "${version_bump_rule}"
-          export new_version=$(python .github/scripts/parse_version.py pyproject.toml)
-          echo "new_version: '${new_version}'"
-          echo "new_version=${new_version}" >> $GITHUB_ENV  # Save env variable for later steps
+          export NO_COLOR=1  # To turn off formatting in `hatch version`
+          hatch version ${{ steps.version.outputs.BUMP_TYPE }}
+          NEW_VERSION="$(hatch version | tr -d '\n')"
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "new_version=${NEW_VERSION}" >> $GITHUB_ENV
+          prerelease="false"
+          if [[ "$NEW_VERSION" == *"a"* ]]; then
+            prerelease="true"
+          elif [[ "$NEW_VERSION" == *"b"* ]]; then
+            prerelease="true"
+          fi
+          echo "prerelease=${prerelease}" >> $GITHUB_ENV
 
-      - name: Tag and push new version
-        shell: bash
+      - name: Determine if release steps should run
+        id: release_check
         run: |
+          # Default to skipping release steps
+          echo "run_release=false" >> $GITHUB_OUTPUT
+
+          # If the ref is main, check the commit message for [skip release]
+          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+            COMMIT_MSG="$(git log -1 --pretty=%B)"
+            if [[ "$COMMIT_MSG" != *"[skip release]"* ]]; then
+              echo "run_release=true" >> $GITHUB_OUTPUT
+              echo "run_release=true"
+            fi
+          fi
+
+      - name: Commit version bump
+        if: ${{ steps.release_check.outputs.run_release == 'true' }}
+        run: |
+          # Note that we need to set read and write permissions under
+          # "Settings" > "Actions" > "General" > "Workflow permissions"
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add pyproject.toml
+          git status
+          git add spherical_functions/__init__.py
           git commit -m "Bump version to v${new_version}"
           git tag -a "v${new_version}" -m "Version ${new_version}"
           git status
           git push --follow-tags  # Will not trigger new workflow because it uses GITHUB_TOKEN
 
-      - name: Create release
-        if: "!contains(github.event.head_commit.message, '[no release]')"
-        id: create_release
-        uses: actions/create-release@latest
+      - name: Create GitHub Release
+        if: ${{ steps.release_check.outputs.run_release == 'true' }}
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: v${{ env.new_version }}
-          release_name: Release v${{ env.new_version }}
+          name: Release v${{ env.new_version }}
           draft: false
-          prerelease: false
+          prerelease: ${{ env.prerelease }}
 
       - name: Publish to PyPI
-        if: "!contains(github.event.head_commit.message, '[no pypi]')"
+        if: ${{ steps.release_check.outputs.run_release == 'true' }}
         env:
           # 1) Get key from https://pypi.org/manage/account/token/
-          # 2) Copy it to Github > repo > Settings > Secrets
-          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
+          # 2) Copy it to Github > repo > Settings > Secrets and variables
+          #    > Actions > New repository secret
+          HATCH_INDEX_USER: __token__
+          HATCH_INDEX_AUTH: ${{ secrets.PYPI_TOKEN }}
         shell: bash
         run: |
-          # Do these first two steps again to ensure the version is right
-          poetry build
-          poetry install --no-interaction --no-dev
-          poetry publish
+          hatch build
+          hatch publish
+  
