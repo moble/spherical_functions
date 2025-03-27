@@ -5,25 +5,25 @@ dynamic = ["version"]
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-  {name = "Michael Boyle", email = "mob22@cornell.edu"}
+    {name = "Michael Boyle", email = "mob22@cornell.edu"}
 ]
 homepage = "https://github.com/moble/spherical_functions"
 requires-python = ">=3.10"
 dependencies = [
-  "numpy >=1.20",
-  "scipy >=1.0",
-  "numba >=0.55",
-  "numpy-quaternion >=2022",
-  "spinsfast >=2022"
+    "numpy >=1.20",
+    "scipy >=1.0",
+    "numba >=0.55",
+    "numpy-quaternion >=2022",
+    "spinsfast >=2022"
 ]
 
 [project.optional-dependencies]
 dev = [
-  "pytest >=7.0",
-  "pytest-cov >=2.10.1",
-  "black >=22.1",
-  "sympy >=1.10",
-  "line-profiler >=3.5.0"
+    "pytest >=7.0",
+    "pytest-cov >=2.10.1",
+    "black >=22.1",
+    "sympy >=1.10",
+    "line-profiler >=3.5.0"
 ]
 
 [build-system]
@@ -36,11 +36,12 @@ path = "spherical_functions/__init__.py"
 [tool.hatch.envs.default]
 installer = "uv"
 dependencies = [
-  "pytest",
-  "pytest-cov",
-  "black",
-  "sympy",
-  "line-profiler"
+    "ipython",
+    "pytest",
+    "pytest-cov",
+    "black",
+    "sympy",
+    "line-profiler"
 ]
 [tool.hatch.envs.default.scripts]
 # Run these as `hatch run test`
@@ -57,5 +58,5 @@ junit_family="xunit2"
 addopts = "-v --tb=short --doctest-glob=''"
 filterwarnings = [
     # Apparently, numpy's tests confuse pytest, so we ignore that
-  "ignore:cannot collect 'test' because it is not a function:pytest.PytestCollectionWarning"
+    "ignore:cannot collect 'test' because it is not a function:pytest.PytestCollectionWarning"
 ]
