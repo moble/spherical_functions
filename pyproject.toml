@@ -8,7 +8,7 @@ authors = [
   {name = "Michael Boyle", email = "mob22@cornell.edu"}
 ]
 homepage = "https://github.com/moble/spherical_functions"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
   "numpy >=1.20",
   "scipy >=1.0",
