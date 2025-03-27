@@ -17,12 +17,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: ['3.10', '3.12']
+        python-version: ['3.10', '3.13']
 
     steps:
       - name: Skip replicates on main branch
         env:
-          skip_replicates: ${{ github.ref == 'refs/heads/main' && (matrix.os != 'ubuntu-latest' || matrix.python-version != '3.12') }}
+          skip_replicates: ${{ github.ref == 'refs/heads/main' && (matrix.os != 'ubuntu-latest' || matrix.python-version != '3.13') }}
         shell: bash
         run: |
           echo "skipping_build_and_test_replicate=${skip_replicates}" >> $GITHUB_ENV
@@ -45,7 +45,7 @@ jobs:
           hatch run test -s --cov=spherical_functions --cov-branch --cov-report=xml --durations=0
 
       - name: Upload coverage
-        if: "matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'"
+        if: "matrix.python-version == '3.13' && matrix.os == 'ubuntu-latest'"
         uses: codecov/codecov-action@v3
 
 
@@ -66,7 +66,7 @@ jobs:
         if: ${{ env.skipping_build_and_test_replicate != 'true' }}
         uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.12"
+          python-version: "3.13"
 
       - name: Install hatch
         if: ${{ env.skipping_build_and_test_replicate != 'true' }}
