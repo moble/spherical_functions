@@ -7,7 +7,7 @@
 
 import copy
 import numpy as np
-from .. import LM_total_size
+from .. import LM_total_size, LM_index
 from ..multiplication import _multiplication_helper
 
 

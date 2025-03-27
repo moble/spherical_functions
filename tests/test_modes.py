@@ -332,6 +332,8 @@ def test_modes_conjugate():
             ell_min = m.ell_min
             ell_max = m.ell_max
             shape = m.shape
+            conjm = np.conjugate(m)
+            conjg = conjm.grid()
             mbar = m.conjugate(inplace)
             gbar = mbar.grid()
             assert s == -mbar.s
@@ -339,6 +341,7 @@ def test_modes_conjugate():
             assert ell_max == mbar.ell_max
             assert shape == mbar.shape
             assert np.allclose(g, np.conjugate(gbar), rtol=tolerance, atol=tolerance)
+            assert np.allclose(g, np.conjugate(conjg), rtol=tolerance, atol=tolerance)
 
 
 def test_modes_real():
