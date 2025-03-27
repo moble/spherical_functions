@@ -170,7 +170,7 @@ def __array_ufunc__(self, ufunc, method, *args, out=None, **kwargs):
             return NotImplemented
 
     elif ufunc is np.absolute:
-        return args[0].norm()
+        return np.abs(args[0].ndarray)
 
     else:
         # I thought we filtered everything else out...
